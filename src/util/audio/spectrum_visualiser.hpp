@@ -8,11 +8,11 @@
 #pragma once
 #include "audio_visualiser.hpp"
 
-class spectrum_renderer : public audio_visualiser
+class spectrum_visualiser : public audio_visualiser
 {
 public:
-    spectrum_renderer() = default;
-    ~spectrum_renderer();
+    spectrum_visualiser() = default;
+    ~spectrum_visualiser();
 
     void update(source::config* cfg) override;
     void tick(source::config* cfg, float) override;

@@ -8,7 +8,7 @@
 
 #include <cstdint>
 #include <obs-module.h>
-#include "../util/audio/spectrum_renderer.hpp"
+#include "../util/audio/spectrum_visualiser.hpp"
 #include "../util/util.hpp"
 
 namespace source {
@@ -40,7 +40,7 @@ struct config {
 class visualiser_source
 {
     config m_config;
-    spectrum_renderer m_renderer;
+    spectrum_visualiser m_renderer;
 public:
     visualiser_source(obs_source_t* source, obs_data_t* settings);
     ~visualiser_source();

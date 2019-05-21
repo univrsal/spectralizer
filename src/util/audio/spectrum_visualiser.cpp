@@ -5,25 +5,25 @@
  * github.com/univrsal/spectraliser
  */
 
-#include "spectrum_renderer.hpp"
+#include "spectrum_visualiser.hpp"
 #include "../../source/visualiser_source.hpp"
 
-spectrum_renderer::~spectrum_renderer()
+spectrum_visualiser::~spectrum_visualiser()
 {
 
 }
 
-void spectrum_renderer::update(source::config* cfg)
+void spectrum_visualiser::update(source::config* cfg)
 {
 
 }
 
-void spectrum_renderer::tick(source::config* cfg, float seconds)
+void spectrum_visualiser::tick(source::config* cfg, float seconds)
 {
 
 }
 
-void spectrum_renderer::render(source::config* cfg, gs_effect_t* effect)
+void spectrum_visualiser::render(source::config* cfg, gs_effect_t* effect)
 {
 
 }

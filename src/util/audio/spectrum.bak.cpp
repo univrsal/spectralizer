@@ -1,8 +1,8 @@
 /**
- * This file is part of spectraliser
+ * This file is part of spectralizer
  * which is licensed under the GPL v2.0
  * See LICENSE or http://www.gnu.org/licenses
- * github.com/univrsal/spectraliser
+ * github.com/univrsal/spectralizer
  */
 
 #ifdef LINUX /* open() & read() */
@@ -13,8 +13,8 @@
 
 #endif
 
-#include "spectrum_visualiser.hpp"
-#include "../../source/visualiser_source.hpp"
+#include "spectrum_visualizer.hpp"
+#include "../../source/visualizer_source.hpp"
 
 void spectrum_renderer::setup(source::config* config)
 {
@@ -49,7 +49,7 @@ void spectrum_renderer::setup(source::config* config)
 
 #ifdef LINUX
     if (strlen(config->fifo_path) > 0 && (m_fifo = open(config->fifo_path, O_RDONLY, O_NONBLOCK)) < 0)
-        blog(LOG_INFO, "[spectraliser] Couldn't open fifo '%s'", config->fifo_path);
+        blog(LOG_INFO, "[spectralizer] Couldn't open fifo '%s'", config->fifo_path);
 
     if (m_sample_buf)
         brealloc(m_sample_buf, sizeof(int16_t) * m_samples_count);

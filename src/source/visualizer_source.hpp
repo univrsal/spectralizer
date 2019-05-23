@@ -1,14 +1,14 @@
 /**
- * This file is part of spectraliser
+ * This file is part of spectralizer
  * which is licensed under the GPL v2.0
  * See LICENSE or http://www.gnu.org/licenses
- * github.com/univrsal/spectraliser
+ * github.com/univrsal/spectralizer
  */
 #pragma once
 
 #include <cstdint>
 #include <obs-module.h>
-#include "../util/audio/spectrum_visualiser.hpp"
+#include "../util/audio/spectrum_visualizer.hpp"
 #include "../util/util.hpp"
 
 namespace source {
@@ -30,7 +30,7 @@ struct config {
 
     const char* fifo_path = nullptr;
 
-    /* Bar visualiser_source settings */
+    /* Bar visualizer_source settings */
     float gravity = 1.f, integral = 10.f / 100, sens = 100.f;
     uint16_t bar_space = 2;
     uint16_t bar_width = 5;
@@ -43,13 +43,13 @@ struct config {
     uint8_t buffer_size = 16; /* Only values 8 - 16, will be squared in audio_processor */
 };
 
-class visualiser_source
+class visualizer_source
 {
     config m_config;
     spectrum_visualiser m_renderer;
 public:
-    visualiser_source(obs_source_t* source, obs_data_t* settings);
-    ~visualiser_source();
+    visualizer_source(obs_source_t* source, obs_data_t* settings);
+    ~visualizer_source();
 
     inline void update(obs_data_t* settings);
     inline void tick(float seconds);

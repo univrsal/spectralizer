@@ -11,7 +11,7 @@ namespace audio
 {
     class audio_processor;
 
-    class audio_visualiser
+    class audio_visualizer
     {
     protected:
         audio::audio_processor* m_processor = nullptr;

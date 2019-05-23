@@ -1,12 +1,12 @@
 /**
- * This file is part of spectraliser
+ * This file is part of spectralizer
  * which is licensed under the GPL v2.0
  * See LICENSE or http://www.gnu.org/licenses
- * github.com/univrsal/spectraliser
+ * github.com/univrsal/spectralizer
  */
 
 #include "fifo.hpp"
-#include "../../source/visualiser_source.hpp"
+#include "../../source/visualizer_source.hpp"
 #include <unistd.h>
 #include <fcntl.h>
 #include <util/platform.h>
@@ -19,7 +19,7 @@ namespace audio
         if (open_fifo() && !m_thread_state) {
             m_thread_state = pthread_create(&m_read_thread, nullptr, read_thread_method, this) == 0;
             if (!m_thread_state)
-                blog(LOG_ERROR, "[spectraliser] Failed to create fifo read thread");
+                blog(LOG_ERROR, "[spectralizer] Failed to create fifo read thread");
         }
     }
 
@@ -52,7 +52,7 @@ namespace audio
             m_fifo_handle = open(m_file_path, O_RDONLY);
 
             if (m_fifo_handle < 0) {
-                blog(LOG_ERROR, "[spectraliser] Failed to open fifo '%s'", m_file_path);
+                blog(LOG_ERROR, "[spectralizer] Failed to open fifo '%s'", m_file_path);
             } else {
                 /* Set to non blocking reading (doesn't really work I think) */
                 int flags = fcntl(m_fifo_handle, F_GETFL, 0);

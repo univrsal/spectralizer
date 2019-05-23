@@ -1,15 +1,15 @@
 /**
- * This file is part of spectraliser
+ * This file is part of spectralizer
  * which is licensed under the GPL v2.0
  * See LICENSE or http://www.gnu.org/licenses
- * github.com/univrsal/spectraliser
+ * github.com/univrsal/spectralizer
  */
 
 #include <obs-module.h>
-#include "source/visualiser_source.hpp"
+#include "source/visualizer_source.hpp"
 
 #define blog(log_level, format, ...)                            \
-    blog(log_level, "[spectraliser: '%s'] " format,             \
+    blog(log_level, "[spectralizer: '%s'] " format,             \
          obs_source_get_name(context->source), ##__VA_ARGS__)
 
 #define debug(format, ...)                      \
@@ -21,7 +21,7 @@
 
 OBS_DECLARE_MODULE()
 
-OBS_MODULE_USE_DEFAULT_LOCALE("spectraliser", "en-US")
+OBS_MODULE_USE_DEFAULT_LOCALE("spectralizer", "en-US")
 
 bool obs_module_load()
 {

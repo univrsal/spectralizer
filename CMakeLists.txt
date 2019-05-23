@@ -1,34 +1,34 @@
-project(spectraliser)
+project(spectralizer)
 
 if (MSVC)
-    set(spectraliser_PLATFORM_DEPS
+    set(spectralizer_PLATFORM_DEPS
             w32-pthreads)
 endif ()
 
 if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
     add_definitions(-DLINUX=1)
     add_definitions(-DUNIX=1)
-    set(spectraliser_PLATFORM_DEPS
+    set(spectralizer_PLATFORM_DEPS
             mpdclient)
 endif ()
 
-set(spectraliser_SOURCES
-        src/spectraliser.cpp
-        src/source/visualiser_source.cpp
+set(spectralizer_SOURCES
+        src/spectralizer.cpp
+        src/source/visualizer_source.cpp
         src/util/util.hpp
-        src/util/audio/spectrum_visualiser.cpp
-        src/util/audio/spectrum_visualiser.hpp
+        src/util/audio/spectrum_visualizer.cpp
+        src/util/audio/spectrum_visualizer.hpp
         src/util/audio/fifo.cpp
         src/util/audio/fifo.hpp
         src/util/audio/audio_processor.hpp
-        src/util/audio/audio_visualiser.hpp
+        src/util/audio/audio_visualizer.hpp
         src/util/audio/audio_processor.cpp)
 
-add_library(spectraliser MODULE
-        ${spectraliser_SOURCES})
-target_link_libraries(spectraliser
+add_library(spectralizer MODULE
+        ${spectralizer_SOURCES})
+target_link_libraries(spectralizer
         libobs
         fftw3
-        ${spectraliser_PLATFORM_DEPS})
+        ${spectralizer_PLATFORM_DEPS})
 
-install_obs_plugin_with_data(spectraliser data)
+install_obs_plugin_with_data(spectralizer data)

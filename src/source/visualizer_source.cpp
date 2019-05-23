@@ -1,11 +1,11 @@
 /**
- * This file is part of spectraliser
+ * This file is part of spectralizer
  * which is licensed under the GPL v2.0
  * See LICENSE or http://www.gnu.org/licenses
- * github.com/univrsal/spectraliser
+ * github.com/univrsal/spectralizer
  */
 
-#include "visualiser_source.hpp"
+#include "visualizer_source.hpp"
 #include "../util/util.hpp"
 #ifdef LINUX
 #include <mpd/client.h>
@@ -21,7 +21,7 @@ struct mpd_status* local_mpd_state = nullptr;
 #endif
 namespace source {
 
-visualiser_source::visualiser_source(obs_source_t* source, obs_data_t* settings)
+visualizer_source::visualizer_source(obs_source_t* source, obs_data_t* settings)
 {
     m_config.settings = settings;
     m_config.source = source;
@@ -42,12 +42,12 @@ visualiser_source::visualiser_source(obs_source_t* source, obs_data_t* settings)
     obs_source_update(source, settings);
 }
 
-visualiser_source::~visualiser_source()
+visualizer_source::~visualizer_source()
 {
     /* NO-OP (?)*/
 }
 
-void visualiser_source::update(obs_data_t* settings)
+void visualizer_source::update(obs_data_t* settings)
 {
     auto test =  obs_data_get_int(settings, S_SAMPLE_RATE);
     UNUSED_PARAMETER(test);
@@ -71,7 +71,7 @@ void visualiser_source::update(obs_data_t* settings)
     m_renderer.setup(&m_config);
 }
 
-void visualiser_source::tick(float seconds)
+void visualizer_source::tick(float seconds)
 {
     m_config.refresh_counter += seconds;
     if (m_config.refresh_counter >= m_config.refresh_rate) {
@@ -86,7 +86,7 @@ void visualiser_source::tick(float seconds)
     }
 }
 
-void visualiser_source::render(gs_effect_t* effect)
+void visualizer_source::render(gs_effect_t* effect)
 {
     gs_effect_t    *solid = obs_get_base_effect(OBS_EFFECT_SOLID);
     gs_eparam_t    *color = gs_effect_get_param_by_name(solid, "color");
@@ -166,7 +166,7 @@ void register_visualiser()
 #endif
 
     obs_source_info si = {};
-    si.id = "spectraliser";
+    si.id = "spectralizer";
     si.type = OBS_SOURCE_TYPE_INPUT;
     si.output_flags = OBS_SOURCE_VIDEO;
     si.get_properties = get_properties_for_visualiser;
@@ -175,19 +175,19 @@ void register_visualiser()
     { return T_SOURCE; };
     si.create = [](obs_data_t* settings, obs_source_t* source)
     {
-        return static_cast<void*>(new visualiser_source(source, settings));
+        return static_cast<void*>(new visualizer_source(source, settings));
     };
     si.destroy = [](void* data)
     {
-        delete reinterpret_cast<visualiser_source*>(data);
+        delete reinterpret_cast<visualizer_source*>(data);
     };
     si.get_width = [](void* data)
     {
-        return reinterpret_cast<visualiser_source*>(data)->get_width();
+        return reinterpret_cast<visualizer_source*>(data)->get_width();
     };
     si.get_height = [](void* data)
     {
-        return reinterpret_cast<visualiser_source*>(data)->get_height();
+        return reinterpret_cast<visualizer_source*>(data)->get_height();
     };
 
     si.get_defaults = [](obs_data_t* settings)
@@ -204,15 +204,15 @@ void register_visualiser()
 
     si.update = [](void* data, obs_data_t* settings)
     {
-        reinterpret_cast<visualiser_source*>(data)->update(settings);
+        reinterpret_cast<visualizer_source*>(data)->update(settings);
     };
     si.video_tick = [](void* data, float seconds)
     {
-        reinterpret_cast<visualiser_source*>(data)->tick(seconds);
+        reinterpret_cast<visualizer_source*>(data)->tick(seconds);
     };
     si.video_render = [](void* data, gs_effect_t* effect)
     {
-        reinterpret_cast<visualiser_source*>(data)->render(effect);
+        reinterpret_cast<visualizer_source*>(data)->render(effect);
     };
 
     obs_register_source(&si);

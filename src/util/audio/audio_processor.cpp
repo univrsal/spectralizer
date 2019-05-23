@@ -1,12 +1,12 @@
 /**
- * This file is part of spectraliser
+ * This file is part of spectralizer
  * which is licensed under the GPL v2.0
  * See LICENSE or http://www.gnu.org/licenses
- * github.com/univrsal/spectraliser
+ * github.com/univrsal/spectralizer
  */
 
 #include "audio_processor.hpp"
-#include "../../source/visualiser_source.hpp"
+#include "../../source/visualizer_source.hpp"
 
 /*
     Most processing is reused from cava
@@ -180,7 +180,7 @@ namespace audio
         }
 #ifdef DEBUG
         else {
-            blog(LOG_DEBUG, "[spectraliser] No sound for 3 seconds, sleeping.");
+            blog(LOG_DEBUG, "[spectralizer] No sound for 3 seconds, sleeping.");
         }
 #endif
 

@@ -48,8 +48,8 @@
 #define S_COLOR                         "color"
 #define S_BAR_FILTER_MODE               "bar_filter_mode"
 #define S_BAR_FILTER_ARG                "bar_filter_arg"
+
 enum visual_mode
 {
-    VISUAL_BARS,
-    VISUAL_WIRE
+    VISUAL_BARS, VISUAL_WIRE
 };

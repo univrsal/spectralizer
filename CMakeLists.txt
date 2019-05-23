@@ -17,7 +17,12 @@ set(spectraliser_SOURCES
         src/source/visualiser_source.cpp
         src/util/util.hpp
         src/util/audio/spectrum_visualiser.cpp
-        src/util/audio/spectrum_visualiser.hpp src/util/audio/fifo.cpp src/util/audio/fifo.hpp src/util/audio/audio_processor.hpp src/util/audio/audio_visualiser.hpp)
+        src/util/audio/spectrum_visualiser.hpp
+        src/util/audio/fifo.cpp
+        src/util/audio/fifo.hpp
+        src/util/audio/audio_processor.hpp
+        src/util/audio/audio_visualiser.hpp
+        src/util/audio/audio_processor.cpp)
 
 add_library(spectraliser MODULE
         ${spectraliser_SOURCES})

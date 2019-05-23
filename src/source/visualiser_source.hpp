@@ -15,7 +15,8 @@ namespace source {
 
 struct config {
     visual_mode mode = VISUAL_BARS;
-    uint32_t detail = 32, cx = 50, cy = 50;
+    /* Detail: Amount of bars / nodes in wire path */
+    uint16_t detail = 32, cx = 50, cy = 50;
     uint16_t fps = 30;
     float refresh_rate = 1.f / fps;
     float refresh_counter = 0.f;
@@ -35,6 +36,11 @@ struct config {
     uint16_t bar_width = 5;
     uint16_t bar_height = 100;
     double bar_filter_arg = 0; /* Used in monstercat filter */
+
+    double ignore = 0; /* Cut off lower peaks */
+    /* Frequency cutting */
+    uint16_t freq_cutoff_low = 50, freq_cutoff_high = 10000;
+    uint8_t buffer_size = 16; /* Only values 8 - 16, will be squared in audio_processor */
 };
 
 class visualiser_source

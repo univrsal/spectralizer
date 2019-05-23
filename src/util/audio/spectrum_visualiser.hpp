@@ -6,15 +6,24 @@
  */
 
 #pragma once
+
 #include "audio_visualiser.hpp"
 
-class spectrum_visualiser : public audio_visualiser
+namespace audio
 {
-public:
-    spectrum_visualiser() = default;
-    ~spectrum_visualiser();
 
-    void update(source::config* cfg) override;
-    void tick(source::config* cfg, float) override;
-    void render(source::config* cfg, gs_effect_t* effect) override;
-};
+    class spectrum_visualiser : public audio_visualiser
+    {
+    public:
+        spectrum_visualiser() = default;
+
+        ~spectrum_visualiser();
+
+        void update(source::config* cfg) override;
+
+        void tick(source::config* cfg, float) override;
+
+        void render(source::config* cfg, gs_effect_t* effect) override;
+    };
+
+}

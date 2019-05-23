@@ -7,23 +7,30 @@
 
 #include "spectrum_visualiser.hpp"
 #include "../../source/visualiser_source.hpp"
+#include "audio_processor.hpp"
 
-spectrum_visualiser::~spectrum_visualiser()
+namespace audio
 {
 
-}
+    spectrum_visualiser::~spectrum_visualiser()
+    {
+        m_processor->clean_up();
+        delete m_processor;
+        m_processor = nullptr;
+    }
 
-void spectrum_visualiser::update(source::config* cfg)
-{
+    void spectrum_visualiser::update(source::config* cfg)
+    {
+        m_processor->update(cfg);
+    }
 
-}
+    void spectrum_visualiser::tick(source::config* cfg, float seconds)
+    {
 
-void spectrum_visualiser::tick(source::config* cfg, float seconds)
-{
+    }
 
-}
+    void spectrum_visualiser::render(source::config* cfg, gs_effect_t* effect)
+    {
 
-void spectrum_visualiser::render(source::config* cfg, gs_effect_t* effect)
-{
-
+    }
 }

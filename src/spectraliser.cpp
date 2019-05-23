@@ -9,17 +9,18 @@
 #include "source/visualiser_source.hpp"
 
 #define blog(log_level, format, ...)                            \
-	blog(log_level, "[spectraliser: '%s'] " format,             \
+    blog(log_level, "[spectraliser: '%s'] " format,             \
          obs_source_get_name(context->source), ##__VA_ARGS__)
 
 #define debug(format, ...)                      \
-	blog(LOG_DEBUG, format, ##__VA_ARGS__)
+    blog(LOG_DEBUG, format, ##__VA_ARGS__)
 #define info(format, ...)                       \
-	blog(LOG_INFO, format, ##__VA_ARGS__)
+    blog(LOG_INFO, format, ##__VA_ARGS__)
 #define warn(format, ...)                       \
-	blog(LOG_WARNING, format, ##__VA_ARGS__)
+    blog(LOG_WARNING, format, ##__VA_ARGS__)
 
 OBS_DECLARE_MODULE()
+
 OBS_MODULE_USE_DEFAULT_LOCALE("spectraliser", "en-US")
 
 bool obs_module_load()

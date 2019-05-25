@@ -11,26 +11,39 @@
 
 namespace audio
 {
-
-    spectrum_visualizer::~spectrum_visualizer()
+    spectrum_visualizer::spectrum_visualizer(source::config* cfg)
+        : audio_visualizer(cfg)
     {
-        m_processor->clean_up();
-        delete m_processor;
-        m_processor = nullptr;
+        update();
     }
 
-    void spectrum_visualizer::update(source::config* cfg)
+    void spectrum_visualizer::update()
     {
-        m_processor->update(cfg);
+        audio_visualizer::update();
     }
 
-    void spectrum_visualizer::tick(source::config* cfg, float seconds)
+    void spectrum_visualizer::tick(float seconds)
     {
-
+        audio_visualizer::tick(seconds);
     }
 
-    void spectrum_visualizer::render(source::config* cfg, gs_effect_t* effect)
+    void spectrum_visualizer::render(gs_effect_t* effect)
     {
+        /* TODO: Stereo, right side up mono */
+        auto* f = m_processor->get_freqs();
+        auto* f_last = m_processor->get_last_freqs();
+        int diff, pos_x;
 
+        for (int i = 0; i < m_cfg->detail; i++) {
+            diff = UTIL_MAX(abs(f[i] - f_last[i]), 5);
+            pos_x = i * (m_cfg->bar_width + m_cfg->bar_space);
+
+            gs_matrix_push();
+            gs_matrix_translate3f(pos_x, 0, 0);
+            gs_draw_sprite(nullptr, 0, m_cfg->bar_width, diff);
+            gs_matrix_pop();
+        }
+
+        UNUSED_PARAMETER(effect);
     }
 }

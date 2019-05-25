@@ -46,11 +46,11 @@ namespace audio
          * m_low_freq_cut / m_high_freq_cut: Cuts high/low frequencies
          * m_freq_mem: Used for smoothing
          */
-        int* m_fall_off{}, * m_last_freqs{}, * m_freq_mem{};
+        int* m_fall_off{}, * m_last_freqs{}, * m_last_freqsd{}, * m_freq_mem{};
         float* m_freq_peak{};
 
         /* Frequency cutting */
-        int* m_low_freq_cut{}, * m_high_freq_cut{}
+        int* m_low_freq_cut{}, * m_high_freq_cut{};
         double* m_freq_weight{}; /* Weights frequencies according to EQ (TODO: used?) */
         double m_eq_dist{}; /* Distributes equalizer values across all bars */
 
@@ -64,6 +64,7 @@ namespace audio
         float m_current_gravity;
         int32_t m_buf_size{};
         uint8_t m_channels{};
+        bool m_can_draw = false; /* If audio has been present long enough start drawing */
     public:
         int32_t m_samples{}; /* 2 * (m_buf_size / 2 + 1) */
         int16_t m_audio_out_r[AUDIO_SIZE]{}; /* Contains audio data read from audio source */
@@ -75,20 +76,19 @@ namespace audio
 
         /* Setup/Cleanup */
         virtual void clean_up();
-
         virtual void update(source::config* cfg);
-
-
         virtual void tick(float seconds, source::config* cfg);
 
         /* Audio processing methods */
         void separate_freq_bands(source::config* cfg, uint16_t detail, bool left_channel);
         void apply_monstercat_filter(source::config* cfg, int* t);
         void apply_wave_filter(source::config* cfg, int* t);
-        void apply_falloff(source::config* cfg, int* t);
 
+        /* Getter */
         uint8_t get_channels();
         int32_t get_buffer_size();
+        int* get_freqs();
+        int* get_last_freqs();
     };
 
 }

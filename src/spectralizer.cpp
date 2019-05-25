@@ -8,17 +8,6 @@
 #include <obs-module.h>
 #include "source/visualizer_source.hpp"
 
-#define blog(log_level, format, ...)                            \
-    blog(log_level, "[spectralizer: '%s'] " format,             \
-         obs_source_get_name(context->source), ##__VA_ARGS__)
-
-#define debug(format, ...)                      \
-    blog(LOG_DEBUG, format, ##__VA_ARGS__)
-#define info(format, ...)                       \
-    blog(LOG_INFO, format, ##__VA_ARGS__)
-#define warn(format, ...)                       \
-    blog(LOG_WARNING, format, ##__VA_ARGS__)
-
 OBS_DECLARE_MODULE()
 
 OBS_MODULE_USE_DEFAULT_LOCALE("spectralizer", "en-US")
@@ -26,11 +15,10 @@ OBS_MODULE_USE_DEFAULT_LOCALE("spectralizer", "en-US")
 bool obs_module_load()
 {
     source::register_visualiser();
-
     return true;
 }
 
 void obs_module_unload()
 {
-
+    /* TODO: MPD disconnecting? */
 }

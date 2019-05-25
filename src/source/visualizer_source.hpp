@@ -8,8 +8,11 @@
 
 #include <cstdint>
 #include <obs-module.h>
-#include "../util/audio/spectrum_visualizer.hpp"
 #include "../util/util.hpp"
+
+namespace audio {
+    class audio_visualizer;
+}
 
 namespace source {
 
@@ -32,7 +35,7 @@ struct config {
     uint32_t sample_rate = 44100;
     uint32_t color;
     uint16_t audio_source = 0; /* Audio source id, 0 is fifo */
-    filter_mode filter_mode = FILTER_NONE;
+    source::filter_mode filter_mode = source::FILTER_NONE;
     bool auto_sens = false;
     const char* fifo_path = nullptr;
 
@@ -52,7 +55,7 @@ struct config {
 class visualizer_source
 {
     config m_config;
-    spectrum_visualiser m_renderer;
+    audio::audio_visualizer* m_visualizer = nullptr;
 public:
     visualizer_source(obs_source_t* source, obs_data_t* settings);
     ~visualizer_source();

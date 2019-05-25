@@ -19,8 +19,15 @@ namespace audio
         if (open_fifo() && !m_thread_state) {
             m_thread_state = pthread_create(&m_read_thread, nullptr, read_thread_method, this) == 0;
             if (!m_thread_state)
-                blog(LOG_ERROR, "[spectralizer] Failed to create fifo read thread");
+                warn("Failed to create fifo read thread");
         }
+    }
+
+    void fifo::tick(float seconds, source::config* cfg)
+    {
+        m_data_mutex.lock();
+        audio_processor::tick(seconds, cfg);
+        m_data_mutex.unlock();
     }
 
     void fifo::clean_up()
@@ -52,7 +59,7 @@ namespace audio
             m_fifo_handle = open(m_file_path, O_RDONLY);
 
             if (m_fifo_handle < 0) {
-                blog(LOG_ERROR, "[spectralizer] Failed to open fifo '%s'", m_file_path);
+                warn("Failed to open fifo '%s'", m_file_path);
             } else {
                 /* Set to non blocking reading (doesn't really work I think) */
                 int flags = fcntl(m_fifo_handle, F_GETFL, 0);

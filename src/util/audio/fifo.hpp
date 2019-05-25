@@ -25,7 +25,7 @@ namespace audio
         int m_fifo_handle = 0;
 
         void update(source::config* cfg) override;
-
+        void tick(float seconds, source::config* cfg) override;
         void clean_up() override;
 
         /* utility */

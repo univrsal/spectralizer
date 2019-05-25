@@ -15,15 +15,13 @@ namespace audio
     class spectrum_visualizer : public audio_visualizer
     {
     public:
-        spectrum_visualizer() = default;
+        explicit spectrum_visualizer(source::config* cfg);
 
-        ~spectrum_visualizer();
+        void update() override;
 
-        void update(source::config* cfg) override;
+        void tick(float seconds) override;
 
-        void tick(source::config* cfg, float) override;
-
-        void render(source::config* cfg, gs_effect_t* effect) override;
+        void render(gs_effect_t* effect) override;
     };
 
 }

@@ -7,6 +7,8 @@
 
 #include "visualizer_source.hpp"
 #include "../util/util.hpp"
+#include "../util/audio/spectrum_visualizer.hpp"
+
 #ifdef LINUX
 #include <mpd/client.h>
 #include <mpd/stats.h>
@@ -40,11 +42,20 @@ visualizer_source::visualizer_source(obs_source_t* source, obs_data_t* settings)
     m_config.cy = m_config.bar_height;
     m_config.color = 0x440044ff;
     obs_source_update(source, settings);
+
+    switch (m_config.mode) {
+        case VISUAL_BARS:
+            m_visualizer = new audio::spectrum_visualizer(&m_config);
+            break;
+        default:;
+    }
 }
 
 visualizer_source::~visualizer_source()
 {
     /* NO-OP (?) */
+    delete m_visualizer;
+    m_visualizer = nullptr;
 }
 
 void visualizer_source::update(obs_data_t* settings)
@@ -66,47 +77,35 @@ void visualizer_source::update(obs_data_t* settings)
     m_config.cx                 = UTIL_MAX(m_config.detail * (m_config.bar_width + m_config.bar_space) - m_config
             .bar_space, 10);
     m_config.cy                 = UTIL_MAX(m_config.bar_height, 10);
-    m_config.mode               = static_cast<visual_mode>(obs_data_get_int(settings, S_BAR_FILTER_MODE));
-    m_config.bar_filter_arg     = obs_data_get_double(settings, S_BAR_FILTER_ARG);
-    m_renderer.setup(&m_config);
+
+
 }
 
 void visualizer_source::tick(float seconds)
 {
-    m_config.refresh_counter += seconds;
-    if (m_config.refresh_counter >= m_config.refresh_rate) {
-        m_config.refresh_counter = 0.f;
-        /* Refresh data */
-#ifdef LINUX
-        local_mpd_state = mpd_run_status(local_mpd_connection);
-
-        if (m_config.audio_source == 0 && mpd_status_get_state(local_mpd_state) == MPD_STATE_PLAY)
-            m_renderer.read_fifo(&m_config);
-#endif
-    }
+    if (m_visualizer)
+        m_visualizer->tick(seconds);
 }
 
 void visualizer_source::render(gs_effect_t* effect)
 {
-    gs_effect_t    *solid = obs_get_base_effect(OBS_EFFECT_SOLID);
-    gs_eparam_t    *color = gs_effect_get_param_by_name(solid, "color");
-    gs_technique_t *tech  = gs_effect_get_technique(solid, "Solid");
+    if (m_visualizer) {
+        gs_effect_t    *solid = obs_get_base_effect(OBS_EFFECT_SOLID);
+        gs_eparam_t    *color = gs_effect_get_param_by_name(solid, "color");
+        gs_technique_t *tech  = gs_effect_get_technique(solid, "Solid");
 
-    struct vec4 colorVal;
-    vec4_from_rgba(&colorVal, m_config.color);
-    gs_effect_set_vec4(color, &colorVal);
+        struct vec4 colorVal;
+        vec4_from_rgba(&colorVal, m_config.color);
+        gs_effect_set_vec4(color, &colorVal);
 
-    gs_technique_begin(tech);
-    gs_technique_begin_pass(tech, 0);
+        gs_technique_begin(tech);
+        gs_technique_begin_pass(tech, 0);
 
-    if (m_config.audio_source == 0) {
-        m_renderer.render_fifo(effect, &m_config);
-    } else {
-
+        m_visualizer->render(nullptr);
+        gs_technique_end_pass(tech);
+        gs_technique_end(tech);
     }
-
-    gs_technique_end_pass(tech);
-    gs_technique_end(tech);
+    UNUSED_PARAMETER(effect);
 }
 
 static auto fifo_filter = "Fifo file(*.fifo);;"
@@ -124,14 +123,14 @@ obs_properties_t* get_properties_for_visualiser(void* data)
 
     auto src = obs_properties_add_list(props, S_AUDIO_SOURCE, T_AUDIO_SOURCE, OBS_COMBO_TYPE_LIST,
                                         OBS_COMBO_FORMAT_INT);
-    auto filter = obs_properties_add_list(props, S_BAR_FILTER_MODE, T_BAR_FILTER_MODE, OBS_COMBO_TYPE_LIST,
+    auto filter = obs_properties_add_list(props, S_FILTER_MODE, T_FILTER_MODE, OBS_COMBO_TYPE_LIST,
                                         OBS_COMBO_FORMAT_INT);
 
-    obs_property_list_add_int(filter, T_BAR_FILTER_MODE_NONE, BAR_FILTER_NONE);
-    obs_property_list_add_int(filter, T_BAR_FILTER_MODE_MONSTERCAT, BAR_FILTER_MONSTERCAT);
-    obs_property_list_add_int(filter, T_BAR_FILTER_MODE_WAVES, BAR_FILTER_WAVES);
+    obs_property_list_add_int(filter, T_FILTER_NONE, FILTER_NONE);
+    obs_property_list_add_int(filter, T_FILTER_MONSTERCAT, FILTER_MCAT);
+    obs_property_list_add_int(filter, T_FILTER_WAVES, FILTER_WAVES);
 
-    obs_properties_add_float_slider(props, S_BAR_FILTER_ARG, T_BAR_FILTER_ARG, 0, 15, 0.1);
+    obs_properties_add_float_slider(props, S_MONSTERCAT_FILTER_STRENGTH, T_MONSTERCAT_FILTER_STRENGTH, 0, 15, 0.1);
 
     obs_properties_add_int(props, S_BAR_WIDTH, T_BAR_WIDTH, 1, UINT16_MAX, 1);
     obs_properties_add_int(props, S_BAR_HEIGHT, T_BAR_HEIGHT, 10, UINT16_MAX, 1);
@@ -198,8 +197,8 @@ void register_visualiser()
         obs_data_set_default_int(settings, S_SOURCE_MODE, VISUAL_BARS);
         obs_data_set_default_int(settings, S_AUDIO_SOURCE, 0);
         obs_data_set_default_int(settings, S_SAMPLE_RATE, 44100);
-        obs_data_set_default_int(settings, S_BAR_FILTER_MODE, BAR_FILTER_NONE);
-        obs_data_set_default_double(settings, S_BAR_FILTER_ARG, 0);
+        obs_data_set_default_int(settings, S_FILTER_MODE, FILTER_MCAT);
+        obs_data_set_default_double(settings, S_MONSTERCAT_FILTER_STRENGTH, 0);
     };
 
     si.update = [](void* data, obs_data_t* settings)

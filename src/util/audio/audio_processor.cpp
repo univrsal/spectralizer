@@ -15,7 +15,7 @@
 
 namespace audio
 {
-
+    /* EQ used to weigh frequencies */
     double smoothing_values[] = {0.8, 0.8, 1, 1, 0.8, 0.8, 1, 0.8, 0.8, 1, 1, 0.8, 1, 1, 0.8, 0.6, 0.6, 0.7, 0.8, 0.8,
                                  0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8,
                                  0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.7, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6,
@@ -42,6 +42,7 @@ namespace audio
         /* Utility arrays*/
         m_fall_off = static_cast<int*>(bzalloc(cfg->detail * sizeof(int) * 2));
         m_last_freqs = static_cast<int*>(bzalloc(cfg->detail * sizeof(int) * 2));
+        m_last_freqsd = static_cast<int*>(bzalloc(cfg->detail * sizeof(int) * 2));
         m_low_freq_cut = static_cast<int*>(bzalloc(cfg->detail * sizeof(int)));
         m_high_freq_cut = static_cast<int*>(bzalloc(cfg->detail * sizeof(int)));
         m_freq_mem = static_cast<int*>(bzalloc(cfg->detail * sizeof(int) * 2));
@@ -117,6 +118,7 @@ namespace audio
         /* Free utility arrays */
         bfree(m_fall_off);
         bfree(m_last_freqs);
+        bfree(m_last_freqsd);
         bfree(m_low_freq_cut);
         bfree(m_high_freq_cut);
         bfree(m_freq_mem);
@@ -126,6 +128,7 @@ namespace audio
         /* Set to null for good measure */
         m_fall_off = nullptr;
         m_last_freqs = nullptr;
+        m_last_freqsd = nullptr;
         m_low_freq_cut = nullptr;
         m_high_freq_cut = nullptr;
         m_freq_mem = nullptr;
@@ -143,7 +146,7 @@ namespace audio
         int i, o;
         /* Process collected audio */
         bool silence = true;
-        for (int i = 0; i < m_samples; i++) {
+        for (i = 0; i < m_samples; i++) {
             if (i < m_buf_size && i < AUDIO_SIZE) {
                 m_fftw_in_l[i] = m_audio_out_l[i];
 
@@ -164,6 +167,7 @@ namespace audio
             m_sleep_counter = 0;
 
         if (m_sleep_counter < 5) { /* Audio for >5 seconds -> can process */
+            m_can_draw = true;
             if (m_channels > 1) {
                 fftw_execute(m_fftw_plan_l);
                 fftw_execute(m_fftw_plan_r);
@@ -175,37 +179,73 @@ namespace audio
             }
         } else {
 #ifdef DEBUG
-            blog(LOG_DEBUG, "[spectralizer] No sound for 3 seconds, sleeping.");
+            debug("No sound for 3 seconds, sleeping.");
 #endif
-            continue;
+            m_can_draw = false;
+            return;
         }
+        int diff;
+        double diff_d;
 
         /* Additional filtering */
         if (cfg->filter_mode == source::FILTER_MCAT) {
             if (m_channels > 1) {
-                apply_monstercat_filter(cfg, &m_freq_l);
-                apply_monstercat_filter(cfg, &m_freq_r);
+                apply_monstercat_filter(cfg, m_freq_l);
+                apply_monstercat_filter(cfg, m_freq_r);
             } else {
-                apply_monstercat_filter(cfg, &m_freq_l);
+                apply_monstercat_filter(cfg, m_freq_l);
             }
         } else if (cfg->filter_mode == source::FILTER_WAVES) {
             if (m_channels > 1) {
-                apply_wave_filter(cfg, &m_freq_l);
-                apply_wave_filter(cfg, &m_freq_r);
+                apply_wave_filter(cfg, m_freq_l);
+                apply_wave_filter(cfg, m_freq_r);
             } else {
-                apply_wave_filter(cfg, &m_freq_l);
+                apply_wave_filter(cfg, m_freq_l);
             }
         }
 
+        /* Copy frequencies over */
+        memcpy(m_freq_both, m_freq_l, sizeof(int) * cfg->detail); /* left channel */
+        if (m_channels > 1) /* right chanel */
+            memcpy(m_freq_both + cfg->detail / 2, m_freq_r, sizeof(int) * cfg->detail);
 
-    }
+        /* Processing */
+        for (o = 0; o < cfg->detail * (m_channels > 1 ? 2 : 1); o++) {
 
-    void audio_processor::apply_falloff(source::config *cfg, int* t) {
-        if (m_current_gravity > 0) {
-            for (int o = 0; o < cfg->detail; o++) {
-                if (t[o] < m_last_freqs[o])
+            /* Falloff */
+            if (m_current_gravity > 0) {
+                if (m_freq_both[o] < m_last_freqs[o]) {
+                    m_freq_both[o] = m_freq_peak[o] - (m_current_gravity * m_fall_off[o] * m_fall_off[o]);
+                    m_fall_off[o]++;
+                } else {
+                    m_freq_peak[o] = m_freq_both[o];
+                    m_fall_off[o] = 0;
+                }
+                /* This value has to be copied before other filters are applied */
+                m_last_freqs[o] = m_freq_both[o];
             }
+
+            /* integral (?) */
+            if (cfg->integral > 0) {
+                m_freq_both[o] = m_freq_mem[o] * cfg->integral + m_freq_both[o];
+                m_freq_mem[o] = m_freq_both[o];
+
+                diff = (cfg->bar_height + 1) - m_freq_both[o];
+                if (diff < 0)
+                    diff = 0;
+                diff_d = 1 / (diff + 1);
+                m_freq_mem[o] = m_freq_mem[o] * (1 - diff_d / 20);
+            }
+
+            /* Remove zero values, to prevent dividing by zero */
+            if (m_freq_both[o] < 1)
+                m_freq_both[o] = 1;
+
+            /* TODO: automatic sensibility adjustment */
         }
+
+        /* Copy over current values for next tick() */
+        memcpy(m_last_freqsd, m_freq_both, sizeof(int) * cfg->detail * 2);
     }
 
     void audio_processor::separate_freq_bands(source::config* cfg, uint16_t detail, bool left_channel)
@@ -237,31 +277,32 @@ namespace audio
 
     void audio_processor::apply_monstercat_filter(source::config *cfg, int* t)
     {
-        int i, m_y, de
-        for (i = 0; i < cfg->detail; i++) {
+        int m_y, de, z;
+
+        for (z = 0; z < cfg->detail; z++) {
             for (m_y = z - 1; m_y >= 0; m_y--) {
                 de = z - m_y;
-                t[m_y] = maxtarr[z] / pow(cfg->mcat_strength, de), t[m_y]);
+                t[m_y] = UTIL_MAX(t[z] / pow(cfg->mcat_strength, de), t[m_y]);
             }
 
             for (m_y = z + 1; m_y < cfg->detail; m_y++) {
                 de = m_y - z;
-                t[m_y] = max(t[z] / pow(cfg->mcat_strength, de), t[m_y]);
+                t[m_y] = UTIL_MAX(t[z] / pow(cfg->mcat_strength, de), t[m_y]);
             }
         }
     }
 
     void audio_processor::apply_wave_filter(source::config *cfg, int* t) {
-        int i, m_y, de;
+        int m_y, de, z;
         for (z = 0; z < cfg->detail; z++) {
             for (m_y = z - 1; m_y >= 0; m_y--) {
                 de = z - m_y;
-                t[m_y] = max(t[z] - pow(cfg->mcat_strength, 2), t[m_y]);
+                t[m_y] = UTIL_MAX(t[z] - pow(2, de), t[m_y]);
             }
 
             for (m_y = z + 1; m_y < cfg->detail; m_y++) {
                 de = m_y - z;
-                t[m_y] = max(t[z] - pow(cfg->mcat_strength, 2), t[m_y]);
+                t[m_y] = UTIL_MAX(t[z] - pow(2, de), t[m_y]);
             }
         }
     }
@@ -274,6 +315,16 @@ namespace audio
     int32_t audio_processor::get_buffer_size()
     {
         return m_buf_size;
+    }
+
+    int* audio_processor::get_freqs()
+    {
+        return m_freq_both;
+    }
+
+    int* audio_processor::get_last_freqs()
+    {
+        return m_last_freqsd;
     }
 
 } /* namespace audio */

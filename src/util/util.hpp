@@ -29,11 +29,9 @@
 #define T_SAMPLE_RATE                   T_("Spectraliser.SampleRate")
 #define T_BAR_SPACING                   T_("Spectraliser.Bar.Space")
 #define T_COLOR                         T_("Spectraliser.Color")
-#define T_BAR_FILTER_MODE               T_("Spectraliser.Bar.Filter")
-#define T_BAR_FILTER_MODE_NONE          T_("Spectraliser.Bar.Filter.None")
-#define T_BAR_FILTER_MODE_MONSTERCAT    T_("Spectraliser.Bar.Filter.Monstercat")
-#define T_BAR_FILTER_MODE_WAVES         T_("Spectraliser.Bar.Filter.Waves")
-#define T_BAR_FILTER_ARG                T_("Spectraliser.Bar.Filter.Arg")
+#define T_BAR_FILTER_MONSTERCAT         T_("Spectraliser.Filter.Monstercat")
+#define T_BAR_FILTER_WAVES              T_("Spectraliser.Filter.Waves")
+#define T_MONSTERCAT_FILTER_STRENGTH    T_("Spectraliser.Filter.Monstercat.Strength")
 
 #define S_SOURCE_MODE                   "source_mode"
 #define S_STEREO                        "stereo"
@@ -46,8 +44,9 @@
 #define S_SAMPLE_RATE                   "sample_rate"
 #define S_BAR_SPACE                     "bar_space"
 #define S_COLOR                         "color"
-#define S_BAR_FILTER_MODE               "bar_filter_mode"
-#define S_BAR_FILTER_ARG                "bar_filter_arg"
+#define S_BAR_FILTER_MONSTERCAT         "filter_monstercat"
+#define S_BAR_FILTER_WAVES              "filter_waves"
+#define S_MONSTERCAT_FILTER_STRENGTH    "filter_strength"
 
 enum visual_mode
 {

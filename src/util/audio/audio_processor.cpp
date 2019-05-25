@@ -40,12 +40,11 @@ namespace audio
         m_sleep_counter = 0.f;
 
         /* Utility arrays*/
-        m_fall_off = static_cast<int*>(bzalloc(cfg->detail * sizeof(int)));
-        m_last_freqs = static_cast<int*>(bzalloc(cfg->detail * sizeof(int)));
-        m_last_freqsd = static_cast<int*>(bzalloc(cfg->detail * sizeof(int)));
+        m_fall_off = static_cast<int*>(bzalloc(cfg->detail * sizeof(int) * 2));
+        m_last_freqs = static_cast<int*>(bzalloc(cfg->detail * sizeof(int) * 2));
         m_low_freq_cut = static_cast<int*>(bzalloc(cfg->detail * sizeof(int)));
         m_high_freq_cut = static_cast<int*>(bzalloc(cfg->detail * sizeof(int)));
-        m_freq_mem = static_cast<int*>(bzalloc(cfg->detail * sizeof(int)));
+        m_freq_mem = static_cast<int*>(bzalloc(cfg->detail * sizeof(int) * 2));
 
         m_freq_peak = static_cast<float*>(bzalloc(cfg->detail * sizeof(float)));
         m_freq_weight = static_cast<double*>(bzalloc(cfg->detail * sizeof(double)));
@@ -71,12 +70,10 @@ namespace audio
         bzero(m_fftw_in_r, sizeof(double) * m_samples);
 
         /* Misc caluclations, that only have to be done once per updated settings */
-
-        float current_gravity;
         double frequency_constant, pot, fre, fc;
         int n, smooth_index;
 
-        current_gravity = cfg->gravity * ((float) cfg->bar_height / 2160) * pow((60 / (float) cfg->fps), 2.5);
+        m_current_gravity = cfg->gravity * ((float) cfg->bar_height / 2160) * pow((60 / (float) cfg->fps), 2.5);
         frequency_constant = log10((float) cfg->freq_cutoff_high) / (1.f / (cfg->detail + 1.f) - 1);
 
         /* Caculate cut-off frequencies & and weigh frequencies */
@@ -120,7 +117,6 @@ namespace audio
         /* Free utility arrays */
         bfree(m_fall_off);
         bfree(m_last_freqs);
-        bfree(m_last_freqsd);
         bfree(m_low_freq_cut);
         bfree(m_high_freq_cut);
         bfree(m_freq_mem);
@@ -130,7 +126,6 @@ namespace audio
         /* Set to null for good measure */
         m_fall_off = nullptr;
         m_last_freqs = nullptr;
-        m_last_freqsd = nullptr;
         m_low_freq_cut = nullptr;
         m_high_freq_cut = nullptr;
         m_freq_mem = nullptr;
@@ -145,6 +140,7 @@ namespace audio
 
     void audio_processor::tick(float seconds, source::config* cfg)
     {
+        int i, o;
         /* Process collected audio */
         bool silence = true;
         for (int i = 0; i < m_samples; i++) {
@@ -177,14 +173,39 @@ namespace audio
                 fftw_execute(m_fftw_plan_l);
                 separate_freq_bands(cfg, cfg->detail, true);
             }
-        }
+        } else {
 #ifdef DEBUG
-        else {
             blog(LOG_DEBUG, "[spectralizer] No sound for 3 seconds, sleeping.");
-        }
 #endif
+            continue;
+        }
 
         /* Additional filtering */
+        if (cfg->filter_mode == source::FILTER_MCAT) {
+            if (m_channels > 1) {
+                apply_monstercat_filter(cfg, &m_freq_l);
+                apply_monstercat_filter(cfg, &m_freq_r);
+            } else {
+                apply_monstercat_filter(cfg, &m_freq_l);
+            }
+        } else if (cfg->filter_mode == source::FILTER_WAVES) {
+            if (m_channels > 1) {
+                apply_wave_filter(cfg, &m_freq_l);
+                apply_wave_filter(cfg, &m_freq_r);
+            } else {
+                apply_wave_filter(cfg, &m_freq_l);
+            }
+        }
+
+
+    }
+
+    void audio_processor::apply_falloff(source::config *cfg, int* t) {
+        if (m_current_gravity > 0) {
+            for (int o = 0; o < cfg->detail; o++) {
+                if (t[o] < m_last_freqs[o])
+            }
+        }
     }
 
     void audio_processor::separate_freq_bands(source::config* cfg, uint16_t detail, bool left_channel)
@@ -211,6 +232,37 @@ namespace audio
                 m_freq_l[o] = tmp;
             else
                 m_freq_r[o] = tmp;
+        }
+    }
+
+    void audio_processor::apply_monstercat_filter(source::config *cfg, int* t)
+    {
+        int i, m_y, de
+        for (i = 0; i < cfg->detail; i++) {
+            for (m_y = z - 1; m_y >= 0; m_y--) {
+                de = z - m_y;
+                t[m_y] = maxtarr[z] / pow(cfg->mcat_strength, de), t[m_y]);
+            }
+
+            for (m_y = z + 1; m_y < cfg->detail; m_y++) {
+                de = m_y - z;
+                t[m_y] = max(t[z] / pow(cfg->mcat_strength, de), t[m_y]);
+            }
+        }
+    }
+
+    void audio_processor::apply_wave_filter(source::config *cfg, int* t) {
+        int i, m_y, de;
+        for (z = 0; z < cfg->detail; z++) {
+            for (m_y = z - 1; m_y >= 0; m_y--) {
+                de = z - m_y;
+                t[m_y] = max(t[z] - pow(cfg->mcat_strength, 2), t[m_y]);
+            }
+
+            for (m_y = z + 1; m_y < cfg->detail; m_y++) {
+                de = m_y - z;
+                t[m_y] = max(t[z] - pow(cfg->mcat_strength, 2), t[m_y]);
+            }
         }
     }
 

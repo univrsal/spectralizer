@@ -44,7 +44,7 @@ visualizer_source::visualizer_source(obs_source_t* source, obs_data_t* settings)
 
 visualizer_source::~visualizer_source()
 {
-    /* NO-OP (?)*/
+    /* NO-OP (?) */
 }
 
 void visualizer_source::update(obs_data_t* settings)
@@ -161,7 +161,7 @@ void register_visualiser()
 {
 
 #ifdef LINUX
-    /* Connect to mpd, otherwise disable fifo */
+    /* Connect to mpd, otherwise disable fifo TODO: remove? reading is done in separate thread */
     local_mpd_connection = mpd_connection_new(nullptr, 0, 0);
 #endif
 

@@ -13,6 +13,12 @@
 
 namespace source {
 
+enum filter_mode {
+    FILTER_NONE,
+    FILTER_MCAT,
+    FILTER_WAVES
+};
+
 struct config {
     visual_mode mode = VISUAL_BARS;
     /* Detail: Amount of bars / nodes in wire path */
@@ -26,8 +32,8 @@ struct config {
     uint32_t sample_rate = 44100;
     uint32_t color;
     uint16_t audio_source = 0; /* Audio source id, 0 is fifo */
-    bar_filter filter_mode = BAR_FILTER_NONE;
-
+    filter_mode filter_mode = FILTER_NONE;
+    bool auto_sens = false;
     const char* fifo_path = nullptr;
 
     /* Bar visualizer_source settings */
@@ -35,7 +41,7 @@ struct config {
     uint16_t bar_space = 2;
     uint16_t bar_width = 5;
     uint16_t bar_height = 100;
-    double bar_filter_arg = 0; /* Used in monstercat filter */
+    double mcat_strength = 0; /* Used in monstercat filter */
 
     double ignore = 0; /* Cut off lower peaks */
     /* Frequency cutting */

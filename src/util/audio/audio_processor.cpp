@@ -33,6 +33,7 @@ namespace audio
 
     void audio_processor::update(source::config* cfg)
     {
+        clean_up();
         m_buf_size = cfg->buffer_size * cfg->buffer_size;
         m_samples = 2 * (m_buf_size / 2 + 1);
         m_channels = cfg->stereo ? 2 : 1;
@@ -152,6 +153,9 @@ namespace audio
 
     void audio_processor::tick(float seconds, source::config* cfg)
     {
+        /* Copy over current values for next tick() */
+        memcpy(m_last_freqsd, m_freq_both, sizeof(int) * cfg->detail * 2);
+
         int i, o;
         /* Process collected audio */
         bool silence = true;
@@ -177,6 +181,10 @@ namespace audio
 
         if (m_sleep_counter < 5) { /* Audio for >5 seconds -> can process */
             m_can_draw = true;
+            if (!log_flag) {
+                debug("Got audio. Starting Visualization");
+            }
+            log_flag = true;
             if (m_channels > 1) {
                 fftw_execute(m_fftw_plan_l);
                 fftw_execute(m_fftw_plan_r);
@@ -187,8 +195,12 @@ namespace audio
                 separate_freq_bands(cfg, cfg->detail, true);
             }
         } else {
+
 #ifdef DEBUG
-            debug("No sound for 3 seconds, sleeping.");
+            if (log_flag) {
+                log_flag = false;
+                debug("No sound for 3 seconds, sleeping.");
+            }
 #endif
             m_can_draw = false;
             return;
@@ -243,7 +255,7 @@ namespace audio
                 diff = (cfg->bar_height + 1) - m_freq_both[o];
                 if (diff < 0)
                     diff = 0;
-                diff_d = 1 / (diff + 1);
+                diff_d = 1. / (diff + 1);
                 m_freq_mem[o] = m_freq_mem[o] * (1 - diff_d / 20);
             }
 
@@ -253,9 +265,6 @@ namespace audio
 
             /* TODO: automatic sensibility adjustment */
         }
-
-        /* Copy over current values for next tick() */
-        memcpy(m_last_freqsd, m_freq_both, sizeof(int) * cfg->detail * 2);
     }
 
     void audio_processor::separate_freq_bands(source::config* cfg, uint16_t detail, bool left_channel)

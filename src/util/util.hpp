@@ -51,6 +51,7 @@
 #define T_FILTER_MONSTERCAT             T_("Spectralizer.Filter.Monstercat")
 #define T_FILTER_WAVES                  T_("Spectralizer.Filter.Wave")
 #define T_MONSTERCAT_FILTER_STRENGTH    T_("Spectralizer.Filter.Monstercat.Strength")
+#define T_CLAMP                         T_("Spectralizer.Clamp")
 
 #define S_SOURCE_MODE                   "source_mode"
 #define S_STEREO                        "stereo"
@@ -68,6 +69,7 @@
 #define S_INTEGRAL                      "integral"
 #define S_SENSITIVITY                   "sensitivity"
 #define S_MONSTERCAT_FILTER_STRENGTH    "filter_strength"
+#define S_CLAMP                         "clamp"
 
 enum visual_mode
 {

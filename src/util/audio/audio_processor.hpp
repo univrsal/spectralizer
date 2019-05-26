@@ -29,6 +29,7 @@ namespace audio
      */
     class audio_processor
     {
+        bool log_flag = true; /* TODO: debugging only*/
     protected:
         /* Complex numbers used for processing by fftw3 */
         fftw_complex* m_fftw_out_l{}, * m_fftw_out_r{};
@@ -37,7 +38,7 @@ namespace audio
         /* Array of frequency strengths currently and last cycle
          * m_freq_both, double the length, contains both channels
          */
-        int* m_freq_l{}, * m_freq_r{}, * m_freq_both;
+        int* m_freq_l{}, * m_freq_r{}, * m_freq_both{};
 
         /* Utility arrays used for smoothing etc.
          * All contain both stereo channels. Left first half, right second half

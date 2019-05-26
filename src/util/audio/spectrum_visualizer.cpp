@@ -35,7 +35,9 @@ namespace audio
         int diff, pos_x;
 
         for (int i = 0; i < m_cfg->detail; i++) {
-            diff = UTIL_MAX(abs(f[i] - f_last[i]), 5);
+            diff = UTIL_MAX(5, abs(f[i]));
+            if (m_cfg->clamp)
+                diff = UTIL_MIN(diff, m_cfg->bar_height);
             pos_x = i * (m_cfg->bar_width + m_cfg->bar_space);
 
             gs_matrix_push();

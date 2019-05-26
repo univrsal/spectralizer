@@ -29,7 +29,7 @@ struct config {
     uint16_t fps = 30;
     float refresh_rate = 1.f / fps; /* TODO: unused? */
     float refresh_counter = 0.f;
-    bool stereo = false;
+    bool stereo = false, clamp = false;
     obs_source_t* source = nullptr;
     obs_data_t* settings = nullptr;
     uint32_t sample_rate = 44100;

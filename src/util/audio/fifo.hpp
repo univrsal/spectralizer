@@ -16,26 +16,27 @@ namespace audio
     class fifo : public audio_processor
     {
     private:
-
-        pthread_t m_read_thread;
-        bool m_thread_state = false;
         const char* m_file_path = nullptr;
-    public:
-        fifo(source::config* cfg);
         std::mutex m_data_mutex;
         int m_fifo_handle = 0;
+        /* Reading method variables
+         * They are stored outside of the function to preserve their values
+         * because in cava reading is done in a while loop instead of a tick method */
+        int16_t buffer[BUFFER_SIZE];
+        float m_retry_timer = 0.f; /* Tries to reopen fifo every 5 seconds*/
+        int n = 0,          /* audio_out array index */
+                i,          /* Loop index */
+                c = 0,      /* Buffer clean counter */
+                bytes = 0;  /* Bytes read from fifo */
+
+        bool open_fifo();
+    public:
+        fifo(source::config* cfg);
 
         void update(source::config* cfg) override;
         void tick(float seconds, source::config* cfg) override;
         void clean_up() override;
-
-        /* utility */
-        bool open_fifo();
-
-        bool running() const;
     };
-
-    void* read_thread_method(void* arg);
 
 }
 #endif //LINUX

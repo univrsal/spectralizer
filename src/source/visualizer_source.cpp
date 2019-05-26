@@ -16,7 +16,7 @@
 /* Keeps track of local mpd instance
  * which is needed to stop reading from the fifo,
  * while mpd is paused, since reading will block the
- * video threat otherwise*/
+ * video thread otherwise*/
 struct mpd_connection* local_mpd_connection = nullptr;
 struct mpd_status* local_mpd_state = nullptr;
 
@@ -41,6 +41,8 @@ visualizer_source::visualizer_source(obs_source_t* source, obs_data_t* settings)
     m_config.cx = m_config.detail * (m_config.bar_width + m_config.bar_space) - m_config.bar_space;
     m_config.cy = m_config.bar_height;
     m_config.color = 0x440044ff;
+    m_config.fifo_path = "/tmp/mpd.fifo";
+
     obs_source_update(source, settings);
 
     switch (m_config.mode) {
@@ -60,8 +62,6 @@ visualizer_source::~visualizer_source()
 
 void visualizer_source::update(obs_data_t* settings)
 {
-    auto test =  obs_data_get_int(settings, S_SAMPLE_RATE);
-    UNUSED_PARAMETER(test);
     m_config.sample_rate        = (uint32_t) obs_data_get_int(settings, S_SAMPLE_RATE);
     m_config.fps                = UTIL_MAX(obs_data_get_int(settings, S_REFRESH_RATE), 1 );
     m_config.refresh_rate       = 1. / m_config.fps;
@@ -77,12 +77,11 @@ void visualizer_source::update(obs_data_t* settings)
     m_config.sens               = obs_data_get_int(settings, S_SENSITIVITY) / 100.f;
     m_config.gravity            = obs_data_get_int(settings, S_GRAVITY) / 100.f;
     m_config.integral           = obs_data_get_int(settings, S_INTEGRAL) / 100.f;
+    m_config.clamp              = obs_data_get_bool(settings, S_CLAMP);
 
     m_config.cx                 = UTIL_MAX(m_config.detail * (m_config.bar_width + m_config.bar_space) - m_config
             .bar_space, 10);
     m_config.cy                 = UTIL_MAX(m_config.bar_height, 10);
-
-
 }
 
 void visualizer_source::tick(float seconds)
@@ -134,7 +133,7 @@ obs_properties_t* get_properties_for_visualiser(void* data)
     obs_property_list_add_int(filter, T_FILTER_WAVES, FILTER_WAVES);
 
     obs_properties_add_float_slider(props, S_MONSTERCAT_FILTER_STRENGTH, T_MONSTERCAT_FILTER_STRENGTH, 0, 15, 0.1);
-
+    obs_properties_add_bool(props, S_CLAMP, T_CLAMP);
     obs_properties_add_int(props, S_BAR_WIDTH, T_BAR_WIDTH, 1, UINT16_MAX, 1);
     obs_properties_add_int(props, S_BAR_HEIGHT, T_BAR_HEIGHT, 10, UINT16_MAX, 1);
     obs_properties_add_int(props, S_BAR_SPACE, T_BAR_SPACING, 0, UINT16_MAX, 1);
@@ -144,7 +143,7 @@ obs_properties_t* get_properties_for_visualiser(void* data)
     /* Smoothing stuff */
     obs_properties_add_int_slider(props, S_GRAVITY, T_GRAVITY, 1, 400, 1);
     obs_properties_add_int_slider(props, S_INTEGRAL, T_INTEGRAl, 0, 100, 1);
-    obs_properties_add_int_slider(props, S_SENSITIVITY, T_SENSITIVITY, 1, 300, 1);
+    obs_properties_add_int_slider(props, S_SENSITIVITY, T_SENSITIVITY, 1, 600, 1);
     int audio_source_index = 0;
 #ifdef LINUX
     /* Add MPD stuff */
@@ -201,14 +200,20 @@ void register_visualiser()
         obs_data_set_default_int(settings, S_DETAIL, 32);
         obs_data_set_default_double(settings, S_REFRESH_RATE, 30);
         obs_data_set_default_bool(settings, S_STEREO, false);
+        obs_data_set_default_bool(settings, S_CLAMP, false);
         obs_data_set_default_int(settings, S_SOURCE_MODE, VISUAL_BARS);
         obs_data_set_default_int(settings, S_AUDIO_SOURCE, 0);
         obs_data_set_default_int(settings, S_SAMPLE_RATE, 44100);
-        obs_data_set_default_int(settings, S_FILTER_MODE, FILTER_MCAT);
+        obs_data_set_default_int(settings, S_FILTER_MODE, FILTER_NONE);
         obs_data_set_default_double(settings, S_MONSTERCAT_FILTER_STRENGTH, 0);
         obs_data_set_default_int(settings, S_GRAVITY, 100);
         obs_data_set_default_int(settings, S_INTEGRAL, 10);
         obs_data_set_default_int(settings, S_SENSITIVITY, 100);
+        obs_data_set_default_string(settings, S_FIFO_PATH, "/tmp/mpd.fifo");
+
+        obs_data_set_default_int(settings, S_BAR_WIDTH, 15);
+        obs_data_set_default_int(settings, S_BAR_HEIGHT, 200);
+        obs_data_set_default_int(settings, S_BAR_SPACE, 5);
     };
 
     si.update = [](void* data, obs_data_t* settings)

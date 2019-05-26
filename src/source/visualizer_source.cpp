@@ -74,6 +74,10 @@ void visualizer_source::update(obs_data_t* settings)
     m_config.detail             = obs_data_get_int(settings, S_DETAIL);
     m_config.fifo_path          = obs_data_get_string(settings, S_FIFO_PATH);
     m_config.bar_height         = obs_data_get_int(settings, S_BAR_HEIGHT);
+    m_config.sens               = obs_data_get_int(settings, S_SENSITIVITY) / 100.f;
+    m_config.gravity            = obs_data_get_int(settings, S_GRAVITY) / 100.f;
+    m_config.integral           = obs_data_get_int(settings, S_INTEGRAL) / 100.f;
+
     m_config.cx                 = UTIL_MAX(m_config.detail * (m_config.bar_width + m_config.bar_space) - m_config
             .bar_space, 10);
     m_config.cy                 = UTIL_MAX(m_config.bar_height, 10);
@@ -100,8 +104,7 @@ void visualizer_source::render(gs_effect_t* effect)
 
         gs_technique_begin(tech);
         gs_technique_begin_pass(tech, 0);
-
-        m_visualizer->render(nullptr);
+        m_visualizer->render(effect);
         gs_technique_end_pass(tech);
         gs_technique_end(tech);
     }
@@ -138,6 +141,10 @@ obs_properties_t* get_properties_for_visualiser(void* data)
     obs_properties_add_int(props, S_SAMPLE_RATE, T_SAMPLE_RATE, 128, UINT16_MAX, 10);
     obs_properties_add_color(props, S_COLOR, T_COLOR);
 
+    /* Smoothing stuff */
+    obs_properties_add_int_slider(props, S_GRAVITY, T_GRAVITY, 1, 400, 1);
+    obs_properties_add_int_slider(props, S_INTEGRAL, T_INTEGRAl, 0, 100, 1);
+    obs_properties_add_int_slider(props, S_SENSITIVITY, T_SENSITIVITY, 1, 300, 1);
     int audio_source_index = 0;
 #ifdef LINUX
     /* Add MPD stuff */
@@ -147,7 +154,7 @@ obs_properties_t* get_properties_for_visualiser(void* data)
     }
 #endif
 
-    /* Go through all audio sources ... */
+    /* TODO: Go through all audio sources ... */
 
     obs_properties_add_bool(props, S_STEREO, T_STEREO);
     obs_properties_add_int(props, S_DETAIL, T_DETAIL, 1, UINT16_MAX, 1);
@@ -199,6 +206,9 @@ void register_visualiser()
         obs_data_set_default_int(settings, S_SAMPLE_RATE, 44100);
         obs_data_set_default_int(settings, S_FILTER_MODE, FILTER_MCAT);
         obs_data_set_default_double(settings, S_MONSTERCAT_FILTER_STRENGTH, 0);
+        obs_data_set_default_int(settings, S_GRAVITY, 100);
+        obs_data_set_default_int(settings, S_INTEGRAL, 10);
+        obs_data_set_default_int(settings, S_SENSITIVITY, 100);
     };
 
     si.update = [](void* data, obs_data_t* settings)

@@ -21,6 +21,7 @@ namespace audio
         bool m_thread_state = false;
         const char* m_file_path = nullptr;
     public:
+        fifo(source::config* cfg);
         std::mutex m_data_mutex;
         int m_fifo_handle = 0;
 

@@ -27,7 +27,7 @@ struct config {
     /* Detail: Amount of bars / nodes in wire path */
     uint16_t detail = 32, cx = 50, cy = 50;
     uint16_t fps = 30;
-    float refresh_rate = 1.f / fps;
+    float refresh_rate = 1.f / fps; /* TODO: unused? */
     float refresh_counter = 0.f;
     bool stereo = false;
     obs_source_t* source = nullptr;
@@ -36,7 +36,7 @@ struct config {
     uint32_t color;
     uint16_t audio_source = 0; /* Audio source id, 0 is fifo */
     source::filter_mode filter_mode = source::FILTER_NONE;
-    bool auto_sens = false;
+    bool auto_sens = false; /* TODO: Auto sens */
     const char* fifo_path = nullptr;
 
     /* Bar visualizer_source settings */

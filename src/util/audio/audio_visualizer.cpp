@@ -7,12 +7,19 @@
 
 #include "audio_visualizer.hpp"
 #include "audio_processor.hpp"
+#include "../../source/visualizer_source.hpp"
+#include "fifo.hpp"
 
 namespace audio {
 
     audio_visualizer::audio_visualizer(source::config* cfg)
     {
         m_cfg = cfg;
+        if (cfg->audio_source == 0) {
+            m_processor = new fifo(cfg);
+        } else {
+            /* TODO: obs audio source processor */
+        }
     }
 
     audio_visualizer::~audio_visualizer()

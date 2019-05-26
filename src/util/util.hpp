@@ -36,17 +36,20 @@
 #define T_DETAIL                        T_("Spectralizer.Detail")
 #define T_REFRESH_RATE                  T_("Spectralizer.RefreshRate")
 #define T_AUDIO_SOURCE                  T_("Spectralizer.AudioSource")
-#define T_SOURCE_MPD                    T_("Spectralizer.Source.MPD.Fifo")
-#define T_FIFO_PATH                     T_("Spectralizer.Source.MPD.Fifo.Path")
+#define T_SOURCE_MPD                    T_("Spectralizer.Source.Fifo")
+#define T_FIFO_PATH                     T_("Spectralizer.Source.Fifo.Path")
 #define T_BAR_WIDTH                     T_("Spectralizer.Bar.Width")
 #define T_BAR_HEIGHT                    T_("Spectralizer.Bar.Height")
 #define T_SAMPLE_RATE                   T_("Spectralizer.SampleRate")
 #define T_BAR_SPACING                   T_("Spectralizer.Bar.Space")
 #define T_COLOR                         T_("Spectralizer.Color")
+#define T_GRAVITY                       T_("Spectralizer.Gravity")
+#define T_INTEGRAl                      T_("Spectralizer.Integral")
+#define T_SENSITIVITY                   T_("Spectralizer.Sensitivity")
 #define T_FILTER_MODE                   T_("Spectralizer.Filter.Mode")
 #define T_FILTER_NONE                   T_("Spectralizer.Filter.None")
 #define T_FILTER_MONSTERCAT             T_("Spectralizer.Filter.Monstercat")
-#define T_FILTER_WAVES                  T_("Spectralizer.Filter.Waves")
+#define T_FILTER_WAVES                  T_("Spectralizer.Filter.Wave")
 #define T_MONSTERCAT_FILTER_STRENGTH    T_("Spectralizer.Filter.Monstercat.Strength")
 
 #define S_SOURCE_MODE                   "source_mode"
@@ -61,8 +64,9 @@
 #define S_BAR_SPACE                     "bar_space"
 #define S_COLOR                         "color"
 #define S_FILTER_MODE                   "filter_mode"
-#define S_FILTER_MONSTERCAT             "filter_monstercat"
-#define S_FILTER_WAVES                  "filter_waves"
+#define S_GRAVITY                       "gravity"
+#define S_INTEGRAL                      "integral"
+#define S_SENSITIVITY                   "sensitivity"
 #define S_MONSTERCAT_FILTER_STRENGTH    "filter_strength"
 
 enum visual_mode

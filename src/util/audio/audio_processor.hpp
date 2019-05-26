@@ -70,7 +70,7 @@ namespace audio
         int16_t m_audio_out_r[AUDIO_SIZE]{}; /* Contains audio data read from audio source */
         int16_t m_audio_out_l[AUDIO_SIZE]{};
 
-        audio_processor(source::config* cfg);
+        explicit audio_processor(source::config* cfg);
 
         virtual ~audio_processor();
 

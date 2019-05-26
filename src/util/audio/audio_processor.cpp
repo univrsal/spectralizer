@@ -39,13 +39,17 @@ namespace audio
         m_eq_dist = 64. / cfg->detail;
         m_sleep_counter = 0.f;
 
-        /* Utility arrays*/
+        /* Utility arrays (bzalloc zeros the memory)*/
         m_fall_off = static_cast<int*>(bzalloc(cfg->detail * sizeof(int) * 2));
         m_last_freqs = static_cast<int*>(bzalloc(cfg->detail * sizeof(int) * 2));
         m_last_freqsd = static_cast<int*>(bzalloc(cfg->detail * sizeof(int) * 2));
+        m_freq_mem = static_cast<int*>(bzalloc(cfg->detail * sizeof(int) * 2));
+        m_freq_both = static_cast<int*>(bzalloc(cfg->detail * sizeof(int) * 2));
+
         m_low_freq_cut = static_cast<int*>(bzalloc(cfg->detail * sizeof(int)));
         m_high_freq_cut = static_cast<int*>(bzalloc(cfg->detail * sizeof(int)));
-        m_freq_mem = static_cast<int*>(bzalloc(cfg->detail * sizeof(int) * 2));
+        m_freq_l = static_cast<int*>(bzalloc(cfg->detail * sizeof(int)));
+        m_freq_r = static_cast<int*>(bzalloc(cfg->detail * sizeof(int)));
 
         m_freq_peak = static_cast<float*>(bzalloc(cfg->detail * sizeof(float)));
         m_freq_weight = static_cast<double*>(bzalloc(cfg->detail * sizeof(double)));
@@ -60,26 +64,17 @@ namespace audio
         m_fftw_plan_l = fftw_plan_dft_r2c_1d(m_buf_size, m_fftw_in_l, m_fftw_out_l, FFTW_MEASURE);
         m_fftw_plan_r = fftw_plan_dft_r2c_1d(m_buf_size, m_fftw_in_r, m_fftw_out_r, FFTW_MEASURE);
 
-        /* zero buffers */
-        bzero(m_audio_out_r, sizeof(int16_t) * AUDIO_SIZE);
-        bzero(m_audio_out_l, sizeof(int16_t) * AUDIO_SIZE);
-
-        bzero(m_fftw_out_l, sizeof(fftw_complex) * m_samples);
-        bzero(m_fftw_out_r, sizeof(fftw_complex) * m_samples);
-
-        bzero(m_fftw_in_l, sizeof(double) * m_samples);
-        bzero(m_fftw_in_r, sizeof(double) * m_samples);
-
         /* Misc caluclations, that only have to be done once per updated settings */
         double frequency_constant, pot, fre, fc;
         int n, smooth_index;
 
         m_current_gravity = cfg->gravity * ((float) cfg->bar_height / 2160) * pow((60 / (float) cfg->fps), 2.5);
-        frequency_constant = log10((float) cfg->freq_cutoff_high) / (1.f / (cfg->detail + 1.f) - 1);
+        frequency_constant = log10(cfg->freq_cutoff_low / ((float) cfg->freq_cutoff_high)) / (1.f / (cfg->detail + 1.f)
+                - 1);
 
         /* Caculate cut-off frequencies & and weigh frequencies */
         for (n = 0; n < cfg->detail + 1; n++) {
-            pot += frequency_constant * (-1);
+            pot = frequency_constant * (-1);
             pot += (n + 1.f) / (cfg->detail + 1.f) * frequency_constant;
             fc = cfg->freq_cutoff_high * pow(10, pot);
             fre = fc / (cfg->sample_rate / 2);
@@ -94,14 +89,19 @@ namespace audio
                     m_low_freq_cut[n] = m_low_freq_cut[n - 1] + 1;
                 m_high_freq_cut[n - 1] = m_low_freq_cut[n] - 1;
             }
+            debug("[%i] LFC: %i, HFC: %i", n, m_low_freq_cut[n], m_high_freq_cut[n]);
 
-            /* Weigh frequencies */
-            /* Smooth index grabs a smoothing value out of the predefined array of values */
-            smooth_index = UTIL_CLAMP(0, (int) floor(n * m_eq_dist), cfg->detail);
-            m_freq_weight[n] = pow(fc, .85);
-            m_freq_weight[n] *= (float) cfg->bar_height / pow(2, 28);
-            m_freq_weight[n] *= smoothing_values[smooth_index];
+            if (n < cfg->detail) {
+                /* Weigh frequencies */
+                /* Smooth index grabs a smoothing value out of the predefined array of values */
+                smooth_index = UTIL_CLAMP(0, (int) floor(n * m_eq_dist), 64);
+                m_freq_weight[n] = pow(fc, .85);
+                m_freq_weight[n] *= (float) cfg->bar_height / pow(2, 28);
+                m_freq_weight[n] *= smoothing_values[smooth_index];
+            }
+
         }
+        UNUSED_PARAMETER(nullptr);
     }
 
     void audio_processor::clean_up()
@@ -124,8 +124,12 @@ namespace audio
         bfree(m_freq_mem);
         bfree(m_freq_peak);
         bfree(m_freq_weight);
+        bfree(m_freq_l);
+        bfree(m_freq_r);
+        bfree(m_freq_both);
 
         /* Set to null for good measure */
+        m_freq_both = nullptr;
         m_fall_off = nullptr;
         m_last_freqs = nullptr;
         m_last_freqsd = nullptr;
@@ -134,11 +138,16 @@ namespace audio
         m_freq_mem = nullptr;
         m_freq_peak = nullptr;
         m_freq_weight = nullptr;
+        m_freq_l = nullptr;
+        m_freq_r = nullptr;
 
         m_fftw_in_l = nullptr;
         m_fftw_in_r = nullptr;
         m_fftw_out_l = nullptr;
         m_fftw_out_r = nullptr;
+
+        m_fftw_plan_l = nullptr;
+        m_fftw_plan_r = nullptr;
     }
 
     void audio_processor::tick(float seconds, source::config* cfg)
@@ -184,6 +193,7 @@ namespace audio
             m_can_draw = false;
             return;
         }
+
         int diff;
         double diff_d;
 
@@ -254,7 +264,8 @@ namespace audio
         double peak, amplitude, tmp;
         for (o = 0; o < detail; o++) {
             peak = 0;
-            for (i = m_low_freq_cut[o]; i <= m_high_freq_cut[o]; i++) {
+            for (i = 0; i < m_samples; i++) {
+                //for (i = m_low_freq_cut[o]; i <= m_high_freq_cut[o]; i++) {
                 if (left_channel)
                     amplitude = hypot(m_fftw_out_l[i][0], m_fftw_out_l[i][1]);
                 else

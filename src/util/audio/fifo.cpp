@@ -71,6 +71,11 @@ namespace audio
         return false;
     }
 
+    fifo::fifo(source::config* cfg) : audio_processor(cfg)
+    {
+        /* NO-OP */
+    }
+
     void* read_thread_method(void* arg)
     {
         auto fifo_instance = static_cast<fifo*>(arg);

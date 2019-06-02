@@ -74,7 +74,7 @@ void visualizer_source::update(obs_data_t* settings)
     m_config.detail             = obs_data_get_int(settings, S_DETAIL);
     m_config.fifo_path          = obs_data_get_string(settings, S_FIFO_PATH);
     m_config.bar_height         = obs_data_get_int(settings, S_BAR_HEIGHT);
-    m_config.sens               = obs_data_get_int(settings, S_SENSITIVITY) / 100.f;
+    m_config.sens               = obs_data_get_int(settings, S_SENSITIVITY) / 10.f;
     m_config.gravity            = obs_data_get_int(settings, S_GRAVITY) / 100.f;
     m_config.integral           = obs_data_get_int(settings, S_INTEGRAL) / 100.f;
     m_config.clamp              = obs_data_get_bool(settings, S_CLAMP);

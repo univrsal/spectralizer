@@ -73,7 +73,7 @@ namespace audio
         frequency_constant = log10(cfg->freq_cutoff_low / ((float) cfg->freq_cutoff_high)) / (1.f / (cfg->detail + 1.f)
                 - 1);
 
-        /* Caculate cut-off frequencies & and weigh frequencies */
+        /* Calculate cut-off frequencies & and weigh frequencies */
         for (n = 0; n < cfg->detail + 1; n++) {
             pot = frequency_constant * (-1);
             pot += (n + 1.f) / (cfg->detail + 1.f) * frequency_constant;
@@ -248,16 +248,16 @@ namespace audio
             }
 
             /* integral (?) */
-            if (cfg->integral > 0) {
-                m_freq_both[o] = m_freq_mem[o] * cfg->integral + m_freq_both[o];
-                m_freq_mem[o] = m_freq_both[o];
-
-                diff = (cfg->bar_height + 1) - m_freq_both[o];
-                if (diff < 0)
-                    diff = 0;
-                diff_d = 1. / (diff + 1);
-                m_freq_mem[o] = m_freq_mem[o] * (1 - diff_d / 20);
-            }
+//            if (cfg->integral > 0) {
+//                m_freq_both[o] = m_freq_mem[o] * cfg->integral + m_freq_both[o];
+//                m_freq_mem[o] = m_freq_both[o];
+//
+//                diff = (cfg->bar_height + 1) - m_freq_both[o];
+//                if (diff < 0)
+//                    diff = 0;
+//                diff_d = 1. / (diff + 1);
+//                m_freq_mem[o] = m_freq_mem[o] * (1 - diff_d / 20);
+//            }
 
             /* Remove zero values, to prevent dividing by zero */
             if (m_freq_both[o] < 1)

@@ -8,21 +8,25 @@
 #pragma once
 
 #include <obs-module.h>
+#include <vector>
 
 /* Logging */
 #define log_src(log_level, format, ...)                            \
     blog(log_level, "[spectralizer: '%s'] " format,             \
          obs_source_get_name(context->source), ##__VA_ARGS__)
-#define log(log_level, format, ...)                            \
+#define write_log(log_level, format, ...)                            \
     blog(log_level, "[spectralizer] " format, ##__VA_ARGS__)
 
 #define debug(format, ...)                      \
-    log(LOG_DEBUG, format, ##__VA_ARGS__)
+    write_log(LOG_DEBUG, format, ##__VA_ARGS__)
 #define info(format, ...)                       \
-    log(LOG_INFO, format, ##__VA_ARGS__)
+    write_log(LOG_INFO, format, ##__VA_ARGS__)
 #define warn(format, ...)                       \
-    log(LOG_WARNING, format, ##__VA_ARGS__)
+    write_log(LOG_WARNING, format, ##__VA_ARGS__)
 
+
+#define UTIL_EULER 2.7182818284590452353
+#define UTIL_SWAP(a, b) do { typeof(a) tmp = a; a = b; b = tmp; } while (0)
 #define UTIL_MAX(a, b)                  (((a) > (b)) ? (a) : (b))
 #define UTIL_MIN(a, b)                  (((a) < (b)) ? (a) : (b))
 #define UTIL_CLAMP(lower, x, upper) (UTIL_MIN(upper, UTIL_MAX(x, lower)))
@@ -73,5 +77,68 @@
 
 enum visual_mode
 {
-    VISUAL_BARS, VISUAL_WIRE
+    VM_BARS, VM_WIRE
+};
+
+enum smooting_mode
+{
+    SM_NONE = 0,
+    SM_MONSTERCAT,
+    SM_SGS
+};
+
+enum falloff
+{
+    FO_NONE = 0,
+    FO_FILL,
+    FO_TOP
+};
+
+enum channel_mode
+{
+    CM_LEFT = 0,
+    CM_RIGHT,
+    CM_BOTH
+};
+
+struct stereo_sample_frame
+{
+    int16_t l, r;
+};
+
+using pcm_stereo_sample = struct stereo_sample_frame;
+#define CNST	static const constexpr
+
+namespace defaults {
+    CNST channel_mode 	channel 		= CM_LEFT;
+    CNST visual_mode 	visual			= VM_BARS;
+    CNST smooting_mode	smoothing		= SM_NONE;
+    CNST uint32_t		color			= 0xffffffff;
+
+    CNST uint16_t		detail			= 32,
+                        cx				= 50,
+                        cy				= 50,
+                        fps				= 30;
+
+    CNST uint32_t		sample_rate		= 44100,
+                        buffer_size		= 8129,
+                        sample_size 	= sample_rate / fps;
+    CNST uint16_t		audio_source	= 0;
+
+    CNST double			lfreq_cut		= 30,
+                        hfreq_cut		= 22050,
+                        falloff_weight	= .95;
+    CNST uint32_t		sgs_points		= 3,		/* Should be a odd number */
+                        sgs_passes		= 2;
+
+    CNST double			mcat_smooth		= 1.5;
+    CNST uint32_t		mcat_bar_width	= 1,
+                        mcat_bar_space	= 0;
+
+    CNST uint16_t		bar_space		= 2,
+                        bar_width		= 5,
+                        bar_height		= 100,
+                        bar_min_height	= 5;
+
+    CNST char			*fifo_path		= "/tmp/mpd.fifo";
 };

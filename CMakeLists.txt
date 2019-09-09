@@ -1,5 +1,7 @@
 project(spectralizer)
 
+find_path(FFTW_INCLUDE_DIRS fftw3.h)
+find_library(FFTW_LIBRARIES fftw3)
 if (MSVC)
     set(spectralizer_PLATFORM_DEPS
             w32-pthreads)
@@ -22,14 +24,14 @@ set(spectralizer_SOURCES
         src/util/audio/fifo.hpp
         src/util/audio/audio_visualizer.cpp
         src/util/audio/audio_visualizer.hpp
-        src/util/audio/audio_processor.hpp
-        src/util/audio/audio_processor.cpp)
+        src/util/audio/audio_source.hpp
+        src/util/audio/audio_source.cpp)
 
 add_library(spectralizer MODULE
         ${spectralizer_SOURCES})
 target_link_libraries(spectralizer
         libobs
-        fftw3
+        ${FFTW_LIBRARIES}
         ${spectralizer_PLATFORM_DEPS})
-
+include_directories(${FFTW_INCLUDE_DIRS})
 install_obs_plugin_with_data(spectralizer data)

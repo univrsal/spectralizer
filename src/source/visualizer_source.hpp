@@ -8,6 +8,7 @@
 
 #include <cstdint>
 #include <obs-module.h>
+#include <mutex>
 #include "../util/util.hpp"
 
 namespace audio {
@@ -16,40 +17,54 @@ namespace audio {
 
 namespace source {
 
-enum filter_mode {
-    FILTER_NONE,
-    FILTER_MCAT,
-    FILTER_WAVES
-};
-
 struct config {
-    visual_mode mode = VISUAL_BARS;
-    /* Detail: Amount of bars / nodes in wire path */
-    uint16_t detail = 32, cx = 50, cy = 50;
-    uint16_t fps = 30;
-    float refresh_rate = 1.f / fps; /* TODO: unused? */
-    float refresh_counter = 0.f;
-    bool stereo = false, clamp = false;
+    std::mutex value_mutex;
+
+    /* obs source stuff */
     obs_source_t* source = nullptr;
     obs_data_t* settings = nullptr;
-    uint32_t sample_rate = 44100;
-    uint32_t color;
-    uint16_t audio_source = 0; /* Audio source id, 0 is fifo */
-    source::filter_mode filter_mode = source::FILTER_NONE;
-    bool auto_sens = false; /* TODO: Auto sens */
-    const char* fifo_path = nullptr;
+
+    /* Misc */
+    const char* fifo_path = defaults::fifo_path;
+
+    pcm_stereo_sample* buffer = nullptr;
+    double ignore = 0; /* Cut off lower peaks */
+
+    /* Appearance settings */
+    channel_mode channel = defaults::channel;
+    visual_mode visual = defaults::visual;
+    smooting_mode smoothing = defaults::smoothing;
+    uint32_t color = defaults::color;
+    uint16_t detail = defaults::detail,
+             cx = defaults::cx, cy = defaults::cy;
+    uint16_t fps = defaults::fps;
+    float refresh_rate = 1.f / fps,
+          refresh_counter = 0.f;
+
+    /* Audio settings */
+    uint32_t sample_rate = defaults::sample_rate;
+    uint32_t sample_size = defaults::sample_size;
+    uint16_t buffer_size = 8192;
+
+    uint16_t audio_source = defaults::audio_source;
+    double low_cutoff_freq = defaults::lfreq_cut;
+    double high_cutoff_freq = defaults::hfreq_cut;
+
+    /* smoothing */
+    uint32_t sgs_points = defaults::sgs_points,
+             sgs_passes = defaults::sgs_passes;
+
+    double mcat_smoothing_factor = defaults::mcat_smooth;
+    uint32_t mcat_bar_width = defaults::mcat_bar_width;
+    uint32_t mcat_bar_space = defaults::mcat_bar_space;
 
     /* Bar visualizer_source settings */
-    float gravity = 1.f, integral = 10.f / 100, sens = 100.f;
-    uint16_t bar_space = 2;
-    uint16_t bar_width = 5;
-    uint16_t bar_height = 100;
-    double mcat_strength = 0; /* Used in monstercat filter */
-
-    double ignore = 0; /* Cut off lower peaks */
-    /* Frequency cutting */
-    uint16_t freq_cutoff_low = 50, freq_cutoff_high = 10000;
-    uint8_t buffer_size = 16; /* Only values 8 - 16, will be squared in audio_processor */
+    uint16_t bar_space = defaults::bar_space;
+    uint16_t bar_width = defaults::bar_width;
+    uint16_t bar_height = defaults::bar_height;
+    uint16_t bar_min_height = defaults::bar_min_height;
+    double falloff_weight = defaults::falloff_weight;
+    bool clamp = true;
 };
 
 class visualizer_source

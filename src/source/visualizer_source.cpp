@@ -25,63 +25,64 @@ namespace source {
 
 visualizer_source::visualizer_source(obs_source_t* source, obs_data_t* settings)
 {
+    m_config.value_mutex.lock();
     m_config.settings = settings;
     m_config.source = source;
 
     /* Defaults are technically loaded by obs over update() */
-    m_config.stereo = false;
-    m_config.detail = 32;
-    m_config.mode = VISUAL_BARS;
-    m_config.refresh_rate = 1 / 30.f;
-    m_config.refresh_counter = 0.f;
-    m_config.sample_rate = 44100;
-    m_config.bar_space = 5;
-    m_config.bar_height = 100;
-    m_config.bar_width = 10;
     m_config.cx = m_config.detail * (m_config.bar_width + m_config.bar_space) - m_config.bar_space;
     m_config.cy = m_config.bar_height;
-    m_config.color = 0x440044ff;
-    m_config.fifo_path = "/tmp/mpd.fifo";
 
+    m_config.buffer = static_cast<pcm_stereo_sample*>(bzalloc(m_config.sample_size * sizeof(pcm_stereo_sample)));
     obs_source_update(source, settings);
 
-    switch (m_config.mode) {
-        case VISUAL_BARS:
+    switch (m_config.visual) {
+        case VM_BARS:
             m_visualizer = new audio::spectrum_visualizer(&m_config);
             break;
         default:;
     }
+    m_config.value_mutex.unlock();
 }
 
 visualizer_source::~visualizer_source()
 {
-    /* NO-OP (?) */
     delete m_visualizer;
     m_visualizer = nullptr;
+
+    if (m_config.buffer) {
+        bfree(m_config.buffer);
+        m_config.buffer = nullptr;
+    }
 }
 
 void visualizer_source::update(obs_data_t* settings)
 {
-    m_config.sample_rate        = (uint32_t) obs_data_get_int(settings, S_SAMPLE_RATE);
-    m_config.fps                = UTIL_MAX(obs_data_get_int(settings, S_REFRESH_RATE), 1 );
-    m_config.refresh_rate       = 1. / m_config.fps;
-    m_config.audio_source       = obs_data_get_int(settings, S_AUDIO_SOURCE);
-    m_config.mode               = static_cast<visual_mode>(obs_data_get_int(settings, S_SOURCE_MODE));
-    m_config.stereo             = obs_data_get_bool(settings, S_STEREO);
+    m_config.value_mutex.lock();
+
+    m_config.sample_rate        = obs_data_get_int(settings, S_SAMPLE_RATE);
+    m_config.fps                = UTIL_MAX(obs_data_get_int(settings, S_REFRESH_RATE), 1);
+    m_config.sample_size		= m_config.sample_rate / m_config.fps;
+    m_config.refresh_rate       = 1.f / m_config.fps;
+    m_config.audio_source       = (uint16_t) obs_data_get_int(settings, S_AUDIO_SOURCE);
+    m_config.visual             = (visual_mode) (obs_data_get_int(settings, S_SOURCE_MODE));
+    m_config.channel            = (channel_mode) obs_data_get_bool(settings, S_STEREO);
     m_config.color              = obs_data_get_int(settings, S_COLOR);
     m_config.bar_width          = obs_data_get_int(settings, S_BAR_WIDTH);
     m_config.bar_space          = obs_data_get_int(settings, S_BAR_SPACE);
     m_config.detail             = obs_data_get_int(settings, S_DETAIL);
     m_config.fifo_path          = obs_data_get_string(settings, S_FIFO_PATH);
     m_config.bar_height         = obs_data_get_int(settings, S_BAR_HEIGHT);
-    m_config.sens               = obs_data_get_int(settings, S_SENSITIVITY) / 10.f;
-    m_config.gravity            = obs_data_get_int(settings, S_GRAVITY) / 100.f;
-    m_config.integral           = obs_data_get_int(settings, S_INTEGRAL) / 100.f;
-    m_config.clamp              = obs_data_get_bool(settings, S_CLAMP);
+    m_config.clamp				= obs_data_get_bool(settings, S_CLAMP);
 
     m_config.cx                 = UTIL_MAX(m_config.detail * (m_config.bar_width + m_config.bar_space) - m_config
             .bar_space, 10);
     m_config.cy                 = UTIL_MAX(m_config.bar_height, 10);
+
+    if (m_visualizer)
+        m_visualizer->update();
+
+    m_config.value_mutex.unlock();
 }
 
 void visualizer_source::tick(float seconds)
@@ -120,17 +121,17 @@ obs_properties_t* get_properties_for_visualiser(void* data)
 
     auto mode = obs_properties_add_list(props, S_SOURCE_MODE, T_SOURCE_MODE, OBS_COMBO_TYPE_LIST,
             OBS_COMBO_FORMAT_INT);
-    obs_property_list_add_int(mode, T_MODE_BARS, VISUAL_BARS);
-    obs_property_list_add_int(mode, T_MODE_WIRE, VISUAL_WIRE);
+    obs_property_list_add_int(mode, T_MODE_BARS, (int) VM_BARS);
+    obs_property_list_add_int(mode, T_MODE_WIRE, (int) VM_WIRE);
 
     auto src = obs_properties_add_list(props, S_AUDIO_SOURCE, T_AUDIO_SOURCE, OBS_COMBO_TYPE_LIST,
                                         OBS_COMBO_FORMAT_INT);
     auto filter = obs_properties_add_list(props, S_FILTER_MODE, T_FILTER_MODE, OBS_COMBO_TYPE_LIST,
                                         OBS_COMBO_FORMAT_INT);
 
-    obs_property_list_add_int(filter, T_FILTER_NONE, FILTER_NONE);
-    obs_property_list_add_int(filter, T_FILTER_MONSTERCAT, FILTER_MCAT);
-    obs_property_list_add_int(filter, T_FILTER_WAVES, FILTER_WAVES);
+    obs_property_list_add_int(filter, T_FILTER_NONE, (int) SM_NONE);
+    obs_property_list_add_int(filter, T_FILTER_MONSTERCAT, (int) SM_MONSTERCAT);
+    obs_property_list_add_int(filter, T_FILTER_WAVES, (int) SM_SGS);
 
     obs_properties_add_float_slider(props, S_MONSTERCAT_FILTER_STRENGTH, T_MONSTERCAT_FILTER_STRENGTH, 0, 15, 0.1);
     obs_properties_add_bool(props, S_CLAMP, T_CLAMP);
@@ -166,7 +167,7 @@ void register_visualiser()
 {
 
 #ifdef LINUX
-    /* Connect to mpd, otherwise disable fifo TODO: remove? reading is done in separate thread */
+    /* Connect to mpd, otherwise disable fifo */
     local_mpd_connection = mpd_connection_new(nullptr, 0, 0);
 #endif
 
@@ -197,23 +198,23 @@ void register_visualiser()
 
     si.get_defaults = [](obs_data_t* settings)
     {
-        obs_data_set_default_int(settings, S_DETAIL, 32);
-        obs_data_set_default_double(settings, S_REFRESH_RATE, 30);
+        obs_data_set_default_int(settings, S_DETAIL, defaults::detail);
+        obs_data_set_default_double(settings, S_REFRESH_RATE, defaults::fps);
         obs_data_set_default_bool(settings, S_STEREO, false);
         obs_data_set_default_bool(settings, S_CLAMP, false);
-        obs_data_set_default_int(settings, S_SOURCE_MODE, VISUAL_BARS);
-        obs_data_set_default_int(settings, S_AUDIO_SOURCE, 0);
-        obs_data_set_default_int(settings, S_SAMPLE_RATE, 44100);
-        obs_data_set_default_int(settings, S_FILTER_MODE, FILTER_NONE);
+        obs_data_set_default_int(settings, S_SOURCE_MODE, (int) VM_BARS);
+        obs_data_set_default_int(settings, S_AUDIO_SOURCE, defaults::audio_source);
+        obs_data_set_default_int(settings, S_SAMPLE_RATE, defaults::sample_rate);
+        obs_data_set_default_int(settings, S_FILTER_MODE, (int) SM_NONE);
         obs_data_set_default_double(settings, S_MONSTERCAT_FILTER_STRENGTH, 0);
         obs_data_set_default_int(settings, S_GRAVITY, 100);
         obs_data_set_default_int(settings, S_INTEGRAL, 10);
         obs_data_set_default_int(settings, S_SENSITIVITY, 100);
-        obs_data_set_default_string(settings, S_FIFO_PATH, "/tmp/mpd.fifo");
+        obs_data_set_default_string(settings, S_FIFO_PATH, defaults::fifo_path);
 
-        obs_data_set_default_int(settings, S_BAR_WIDTH, 15);
-        obs_data_set_default_int(settings, S_BAR_HEIGHT, 200);
-        obs_data_set_default_int(settings, S_BAR_SPACE, 5);
+        obs_data_set_default_int(settings, S_BAR_WIDTH, defaults::bar_width);
+        obs_data_set_default_int(settings, S_BAR_HEIGHT, defaults::bar_height);
+        obs_data_set_default_int(settings, S_BAR_SPACE, defaults::bar_space);
     };
 
     si.update = [](void* data, obs_data_t* settings)

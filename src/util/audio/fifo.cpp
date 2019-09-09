@@ -11,95 +11,89 @@
 #include <fcntl.h>
 #include <util/platform.h>
 
+#define MAX_READ_ATTEMPTS   100
+#define READ_ATTEMPT_SLEEP  1L * 1000000L
+
 namespace audio
 {
-    void fifo::update(source::config* cfg)
+    fifo::fifo(source::config* cfg) : audio_source(cfg)
     {
-        audio_processor::update(cfg);
-        m_file_path = cfg->fifo_path;
-        if (!open_fifo())
-            warn("Failed to open fifo");
-        else
-            debug("Opened fifo@%s:%i", m_file_path, m_fifo_handle);
+        open_fifo();
     }
 
-    void fifo::tick(float seconds, source::config* cfg)
+    void fifo::update(source::config* cfg)
     {
-        if (!m_fifo_handle) {
-            m_retry_timer += seconds;
-            if (m_retry_timer < 5) {
-                return;
-            } else {
-                m_retry_timer = 0.f;
-                if (!open_fifo())
-                    return;
-            }
-        }
+        audio_source::update(cfg);
+        m_file_path = cfg->fifo_path;
+        open_fifo();
+    }
 
-        bytes = read(m_fifo_handle, buffer, sizeof(buffer));
-        if (bytes < 1) {
-            os_sleep_ms(10);
-            c++; /* haha */
-            if (c > 10) {
-                bzero(m_audio_out_l, sizeof(int16_t) * AUDIO_SIZE);
-                bzero(m_audio_out_r, sizeof(int16_t) * AUDIO_SIZE);
-                c = 0;
-                /* Reopen fifo */
-                m_data_mutex.unlock();
-                if (!open_fifo())
-                    return;
-            }
-        } else {
-            c = 0;
+    bool fifo::tick(float seconds, source::config* cfg)
+    {
+        if (m_fifo_fd < 0 && !open_fifo())
+            return false;
+        auto buffer_size_bytes =
+                static_cast<size_t>(sizeof(pcm_stereo_sample) * cfg->sample_size);
+        size_t bytes_left = buffer_size_bytes;
+        auto attempts = 0;
+        memset(cfg->buffer, 0, buffer_size_bytes);
 
-            for (i = 0; i < BUFFER_SIZE / 2; i += 2) {
+        while (bytes_left > 0) {
+            int64_t bytes_read = read(m_fifo_fd, cfg->buffer, bytes_left);
 
-                if (get_channels() == 1) {
-                    m_audio_out_l[n] = (buffer[i] + buffer[i + 1]) / 2;
+            if (bytes_read == 0) {
+                debug("Could not read any bytes");
+                return false;
+            } else if (bytes_read == -1) {
+                if (errno == EAGAIN) {
+                    if (attempts > MAX_READ_ATTEMPTS) {
+                        debug("Couldn't finish reading buffer, bytes read: %d,"
+                             "buffer size: %d", bytes_read, buffer_size_bytes);
+                        memset(cfg->buffer, 0, buffer_size_bytes);
+                        close(m_fifo_fd);
+                        m_fifo_fd = -1;
+                        return false;
+                    }
+                    /* TODO: Sleep? Would delay thread */
+                    ++attempts;
                 } else {
-                    m_audio_out_l[n] = buffer[i];
-                    m_audio_out_r[n] = buffer[i + 1];
+                    debug("Error reading file: %d %s", errno, strerror(errno));
                 }
-                n++;
-                if (n >= get_buffer_size() - 1)
-                    n = 0;
+            } else {
+                bytes_left -= (size_t) bytes_read;
             }
         }
-
-        audio_processor::tick(seconds, cfg);
+        audio_source::tick(seconds, cfg);
+        return true;
     }
 
     void fifo::clean_up()
     {
-        audio_processor::clean_up();
-        if (m_fifo_handle)
-            close(m_fifo_handle);
-        m_fifo_handle = 0;
+        audio_source::clean_up();
+        if (m_fifo_fd)
+            close(m_fifo_fd);
+        m_fifo_fd = 0;
     }
 
 
     bool fifo::open_fifo()
     {
-        if (m_fifo_handle)
-            close(m_fifo_handle);
+        if (m_fifo_fd)
+            close(m_fifo_fd);
 
         if (m_file_path && strlen(m_file_path) > 0) {
-            m_fifo_handle = open(m_file_path, O_RDONLY);
+            m_fifo_fd = open(m_file_path, O_RDONLY);
 
-            if (m_fifo_handle < 0) {
+            if (m_fifo_fd < 0) {
                 warn("Failed to open fifo '%s'", m_file_path);
             } else {
-                /* Set to non blocking reading (doesn't really work I think) */
-                int flags = fcntl(m_fifo_handle, F_GETFL, 0);
-                fcntl(m_fifo_handle, F_SETFL, flags | O_NONBLOCK);
-                return true;
+                auto flags = fcntl(m_fifo_fd, F_GETFL, 0);
+                auto ret = fcntl(m_fifo_fd, F_SETFL, flags | O_NONBLOCK);
+                if (ret < 0)
+                    warn("Failed to set fifo flags!");
+                return ret >= 0;
             }
         }
         return false;
-    }
-
-    fifo::fifo(source::config* cfg) : audio_processor(cfg)
-    {
-        /* NO-OP */
     }
 } /* namespace audio */

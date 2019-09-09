@@ -16,13 +16,16 @@ namespace source
 
 namespace audio
 {
-    class audio_processor;
+    class audio_source;
 
     class audio_visualizer
     {
     protected:
-        audio::audio_processor* m_processor = nullptr;
+        audio::audio_source* m_source = nullptr;
         source::config* m_cfg = nullptr;
+        uint16_t m_source_id = 0; /* where to read audio from */
+        bool m_data_read = false; /* Audio source will return false if reading failed */
+
     public:
         audio_visualizer(source::config* cfg);
         virtual ~audio_visualizer();

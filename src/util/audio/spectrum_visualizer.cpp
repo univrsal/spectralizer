@@ -28,14 +28,7 @@ namespace audio
           m_fftw_plan_left(nullptr), m_fftw_plan_right(nullptr),
           m_fftw_results(0), m_silent_runs(0u), m_last_bar_count(0)
     {
-        m_fftw_results = (size_t) cfg->sample_size / 2 + 1;
-        m_fftw_input_left = (double*) fftw_malloc(sizeof(double) * cfg->sample_size);
-        m_fftw_input_right = (double*) fftw_malloc(sizeof(double) * cfg->sample_size);
-
-        m_fftw_output_left = (fftw_complex*) fftw_malloc(sizeof(fftw_complex)
-                                                         * m_fftw_results);
-        m_fftw_output_right = (fftw_complex*) fftw_malloc(sizeof(fftw_complex)
-                                                         * m_fftw_results);
+        update();
     }
 
     spectrum_visualizer::~spectrum_visualizer()
@@ -123,21 +116,18 @@ namespace audio
             fftw_execute(m_fftw_plan_left);
 
             create_spectrum_bars(m_fftw_output_left, m_fftw_results, height,
-                                 m_cfg->detail, &m_bars_left, &m_bars_falloff_left);
-            create_spectrum_bars(m_fftw_output_right, m_fftw_results, height,
-                                 m_cfg->detail, &m_bars_right, &m_bars_falloff_right);
+                                 m_cfg->detail, &m_bars_left_new, &m_bars_falloff_left);
+            if (m_cfg->channel == CM_BOTH)
+                create_spectrum_bars(m_fftw_output_right, m_fftw_results, height,
+                                 m_cfg->detail, &m_bars_right_new, &m_bars_falloff_right);
+
+            m_bars_left.resize(m_bars_left_new.size());
+            for (int i = 0; i < m_bars_left.size(); i++)
+                m_bars_left[i] = (m_bars_left[i] * 2 + m_bars_left_new[i] + 3) / 3;
 
             fftw_destroy_plan(m_fftw_plan_left);
             if (m_cfg->channel == CM_BOTH)
                 fftw_destroy_plan(m_fftw_plan_right);
-
-            create_spectrum_bars(m_fftw_output_left, m_fftw_results, height,
-                                 m_cfg->detail, &m_bars_left,
-                                 &m_bars_falloff_left);
-            create_spectrum_bars(m_fftw_output_right, m_fftw_results, height,
-                                 m_cfg->detail, &m_bars_right,
-                                 &m_bars_falloff_right);
-
         } else {
             debug("No input sleeping for %d ms.", 250);
             m_sleeping = true;
@@ -152,7 +142,7 @@ namespace audio
             int i = -1, pos_x = 0;
             for (auto val : m_bars_left) {
                 i++;
-                if (val < 0.01) {
+                if (val <= 1) {
                     if (m_cfg->clamp)
                         val = m_cfg->bar_min_height;
                     else

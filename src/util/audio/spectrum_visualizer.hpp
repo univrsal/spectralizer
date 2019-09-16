@@ -40,7 +40,9 @@ namespace audio
         doublev m_frequency_constants_per_bin;
 
         uint64_t m_silent_runs; /* determines sleep state */
-        doublev m_bars_left, m_bars_right;
+        /* New values are smoothly copied over if smoothing is used
+         * otherwise they're directly copied */
+        doublev m_bars_left, m_bars_right, m_bars_left_new, m_bars_right_new;
         doublev m_bars_falloff_left, m_bars_falloff_right;
         doublev m_previous_max_heights;
         doublev m_monstercat_smoothing_weights;

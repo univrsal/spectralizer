@@ -53,8 +53,12 @@
 #define T_FILTER_MODE                   T_("Spectralizer.Filter.Mode")
 #define T_FILTER_NONE                   T_("Spectralizer.Filter.None")
 #define T_FILTER_MONSTERCAT             T_("Spectralizer.Filter.Monstercat")
-#define T_FILTER_WAVES                  T_("Spectralizer.Filter.Wave")
-#define T_MONSTERCAT_FILTER_STRENGTH    T_("Spectralizer.Filter.Monstercat.Strength")
+#define T_MCAT_BAR_SPACE				T_("Spectralizer.Filter.Monstercat.Bar.Space")
+#define T_MCAT_BAR_WIDTH				T_("Spectralizer.Filter.Monstercat.Bar.Width")
+#define T_FILTER_SGS					T_("Spectralizer.Filter.SGS")
+#define T_SGS_PASSES					T_("Spectralizer.Filter.SGS.Passes")
+#define T_SGS_POINTS					T_("Spectralizer.Filter.SGS.Points")
+#define T_FILTER_STRENGTH    			T_("Spectralizer.Filter.Strength")
 #define T_CLAMP                         T_("Spectralizer.Clamp")
 
 #define S_SOURCE_MODE                   "source_mode"
@@ -69,10 +73,14 @@
 #define S_BAR_SPACE                     "bar_space"
 #define S_COLOR                         "color"
 #define S_FILTER_MODE                   "filter_mode"
+#define S_SGS_PASSES					"sgs_passes"
+#define S_SGS_POINTS					"sgs_points"
+#define S_MCAT_BAR_SPACE				"mcat_bar_space"
+#define S_MCAT_BAR_WIDTH				"mcat_bar_width"
 #define S_GRAVITY                       "gravity"
 #define S_INTEGRAL                      "integral"
 #define S_SENSITIVITY                   "sensitivity"
-#define S_MONSTERCAT_FILTER_STRENGTH    "filter_strength"
+#define S_FILTER_STRENGTH   			"filter_strength"
 #define S_CLAMP                         "clamp"
 
 enum visual_mode
@@ -107,38 +115,38 @@ struct stereo_sample_frame
 };
 
 using pcm_stereo_sample = struct stereo_sample_frame;
-#define CNST	static const constexpr
+#define CNST		static const constexpr
 
 namespace defaults {
     CNST channel_mode 	channel 		= CM_LEFT;
     CNST visual_mode 	visual			= VM_BARS;
     CNST smooting_mode	smoothing		= SM_NONE;
-    CNST uint32_t		color			= 0xffffffff;
+    CNST uint32_t	color			= 0xffffffff;
 
-    CNST uint16_t		detail			= 32,
-                        cx				= 50,
-                        cy				= 50,
-                        fps				= 30;
+    CNST uint16_t	detail			= 32,
+                        cx			= 50,
+                        cy			= 50,
+                        fps			= 30;
 
-    CNST uint32_t		sample_rate		= 44100,
+    CNST uint32_t	sample_rate		= 44100,
                         buffer_size		= 8129,
-                        sample_size 	= sample_rate / fps;
-    CNST uint16_t		audio_source	= 0;
+                        sample_size 		= sample_rate / fps;
+    CNST uint16_t	audio_source		= 0;
 
-    CNST double			lfreq_cut		= 30,
+    CNST double		lfreq_cut		= 30,
                         hfreq_cut		= 22050,
-                        falloff_weight	= .95;
-    CNST uint32_t		sgs_points		= 3,		/* Should be a odd number */
+                        falloff_weight		= .95;
+    CNST uint32_t	sgs_points		= 3,		/* Should be a odd number */
                         sgs_passes		= 2;
 
-    CNST double			mcat_smooth		= 1.5;
-    CNST uint32_t		mcat_bar_width	= 1,
-                        mcat_bar_space	= 0;
+    CNST double		mcat_smooth		= 1.5;
+    CNST uint32_t	mcat_bar_width		= 1,
+                        mcat_bar_space		= 0;
 
-    CNST uint16_t		bar_space		= 2,
+    CNST uint16_t	bar_space		= 2,
                         bar_width		= 5,
                         bar_height		= 100,
-                        bar_min_height	= 5;
+                        bar_min_height		= 5;
 
-    CNST char			*fifo_path		= "/tmp/mpd.fifo";
+    CNST char		*fifo_path		= "/tmp/mpd.fifo";
 };

@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <obs-module.h>
 #include <mutex>
+#include <map>
 #include "../util/util.hpp"
 
 namespace audio {
@@ -69,6 +70,7 @@ struct config {
 
 class visualizer_source
 {
+    std::map<int, obs_source_t*> m_audio_sources;
     config m_config;
     audio::audio_visualizer* m_visualizer = nullptr;
 public:
@@ -84,6 +86,18 @@ public:
 
     uint32_t get_height() const
     { return m_config.cy; }
+
+    void add_audio_source(int index, obs_source_t *source)
+    {
+            m_audio_sources[index] = source;
+    }
+
+    void clear_audio_sources()
+    {
+            for (auto& src : m_audio_sources) {
+                    obs_source_release(src.second);
+            }
+    }
 };
 
 /* Util for registering the source */

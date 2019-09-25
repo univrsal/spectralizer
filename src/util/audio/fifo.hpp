@@ -1,14 +1,24 @@
-/**
+/*************************************************************************
  * This file is part of spectralizer
- * which is licensed under the GPL v2.0
- * See LICENSE or http://www.gnu.org/licenses
- * github.com/univrsal/spectralizer
- */
+ * github.con/univrsal/spectralizer
+ * Copyright 2019 univrsal <universailp@web.de>.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 2 of the License.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *************************************************************************/
 
 #ifdef LINUX
 
 #include "audio_source.hpp"
-#include <poll.h>
 
 namespace audio
 {
@@ -22,8 +32,8 @@ namespace audio
     public:
         fifo(source::config* cfg);
 
-        void update(source::config* cfg) override;
-        bool tick(float seconds, source::config* cfg) override;
+        void update() override;
+        bool tick(float seconds) override;
         void clean_up() override;
     };
 

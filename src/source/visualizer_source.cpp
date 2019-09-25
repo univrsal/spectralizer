@@ -1,9 +1,20 @@
-/**
+/*************************************************************************
  * This file is part of spectralizer
- * which is licensed under the GPL v2.0
- * See LICENSE or http://www.gnu.org/licenses
- * github.com/univrsal/spectralizer
- */
+ * github.con/univrsal/spectralizer
+ * Copyright 2019 univrsal <universailp@web.de>.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 2 of the License.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *************************************************************************/
 
 #include "visualizer_source.hpp"
 #include "../util/util.hpp"
@@ -21,12 +32,14 @@ struct mpd_connection* local_mpd_connection = nullptr;
 struct mpd_status* local_mpd_state = nullptr;
 
 #endif
-namespace source {
+namespace source
+{
 
 static auto fifo_filter = "Fifo file(*.fifo);;"
                           "All Files (*.*)";
 
-struct enum_data {
+struct enum_data
+{
     visualizer_source *vis;
     obs_property *list;
     int *index;
@@ -82,7 +95,6 @@ bool enum_audio_sources(void *data, obs_source_t *source)
 void visualizer_source::update(obs_data_t* settings)
 {
     m_config.value_mutex.lock();
-
     m_config.sample_rate        = obs_data_get_int(settings, S_SAMPLE_RATE);
     m_config.fps                = UTIL_MAX(obs_data_get_int(settings, S_REFRESH_RATE), 1);
     m_config.sample_size		= m_config.sample_rate / m_config.fps;
@@ -138,8 +150,13 @@ bool reload_audio_sources(obs_properties_t *props, obs_property_t *prop, void* d
 
 void visualizer_source::tick(float seconds)
 {
-    if (m_visualizer)
-        m_visualizer->tick(seconds);
+    m_config.refresh_counter += seconds;
+
+    if (m_config.refresh_counter >= m_config.refresh_rate) {
+        if (m_visualizer)
+            m_visualizer->tick(seconds);
+        m_config.refresh_counter = 0.f;
+    }
 }
 
 void visualizer_source::render(gs_effect_t* effect)
@@ -221,11 +238,16 @@ obs_properties_t* get_properties_for_visualiser(void* data)
     obs_property_set_visible(obs_properties_add_int(props, S_MCAT_BAR_WIDTH, T_MCAT_BAR_WIDTH, 1, 32, 1), false);
 
     obs_properties_add_bool(props, S_CLAMP, T_CLAMP);
-    obs_properties_add_int(props, S_BAR_WIDTH, T_BAR_WIDTH, 1, UINT16_MAX, 1);
-    obs_properties_add_int(props, S_BAR_HEIGHT, T_BAR_HEIGHT, 10, UINT16_MAX, 1);
-    obs_properties_add_int(props, S_BAR_SPACE, T_BAR_SPACING, 0, UINT16_MAX, 1);
-    obs_properties_add_int(props, S_SAMPLE_RATE, T_SAMPLE_RATE, 128, UINT16_MAX, 10);
     obs_properties_add_color(props, S_COLOR, T_COLOR);
+    auto* w = obs_properties_add_int(props, S_BAR_WIDTH, T_BAR_WIDTH, 1, UINT16_MAX, 1);
+    auto* h = obs_properties_add_int(props, S_BAR_HEIGHT, T_BAR_HEIGHT, 10, UINT16_MAX, 1);
+    auto* s = obs_properties_add_int(props, S_BAR_SPACE, T_BAR_SPACING, 0, UINT16_MAX, 1);
+    auto* sr = obs_properties_add_int(props, S_SAMPLE_RATE, T_SAMPLE_RATE, 128, UINT16_MAX, 10);
+    obs_property_int_set_suffix(sr, " Hz");
+    obs_property_int_set_suffix(w, " Pixel");
+    obs_property_int_set_suffix(h, " Pixel");
+    obs_property_int_set_suffix(s, " Pixel");
+
 
     /* Smoothing stuff */
     obs_properties_add_float_slider(props, S_GRAVITY, T_GRAVITY, 0, 2, 0.01);
@@ -244,7 +266,8 @@ obs_properties_t* get_properties_for_visualiser(void* data)
     obs_properties_add_bool(props, S_STEREO, T_STEREO);
     obs_properties_add_int(props, S_DETAIL, T_DETAIL, 1, UINT16_MAX, 1);
 
-    obs_properties_add_int(props, S_REFRESH_RATE, T_REFRESH_RATE, 1, 255, 5);
+    auto* fps = obs_properties_add_int(props, S_REFRESH_RATE, T_REFRESH_RATE, 1, 255, 5);
+    obs_property_int_set_suffix(fps, " FPS");
     return props;
 }
 

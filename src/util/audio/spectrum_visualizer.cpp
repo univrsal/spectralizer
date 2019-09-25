@@ -1,9 +1,20 @@
-/**
+/*************************************************************************
  * This file is part of spectralizer
- * which is licensed under the GPL v2.0
- * See LICENSE or http://www.gnu.org/licenses
- * github.com/univrsal/spectralizer
- */
+ * github.con/univrsal/spectralizer
+ * Copyright 2019 univrsal <universailp@web.de>.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 2 of the License.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *************************************************************************/
 
 #include <numeric>
 #include <algorithm>
@@ -17,7 +28,7 @@ const double k_autoscaling_reset_window_percent = 0.10;
 const double k_autoscaling_erase_percent_on_reset = 0.75;
 const double k_deviation_amount_to_reset =
         1.0; // amount of deviation needed between short term and long term moving
-// max height averages to trigger an auto scaling reset
+             // max height averages to trigger an auto scaling reset
 
 namespace audio
 {
@@ -134,7 +145,7 @@ namespace audio
         }
     }
 
-    void spectrum_visualizer::render(gs_effect_t* effect)
+    void spectrum_visualizer::render(gs_effect_t *effect)
     {
         if (m_cfg->channel == CM_BOTH) {
 
@@ -159,15 +170,13 @@ namespace audio
         UNUSED_PARAMETER(effect);
     }
 
-    bool spectrum_visualizer::prepare_fft_input(pcm_stereo_sample* buffer, uint32_t sample_size, double* fftw_input,
+    bool spectrum_visualizer::prepare_fft_input(pcm_stereo_sample *buffer, uint32_t sample_size, double *fftw_input,
                                                 channel_mode channel_mode)
     {
         bool is_silent = true;
 
-        for (auto i = 0u; i < sample_size; ++i)
-        {
-            switch (channel_mode)
-            {
+        for (auto i = 0u; i < sample_size; ++i) {
+            switch (channel_mode) {
                 case CM_LEFT:
                     fftw_input[i] = buffer[i].l;
                     break;
@@ -180,27 +189,24 @@ namespace audio
             }
 
             if (is_silent && fftw_input[i] > 0)
-            {
                 is_silent = false;
-            }
         }
 
         return is_silent;
     }
 
-    void spectrum_visualizer::smooth_bars(doublev *bars)
-    {
-        switch (m_cfg->smoothing)
-        {
-            case SM_MONSTERCAT:
-                monstercat_smoothing(bars);
-            break;
-            case SM_SGS:
-                sgs_smoothing(bars);
-            break;
-            default:;
-        }
-    }
+	void spectrum_visualizer::smooth_bars(doublev *bars)
+	{
+		switch (m_cfg->smoothing) {
+			case SM_MONSTERCAT:
+				monstercat_smoothing(bars);
+				break;
+			case SM_SGS:
+				sgs_smoothing(bars);
+				break;
+			default:;
+		}
+	}
 
     void spectrum_visualizer::sgs_smoothing(doublev *bars)
     {
@@ -209,23 +215,19 @@ namespace audio
         auto smoothing_passes = m_cfg->sgs_passes;
         auto smoothing_points = m_cfg->sgs_points;
 
-        for (auto pass = 0u; pass < smoothing_passes; ++pass)
-        {
+        for (auto pass = 0u; pass < smoothing_passes; ++pass) {
             auto pivot = static_cast<uint32_t>(std::floor(smoothing_points / 2.0));
 
-            for (auto i = 0u; i < pivot; ++i)
-            {
+            for (auto i = 0u; i < pivot; ++i) {
                 (*bars)[i] = original_bars[i];
                 (*bars)[original_bars.size() - i - 1] =
                         original_bars[original_bars.size() - i - 1];
             }
 
             auto smoothing_constant = 1.0 / (2.0 * pivot + 1.0);
-            for (auto i = pivot; i < (original_bars.size() - pivot); ++i)
-            {
+            for (auto i = pivot; i < (original_bars.size() - pivot); ++i) {
                 auto sum = 0.0;
-                for (auto j = 0u; j <= (2 * pivot); ++j)
-                {
+                for (auto j = 0u; j <= (2 * pivot); ++j) {
                     sum += (smoothing_constant * original_bars[i + j - pivot]) + j -
                            pivot;
                 }
@@ -233,8 +235,7 @@ namespace audio
             }
 
             // prepare for next pass
-            if (pass < (smoothing_passes - 1))
-            {
+            if (pass < (smoothing_passes - 1)) {
                 original_bars = *bars;
             }
         }
@@ -246,11 +247,9 @@ namespace audio
 
         // re-compute weights if needed, this is a performance tweak to computer the
         // smoothing considerably faster
-        if (m_monstercat_smoothing_weights.size() != bars->size())
-        {
+        if (m_monstercat_smoothing_weights.size() != bars->size()) {
             m_monstercat_smoothing_weights.reserve(bars->size());
-            for (auto i = 0u; i < bars->size(); ++i)
-            {
+            for (auto i = 0u; i < bars->size(); ++i) {
                 m_monstercat_smoothing_weights[i] =
                         std::pow(m_cfg->mcat_smoothing_factor, i);
             }
@@ -259,20 +258,14 @@ namespace audio
         // apply monstercat sytle smoothing
         // Since this type of smoothing smoothes the bars around it, doesn't make
         // sense to smooth the first value so skip it.
-        for (auto i = 1l; i < bars_length; ++i)
-        {
+        for (auto i = 1l; i < bars_length; ++i) {
             auto outer_index = static_cast<size_t>(i);
 
-            if ((*bars)[outer_index] < m_cfg->bar_min_height)
-            {
+            if ((*bars)[outer_index] < m_cfg->bar_min_height) {
                 (*bars)[outer_index] = m_cfg->bar_min_height;
-            }
-            else
-            {
-                for (int64_t j = 0; j < bars_length; ++j)
-                {
-                    if (i != j)
-                    {
+            } else {
+                for (int64_t j = 0; j < bars_length; ++j) {
+                    if (i != j) {
                         const auto index = static_cast<size_t>(j);
                         const auto weighted_value =
                                 (*bars)[outer_index] /
@@ -285,9 +278,7 @@ namespace audio
                         // which
                         // is often
                         if ((*bars)[index] < weighted_value)
-                        {
                             (*bars)[index] = weighted_value;
-                        }
                     }
                 }
             }
@@ -298,14 +289,12 @@ namespace audio
                                             doublev *falloff_bars) const
     {
         // Screen size has change which means previous falloff values are not valid
-        if (falloff_bars->size() != bars.size())
-        {
+        if (falloff_bars->size() != bars.size()) {
             *falloff_bars = bars;
             return;
         }
 
-        for (auto i = 0u; i < bars.size(); ++i)
-        {
+        for (auto i = 0u; i < bars.size(); ++i) {
             // falloff should always by at least one
             auto falloff_value = std::min(
                     (*falloff_bars)[i] * m_cfg->falloff_weight,
@@ -320,9 +309,7 @@ namespace audio
                                                                    double* moving_average, double* std_dev) const
     {
         if (old_values->size() > max_number_of_elements)
-        {
             old_values->erase(old_values->begin());
-        }
 
         old_values->push_back(new_value);
 
@@ -338,9 +325,7 @@ namespace audio
     void spectrum_visualizer::scale_bars(int32_t height, doublev* bars)
     {
         if (bars->empty())
-        {
             return;
-        }
 
         const auto max_height_iter = std::max_element(bars->begin(), bars->end());
 
@@ -365,8 +350,7 @@ namespace audio
         // height is zero, this happens when
         // the sound is muted
 
-        for (double &bar : *bars)
-        {
+        for (double &bar : *bars) {
             bar = std::min(static_cast<double>(height - 1),
                            ((bar / max_height) * height) - 1);
         }
@@ -380,8 +364,7 @@ namespace audio
                 (k_autoscaling_reset_window_percent * max_number_of_elements);
         // Current max height is much larger than moving average, so throw away most
         // values re-calculate
-        if (static_cast<double>(values->size()) > reset_window_size)
-        {
+        if (static_cast<double>(values->size()) > reset_window_size) {
             // get average over scaling window
             auto average_over_reset_window =
                     std::accumulate(values->begin(),
@@ -393,8 +376,7 @@ namespace audio
             // if short term average very different from long term moving average,
             // reset window and re-calculate
             if (std::abs(average_over_reset_window - *moving_average) >
-                (k_deviation_amount_to_reset * (*std_dev)))
-            {
+                (k_deviation_amount_to_reset * (*std_dev))) {
                 values->erase(values->begin(),
                               values->begin() +
                               static_cast<int64_t>(
@@ -414,8 +396,7 @@ namespace audio
     {
         // cut off frequencies only have to be re-calculated if number of bars
         // change
-        if (m_last_bar_count != number_of_bars)
-        {
+        if (m_last_bar_count != number_of_bars) {
             recalculate_cutoff_frequencies(
                     number_of_bars, &m_low_cutoff_frequencies,
                     &m_high_cutoff_frequencies, &m_frequency_constants_per_bin);

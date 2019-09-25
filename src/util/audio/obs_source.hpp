@@ -17,30 +17,21 @@
  *************************************************************************/
 
 #pragma once
+#include "audio_source.hpp"
+#include <util/circlebuf.h>
 
-#define BUFFER_SIZE 1024
+namespace audio {
 
-namespace source
+class obs_source : public audio_source
 {
-    struct config;
-}
+    circlebuf m_audio_buf[2];
+public:
+    obs_source(source::config *cfg);
+    ~obs_source() override;
 
-namespace audio
-{
-    /* Base class for audio reading */
-    class audio_source
-    {
-    protected:
-        source::config *m_cfg;
-    public:
-        explicit audio_source(source::config *cfg) : m_cfg(cfg) { update(); };
-
-        virtual ~audio_source() { clean_up(); }
-
-        /* Setup/Cleanup */
-        virtual void clean_up() {}
-        virtual void update() {}
-        virtual bool tick(float seconds) {}
-    };
+    bool tick(float seconds) override;
+    void clean_up() override;
+    void update() override;
+};
 
 }

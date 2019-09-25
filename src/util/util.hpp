@@ -1,9 +1,20 @@
-/**
+/*************************************************************************
  * This file is part of spectralizer
- * which is licensed under the GPL v2.0
- * See LICENSE or http://www.gnu.org/licenses
- * github.com/univrsal/spectralizer
- */
+ * github.con/univrsal/spectralizer
+ * Copyright 2019 univrsal <universailp@web.de>.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 2 of the License.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *************************************************************************/
 
 #pragma once
 
@@ -129,24 +140,24 @@ namespace defaults {
                         fps			= 30;
 
     CNST uint32_t	sample_rate		= 44100,
-                        buffer_size		= 8129,
-                        sample_size 		= sample_rate / fps;
-    CNST uint16_t	audio_source		= 0;
+                    buffer_size		= 8129,
+                    sample_size 	= sample_rate / fps;
+    CNST uint16_t	audio_source	= 0;
 
     CNST double		lfreq_cut		= 30,
-                        hfreq_cut		= 22050,
-                        falloff_weight		= .95;
+                    hfreq_cut		= 22050,
+                    falloff_weight	= .95;
     CNST uint32_t	sgs_points		= 3,		/* Should be a odd number */
-                        sgs_passes		= 2;
+                    sgs_passes		= 2;
 
     CNST double		mcat_smooth		= 1.5;
-    CNST uint32_t	mcat_bar_width		= 1,
-                        mcat_bar_space		= 0;
+    CNST uint32_t	mcat_bar_width	= 1,
+                    mcat_bar_space	= 0;
 
     CNST uint16_t	bar_space		= 2,
-                        bar_width		= 5,
-                        bar_height		= 100,
-                        bar_min_height		= 5;
+                    bar_width		= 5,
+                    bar_height		= 100,
+                    bar_min_height	= 5;
 
     CNST char		*fifo_path		= "/tmp/mpd.fifo";
 };

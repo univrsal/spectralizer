@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *************************************************************************/
 
-#include "obs_source.hpp"
+#include "obs_internal_source.hpp"
 #include "../../source/visualizer_source.hpp"
 
 namespace audio {
@@ -24,10 +24,10 @@ namespace audio {
 static void audio_capture(void *param, obs_source_t *src,
                           const struct audio_data *data, bool muted)
 {
-
+    obs_source *s = reinterpret_cast<obs_source *>(param);
 }
 
-obs_source::obs_source(source::config *cfg)
+obs_internal_source::obs_internal_source(source::config *cfg)
     : audio_source(cfg)
 {
     circlebuf_init(m_audio_buf);
@@ -38,12 +38,11 @@ obs_source::obs_source(source::config *cfg)
 
 }
 
-obs_source::~obs_source()
-{
+obs_internal_source::~obs_internal_source() {
     clean_up();
 }
 
-bool obs_source::tick(float seconds)
+bool obs_internal_source::tick(float seconds)
 {
     /* Audio capturing is done in separate callback
      * and is technically only done, once the circle buffer is
@@ -51,12 +50,12 @@ bool obs_source::tick(float seconds)
     return true;
 }
 
-void obs_source::update()
+void obs_internal_source::update()
 {
 
 }
 
-void obs_source::clean_up()
+void obs_internal_source::clean_up()
 {
     circlebuf_free(m_audio_buf);
     circlebuf_free(&m_audio_buf[1]);

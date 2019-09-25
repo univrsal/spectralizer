@@ -22,8 +22,8 @@ set(spectralizer_SOURCES
         src/util/audio/spectrum_visualizer.hpp
         src/util/audio/fifo.cpp
         src/util/audio/fifo.hpp
-        src/util/audio/obs_source.cpp
-        src/util/audio/obs_source.hpp
+        src/util/audio/obs_internal_source.cpp
+        src/util/audio/obs_internal_source.hpp
         src/util/audio/audio_visualizer.cpp
         src/util/audio/audio_visualizer.hpp
         src/util/audio/audio_source.hpp)

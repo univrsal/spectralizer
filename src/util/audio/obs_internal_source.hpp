@@ -22,12 +22,12 @@
 
 namespace audio {
 
-class obs_source : public audio_source
+class obs_internal_source : public audio_source
 {
     circlebuf m_audio_buf[2];
 public:
-    obs_source(source::config *cfg);
-    ~obs_source() override;
+    obs_internal_source(source::config *cfg);
+    ~obs_internal_source() override;
 
     bool tick(float seconds) override;
     void clean_up() override;

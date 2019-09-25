@@ -22,7 +22,6 @@
 
 namespace audio
 {
-
     class fifo : public audio_source
     {
     private:

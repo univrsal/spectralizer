@@ -47,7 +47,6 @@ struct enum_data
 
 visualizer_source::visualizer_source(obs_source_t* source, obs_data_t* settings)
 {
-    m_config.value_mutex.lock();
     m_config.settings = settings;
     m_config.source = source;
 
@@ -64,11 +63,11 @@ visualizer_source::visualizer_source(obs_source_t* source, obs_data_t* settings)
             break;
         default:;
     }
-    m_config.value_mutex.unlock();
 }
 
 visualizer_source::~visualizer_source()
 {
+    m_config.value_mutex.lock();
     delete m_visualizer;
     m_visualizer = nullptr;
 
@@ -77,6 +76,7 @@ visualizer_source::~visualizer_source()
         m_config.buffer = nullptr;
     }
     clear_audio_sources();
+    m_config.value_mutex.unlock();
 }
 
 
@@ -123,8 +123,6 @@ void visualizer_source::update(obs_data_t* settings)
     if (m_visualizer)
         m_visualizer->update();
 
-    /* update audio sources */
-
     m_config.value_mutex.unlock();
 }
 
@@ -150,6 +148,7 @@ bool reload_audio_sources(obs_properties_t *props, obs_property_t *prop, void* d
 
 void visualizer_source::tick(float seconds)
 {
+    m_config.value_mutex.lock();
     m_config.refresh_counter += seconds;
 
     if (m_config.refresh_counter >= m_config.refresh_rate) {
@@ -157,11 +156,13 @@ void visualizer_source::tick(float seconds)
             m_visualizer->tick(seconds);
         m_config.refresh_counter = 0.f;
     }
+    m_config.value_mutex.unlock();
 }
 
 void visualizer_source::render(gs_effect_t* effect)
 {
     if (m_visualizer) {
+        m_config.value_mutex.lock();
         gs_effect_t    *solid = obs_get_base_effect(OBS_EFFECT_SOLID);
         gs_eparam_t    *color = gs_effect_get_param_by_name(solid, "color");
         gs_technique_t *tech  = gs_effect_get_technique(solid, "Solid");
@@ -175,6 +176,7 @@ void visualizer_source::render(gs_effect_t* effect)
         m_visualizer->render(effect);
         gs_technique_end_pass(tech);
         gs_technique_end(tech);
+        m_config.value_mutex.unlock();
     }
     UNUSED_PARAMETER(effect);
 }
@@ -208,6 +210,18 @@ bool filter_changed(obs_properties_t* props, obs_property_t* p, obs_data_t* data
         obs_property_set_visible(sgs_points, false);
     }
     return true;
+}
+
+static bool add_source(void *data, obs_source_t *src)
+{
+	uint32_t caps = obs_source_get_output_flags(src);
+	obs_property_t *list = (obs_property_t *) data;
+
+	if ((caps & OBS_SOURCE_AUDIO) == 0)
+		return true;
+	const char *name = obs_source_get_name(src);
+	obs_property_list_add_string(list, name, name);
+	return true;
 }
 
 obs_properties_t* get_properties_for_visualiser(void* data)
@@ -268,6 +282,8 @@ obs_properties_t* get_properties_for_visualiser(void* data)
 
     auto* fps = obs_properties_add_int(props, S_REFRESH_RATE, T_REFRESH_RATE, 1, 255, 5);
     obs_property_int_set_suffix(fps, " FPS");
+
+    obs_enum_sources(add_source, src);
     return props;
 }
 

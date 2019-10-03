@@ -79,8 +79,6 @@ namespace audio
             return;
         }
 
-        std::lock_guard<std::mutex> lock(m_cfg->value_mutex);
-
         audio_visualizer::tick(seconds);
         /* TODO: Check if data was read? */
         if (!m_data_read)
@@ -151,19 +149,20 @@ namespace audio
 
         } else {
             int i = -1, pos_x = 0;
+            uint32_t height;
             for (auto val : m_bars_left) {
                 i++;
                 if (val <= 1) {
                     if (m_cfg->clamp)
                         val = m_cfg->bar_min_height;
                     else
-                        continue;
+                        continue; /* Don't draw this bar */
                 }
-
+                height = round(val);
                 pos_x = i * (m_cfg->bar_width + m_cfg->bar_space);
                 gs_matrix_push();
-                gs_matrix_translate3f(pos_x, 0, 0);
-                gs_draw_sprite(nullptr, 0, m_cfg->bar_width, val);
+                gs_matrix_translate3f(pos_x, (m_cfg->bar_height - height), 0);
+                gs_draw_sprite(nullptr, 0, m_cfg->bar_width, height);
                 gs_matrix_pop();
             }
         }

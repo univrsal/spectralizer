@@ -50,12 +50,12 @@ namespace audio
                 /* TODO: obs audio source processor */
             }
         }
-        m_source->update(m_cfg);
+        m_source->update();
     }
 
     void audio_visualizer::tick(float seconds)
     {
         if (m_source)
-            m_data_read = m_source->tick(seconds, m_cfg);
+            m_data_read = m_source->tick(seconds);
     }
 }

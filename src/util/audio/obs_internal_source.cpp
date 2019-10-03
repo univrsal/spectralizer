@@ -18,28 +18,44 @@
 
 #include "obs_internal_source.hpp"
 #include "../../source/visualizer_source.hpp"
-
+#include <limits>
 namespace audio {
 
 static void audio_capture(void *param, obs_source_t *src,
                           const struct audio_data *data, bool muted)
 {
-    obs_source *s = reinterpret_cast<obs_source *>(param);
+	obs_internal_source* s = reinterpret_cast<obs_internal_source *>(param);
+	if (s)
+		s->capture(src, data, muted);
 }
 
 obs_internal_source::obs_internal_source(source::config *cfg)
-    : audio_source(cfg)
+    : audio_source(cfg),
+      m_buffer_index(0)
 {
-    circlebuf_init(m_audio_buf);
-    circlebuf_init(&m_audio_buf[1]);
-
-    circlebuf_reserve(m_audio_buf, cfg->buffer_size);
-    circlebuf_reserve(&m_audio_buf[1], cfg->buffer_size);
-
 }
 
 obs_internal_source::~obs_internal_source() {
     clean_up();
+}
+
+void obs_internal_source::capture(obs_source_t *src, const struct audio_data *data, bool muted)
+{
+	std::lock_guard<std::mutex> lock(m_cfg->value_mutex);
+	float *l = (float *) data->data[0];
+	float *r = (float *) data->data[1];
+
+	if (!muted && data->frames > 0) {
+		for (int i = 0; i < data->frames; i++) {
+			m_cfg->buffer[m_buffer_index + i].l = l[i] * (UINT16_MAX / 2);
+			m_cfg->buffer[m_buffer_index + i].r = r[i] * (UINT16_MAX / 2);
+			m_buffer_index++;
+
+			if (m_buffer_index >= m_cfg->sample_size) {
+				m_buffer_index = 0;
+			}
+		}
+	}
 }
 
 bool obs_internal_source::tick(float seconds)
@@ -47,6 +63,8 @@ bool obs_internal_source::tick(float seconds)
     /* Audio capturing is done in separate callback
      * and is technically only done, once the circle buffer is
      * filled, but we'll just assume that's always the case */
+
+    /* copy & convert data */
     return true;
 }
 
@@ -57,8 +75,6 @@ void obs_internal_source::update()
 
 void obs_internal_source::clean_up()
 {
-    circlebuf_free(m_audio_buf);
-    circlebuf_free(&m_audio_buf[1]);
 }
 
 }

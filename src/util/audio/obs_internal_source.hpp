@@ -19,12 +19,15 @@
 #pragma once
 #include "audio_source.hpp"
 #include <util/circlebuf.h>
+#include <mutex>
+#include <media-io/audio-io.h>
+#include <obs-module.h>
 
 namespace audio {
 
 class obs_internal_source : public audio_source
 {
-    circlebuf m_audio_buf[2];
+    size_t m_buffer_index;
 public:
     obs_internal_source(source::config *cfg);
     ~obs_internal_source() override;
@@ -32,6 +35,8 @@ public:
     bool tick(float seconds) override;
     void clean_up() override;
     void update() override;
+
+    void capture(obs_source_t *src, const struct audio_data *data, bool muted);
 };
 
 }

@@ -45,7 +45,7 @@ struct config {
     /* Audio settings */
     uint32_t sample_rate = defaults::sample_rate;
     uint32_t sample_size = defaults::sample_size;
-    uint16_t buffer_size = 8192;
+    uint16_t buffer_size = defaults::buffer_size;
 
     uint16_t audio_source = defaults::audio_source;
     double low_cutoff_freq = defaults::lfreq_cut;

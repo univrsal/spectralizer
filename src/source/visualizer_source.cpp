@@ -42,7 +42,6 @@ struct enum_data
 {
     visualizer_source *vis;
     obs_property *list;
-    int *index;
 };
 
 visualizer_source::visualizer_source(obs_source_t* source, obs_data_t* settings)
@@ -55,7 +54,7 @@ visualizer_source::visualizer_source(obs_source_t* source, obs_data_t* settings)
     m_config.cy = m_config.bar_height;
 
     m_config.buffer = static_cast<pcm_stereo_sample*>(bzalloc(m_config.sample_size * sizeof(pcm_stereo_sample)));
-    obs_source_update(source, settings);
+    update(settings);
 
     switch (m_config.visual) {
         case VM_BARS:
@@ -75,21 +74,7 @@ visualizer_source::~visualizer_source()
         bfree(m_config.buffer);
         m_config.buffer = nullptr;
     }
-    clear_audio_sources();
     m_config.value_mutex.unlock();
-}
-
-
-bool enum_audio_sources(void *data, obs_source_t *source)
-{
-    enum_data* e = static_cast<enum_data*>(data);
-    if (obs_source_get_type(source) == OBS_SOURCE_TYPE_INPUT &&
-        obs_source_get_output_flags(source) & OBS_SOURCE_AUDIO) {
-        debug("Found audio source %s", obs_source_get_name(source));
-        obs_property_list_add_int(e->list, obs_source_get_name(source), *e->index);
-        e->vis->add_audio_source((*e->index)++, obs_source_get_ref(source));
-    }
-    return true;
 }
 
 void visualizer_source::update(obs_data_t* settings)
@@ -99,7 +84,7 @@ void visualizer_source::update(obs_data_t* settings)
     m_config.fps                = UTIL_MAX(obs_data_get_int(settings, S_REFRESH_RATE), 1);
     m_config.sample_size		= m_config.sample_rate / m_config.fps;
     m_config.refresh_rate       = 1.f / m_config.fps;
-    m_config.audio_source       = (uint16_t) obs_data_get_int(settings, S_AUDIO_SOURCE);
+    m_config.audio_source_name	= obs_data_get_string(settings, S_AUDIO_SOURCE);
     m_config.visual             = (visual_mode) (obs_data_get_int(settings, S_SOURCE_MODE));
     m_config.channel            = (channel_mode) obs_data_get_bool(settings, S_STEREO);
     m_config.color              = obs_data_get_int(settings, S_COLOR);
@@ -124,26 +109,6 @@ void visualizer_source::update(obs_data_t* settings)
         m_visualizer->update();
 
     m_config.value_mutex.unlock();
-}
-
-bool reload_audio_sources(obs_properties_t *props, obs_property_t *prop, void* data)
-{
-    visualizer_source* vis = static_cast<visualizer_source*>(data);
-    obs_property_t *src = obs_properties_get(props, S_AUDIO_SOURCE);
-    vis->clear_audio_sources();
-    int audio_source_index = 0;
-    enum_data d { vis, src, &audio_source_index };
-
-#ifdef LINUX
-    /* Add MPD stuff */
-    if (local_mpd_connection) {
-        obs_property_list_add_int(src, T_SOURCE_MPD, audio_source_index++);
-        obs_properties_add_path(props, S_FIFO_PATH, T_FIFO_PATH, OBS_PATH_FILE, fifo_filter, "");
-    }
-#endif
-    obs_enum_sources(enum_audio_sources, &d);
-    obs_properties_destroy(props);
-    return true;
 }
 
 void visualizer_source::tick(float seconds)
@@ -215,12 +180,12 @@ bool filter_changed(obs_properties_t* props, obs_property_t* p, obs_data_t* data
 static bool add_source(void *data, obs_source_t *src)
 {
 	uint32_t caps = obs_source_get_output_flags(src);
-	obs_property_t *list = (obs_property_t *) data;
+	enum_data *d = (enum_data*) data;
 
 	if ((caps & OBS_SOURCE_AUDIO) == 0)
 		return true;
 	const char *name = obs_source_get_name(src);
-	obs_property_list_add_string(list, name, name);
+	obs_property_list_add_string(d->list, name, name);
 	return true;
 }
 
@@ -235,7 +200,7 @@ obs_properties_t* get_properties_for_visualiser(void* data)
     obs_property_list_add_int(mode, T_MODE_WIRE, (int) VM_WIRE);
 
     auto src = obs_properties_add_list(props, S_AUDIO_SOURCE, T_AUDIO_SOURCE, OBS_COMBO_TYPE_LIST,
-                                        OBS_COMBO_FORMAT_INT);
+                                        OBS_COMBO_FORMAT_STRING);
     auto filter = obs_properties_add_list(props, S_FILTER_MODE, T_FILTER_MODE, OBS_COMBO_TYPE_LIST,
                                         OBS_COMBO_FORMAT_INT);
 
@@ -268,11 +233,11 @@ obs_properties_t* get_properties_for_visualiser(void* data)
     obs_properties_add_int_slider(props, S_INTEGRAL, T_INTEGRAl, 0, 100, 1);
     obs_properties_add_int_slider(props, S_SENSITIVITY, T_SENSITIVITY, 1, 600, 1);
 
-    int audio_source_index = 0;
+    obs_property_list_add_string(src, T_AUDIO_SOURCE_NONE, "none");
 #ifdef LINUX
     /* Add MPD stuff */
     if (local_mpd_connection) {
-        obs_property_list_add_int(src, T_SOURCE_MPD, audio_source_index++);
+        obs_property_list_add_string(src, T_SOURCE_MPD, "mpd");
         obs_properties_add_path(props, S_FIFO_PATH, T_FIFO_PATH, OBS_PATH_FILE, fifo_filter, "");
     }
 #endif
@@ -283,8 +248,11 @@ obs_properties_t* get_properties_for_visualiser(void* data)
     auto* fps = obs_properties_add_int(props, S_REFRESH_RATE, T_REFRESH_RATE, 1, 255, 5);
     obs_property_int_set_suffix(fps, " FPS");
 
-    obs_enum_sources(add_source, src);
-    return props;
+	enum_data d;
+	d.list = src;
+	d.vis = reinterpret_cast<visualizer_source*>(data);
+	obs_enum_sources(add_source, &d);
+	return props;
 }
 
 void register_visualiser()
@@ -327,7 +295,7 @@ void register_visualiser()
         obs_data_set_default_bool(settings, S_STEREO, false);
         obs_data_set_default_bool(settings, S_CLAMP, false);
         obs_data_set_default_int(settings, S_SOURCE_MODE, (int) VM_BARS);
-        obs_data_set_default_int(settings, S_AUDIO_SOURCE, defaults::audio_source);
+        obs_data_set_default_string(settings, S_AUDIO_SOURCE, "none");
         obs_data_set_default_int(settings, S_SAMPLE_RATE, defaults::sample_rate);
         obs_data_set_default_int(settings, S_FILTER_MODE, (int) SM_NONE);
         obs_data_set_default_double(settings, S_FILTER_STRENGTH, defaults::mcat_smooth);

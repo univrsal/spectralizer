@@ -29,7 +29,6 @@ struct config {
     const char* fifo_path = defaults::fifo_path;
 
     pcm_stereo_sample* buffer = nullptr;
-    double ignore = 0; /* Cut off lower peaks */
 
     /* Appearance settings */
     channel_mode channel = defaults::channel;
@@ -47,7 +46,7 @@ struct config {
     uint32_t sample_size = defaults::sample_size;
     uint16_t buffer_size = defaults::buffer_size;
 
-    uint16_t audio_source = defaults::audio_source;
+    std::string audio_source_name = "";
     double low_cutoff_freq = defaults::lfreq_cut;
     double high_cutoff_freq = defaults::hfreq_cut;
 
@@ -70,9 +69,9 @@ struct config {
 
 class visualizer_source
 {
-    std::map<int, obs_source_t*> m_audio_sources;
     config m_config;
     audio::audio_visualizer* m_visualizer = nullptr;
+    std::map<uint16_t, std::string> m_source_names;
 public:
     visualizer_source(obs_source_t* source, obs_data_t* settings);
     ~visualizer_source();
@@ -87,17 +86,8 @@ public:
     uint32_t get_height() const
     { return m_config.cy; }
 
-    void add_audio_source(int index, obs_source_t *source)
-    {
-            m_audio_sources[index] = source;
-    }
-
-    void clear_audio_sources()
-    {
-            for (auto& src : m_audio_sources) {
-                    obs_source_release(src.second);
-            }
-    }
+    void clear_source_names() { m_source_names.clear(); }
+    void add_source(uint16_t id, const char* name) { m_source_names[id] = name; }
 };
 
 /* Util for registering the source */

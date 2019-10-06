@@ -19,6 +19,7 @@
 #pragma once
 
 #include <graphics/graphics.h>
+#include <string>
 
 namespace source
 {
@@ -34,7 +35,7 @@ namespace audio
     protected:
         audio::audio_source* m_source = nullptr;
         source::config* m_cfg = nullptr;
-        uint16_t m_source_id = 0; /* where to read audio from */
+        std::string m_source_id = "none"; /* where to read audio from */
         bool m_data_read = false; /* Audio source will return false if reading failed */
 
     public:

@@ -51,6 +51,7 @@
 #define T_DETAIL                        T_("Spectralizer.Detail")
 #define T_REFRESH_RATE                  T_("Spectralizer.RefreshRate")
 #define T_AUDIO_SOURCE                  T_("Spectralizer.AudioSource")
+#define T_AUDIO_SOURCE_NONE             T_("Spectralizer.AudioSource.None")
 #define T_SOURCE_MPD                    T_("Spectralizer.Source.Fifo")
 #define T_FIFO_PATH                     T_("Spectralizer.Source.Fifo.Path")
 #define T_BAR_WIDTH                     T_("Spectralizer.Bar.Width")

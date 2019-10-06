@@ -17,6 +17,7 @@
  *************************************************************************/
 
 #include "audio_visualizer.hpp"
+#include "obs_internal_source.hpp"
 #include "audio_source.hpp"
 #include "../../source/visualizer_source.hpp"
 #include "fifo.hpp"
@@ -40,17 +41,18 @@ namespace audio
 
     void audio_visualizer::update()
     {
-        if (!m_source || m_cfg->audio_source != m_source_id) {
-            m_source_id = m_cfg->audio_source;
+        if (m_source)
+            m_source->update();
+        if (!m_source || m_cfg->audio_source_name != m_source_id) {
+            m_source_id = m_cfg->audio_source_name;
             if (m_source)
                 delete m_source;
-            if (m_cfg->audio_source == 0) {
+            if (m_cfg->audio_source_name == std::string("mpd")) {
                 m_source = new fifo(m_cfg);
             } else {
-                /* TODO: obs audio source processor */
+                m_source = new obs_internal_source(m_cfg);
             }
         }
-        m_source->update();
     }
 
     void audio_visualizer::tick(float seconds)

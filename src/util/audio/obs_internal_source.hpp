@@ -28,6 +28,10 @@ namespace audio {
 class obs_internal_source : public audio_source
 {
     size_t m_buffer_index;
+    bool m_data_ready = false;
+    std::string m_capture_name = "";
+    obs_weak_source_t *m_capture_source = nullptr;
+    uint64_t m_capture_check_time = 0;
 public:
     obs_internal_source(source::config *cfg);
     ~obs_internal_source() override;

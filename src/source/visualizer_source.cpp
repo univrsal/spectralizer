@@ -177,6 +177,23 @@ bool filter_changed(obs_properties_t* props, obs_property_t* p, obs_data_t* data
     return true;
 }
 
+bool source_changed(obs_properties_t *props, obs_property_t *p, obs_data_t *data)
+{
+	auto* id = obs_data_get_string(data, S_AUDIO_SOURCE);
+	auto* sr = obs_properties_get(props, S_SAMPLE_RATE);
+	obs_property_t* fifo = nullptr;
+#ifdef LINUX
+	fifo = obs_properties_get(props, S_FIFO_PATH);
+#endif
+	if (strcmp(id, "mpd") == 0) {
+		obs_property_set_visible(sr, true);
+		if (fifo) {
+			obs_property_set_visible(fifo, true);
+		}
+	}
+	return true;
+}
+
 static bool add_source(void *data, obs_source_t *src)
 {
 	uint32_t caps = obs_source_get_output_flags(src);
@@ -197,18 +214,21 @@ obs_properties_t* get_properties_for_visualiser(void* data)
     auto mode = obs_properties_add_list(props, S_SOURCE_MODE, T_SOURCE_MODE, OBS_COMBO_TYPE_LIST,
             OBS_COMBO_FORMAT_INT);
     obs_property_list_add_int(mode, T_MODE_BARS, (int) VM_BARS);
-    obs_property_list_add_int(mode, T_MODE_WIRE, (int) VM_WIRE);
+    /* TODO */
+    obs_property_set_visible(mode, false);
+//    obs_property_list_add_int(mode, T_MODE_WIRE, (int) VM_WIRE);
 
     auto src = obs_properties_add_list(props, S_AUDIO_SOURCE, T_AUDIO_SOURCE, OBS_COMBO_TYPE_LIST,
                                         OBS_COMBO_FORMAT_STRING);
     auto filter = obs_properties_add_list(props, S_FILTER_MODE, T_FILTER_MODE, OBS_COMBO_TYPE_LIST,
                                         OBS_COMBO_FORMAT_INT);
 
-    obs_property_set_modified_callback(filter, filter_changed);
+	obs_property_set_modified_callback(filter, filter_changed);
+	obs_property_set_modified_callback(src, source_changed);
 
-    obs_property_list_add_int(filter, T_FILTER_NONE, (int) SM_NONE);
-    obs_property_list_add_int(filter, T_FILTER_MONSTERCAT, (int) SM_MONSTERCAT);
-    obs_property_list_add_int(filter, T_FILTER_SGS, (int) SM_SGS);
+	obs_property_list_add_int(filter, T_FILTER_NONE, (int) SM_NONE);
+	obs_property_list_add_int(filter, T_FILTER_MONSTERCAT, (int) SM_MONSTERCAT);
+	obs_property_list_add_int(filter, T_FILTER_SGS, (int) SM_SGS);
 
     obs_property_set_visible(obs_properties_add_float_slider(props, S_FILTER_STRENGTH, T_FILTER_STRENGTH, 0, 15, 0.1), false);
     obs_property_set_visible(obs_properties_add_int(props, S_SGS_POINTS, T_SGS_POINTS, 1, 32, 1), false);
@@ -227,6 +247,7 @@ obs_properties_t* get_properties_for_visualiser(void* data)
     obs_property_int_set_suffix(h, " Pixel");
     obs_property_int_set_suffix(s, " Pixel");
 
+    obs_property_set_visible(sr, false);		/* Sampel rate is only needed for fifo */
 
     /* Smoothing stuff */
     obs_properties_add_float_slider(props, S_GRAVITY, T_GRAVITY, 0, 2, 0.01);
@@ -238,7 +259,9 @@ obs_properties_t* get_properties_for_visualiser(void* data)
     /* Add MPD stuff */
     if (local_mpd_connection) {
         obs_property_list_add_string(src, T_SOURCE_MPD, "mpd");
-        obs_properties_add_path(props, S_FIFO_PATH, T_FIFO_PATH, OBS_PATH_FILE, fifo_filter, "");
+        auto *path = obs_properties_add_path(props, S_FIFO_PATH, T_FIFO_PATH,
+                                             OBS_PATH_FILE, fifo_filter, "");
+        obs_property_set_visible(path, false);
     }
 #endif
 

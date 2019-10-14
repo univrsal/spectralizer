@@ -6,14 +6,14 @@
  */
 #pragma once
 
-#include <cstdint>
-#include <obs-module.h>
-#include <mutex>
-#include <map>
 #include "../util/util.hpp"
+#include <cstdint>
+#include <map>
+#include <mutex>
+#include <obs-module.h>
 
 namespace audio {
-    class audio_visualizer;
+class audio_visualizer;
 }
 
 namespace source {
@@ -66,11 +66,11 @@ struct config {
     bool clamp = true;
 };
 
-class visualizer_source
-{
+class visualizer_source {
     config m_config;
     audio::audio_visualizer* m_visualizer = nullptr;
     std::map<uint16_t, std::string> m_source_names;
+
 public:
     visualizer_source(obs_source_t* source, obs_data_t* settings);
     ~visualizer_source();
@@ -80,10 +80,14 @@ public:
     inline void render(gs_effect_t* effect);
 
     uint32_t get_width() const
-    { return m_config.cx; }
+    {
+        return m_config.cx;
+    }
 
     uint32_t get_height() const
-    { return m_config.cy; }
+    {
+        return m_config.cy;
+    }
 
     void clear_source_names() { m_source_names.clear(); }
     void add_source(uint16_t id, const char* name) { m_source_names[id] = name; }
@@ -93,5 +97,4 @@ public:
 static obs_properties_t* get_properties_for_visualiser(void* data);
 
 void register_visualiser();
-void cleanup();
 }

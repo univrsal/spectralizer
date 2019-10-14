@@ -17,50 +17,47 @@
  *************************************************************************/
 
 #include "audio_visualizer.hpp"
-#include "obs_internal_source.hpp"
-#include "audio_source.hpp"
 #include "../../source/visualizer_source.hpp"
+#include "audio_source.hpp"
 #include "fifo.hpp"
+#include "obs_internal_source.hpp"
 
-namespace audio
+namespace audio {
+
+audio_visualizer::audio_visualizer(source::config* cfg)
 {
+    m_cfg = cfg;
+}
 
-    audio_visualizer::audio_visualizer(source::config* cfg)
-    {
-        m_cfg = cfg;
+audio_visualizer::~audio_visualizer()
+{
+    delete m_source;
+    m_source = nullptr;
+}
 
-    }
-
-    audio_visualizer::~audio_visualizer()
-    {
-        delete m_source;
-        m_source = nullptr;
-    }
-
-    void audio_visualizer::update()
-    {
+void audio_visualizer::update()
+{
+    if (m_source)
+        m_source->update();
+    if (!m_source || m_cfg->audio_source_name != m_source_id) {
+        m_source_id = m_cfg->audio_source_name;
         if (m_source)
-            m_source->update();
-        if (!m_source || m_cfg->audio_source_name != m_source_id) {
-            m_source_id = m_cfg->audio_source_name;
-            if (m_source)
-                delete m_source;
-            if (m_cfg->audio_source_name.empty() ||
-                m_cfg->audio_source_name == std::string(defaults::audio_source)) {
-                m_source = nullptr;
-            } else if (m_cfg->audio_source_name == std::string("mpd")) {
-                m_source = new fifo(m_cfg);
-            } else {
-                m_source = new obs_internal_source(m_cfg);
-            }
+            delete m_source;
+        if (m_cfg->audio_source_name.empty() || m_cfg->audio_source_name == std::string(defaults::audio_source)) {
+            m_source = nullptr;
+        } else if (m_cfg->audio_source_name == std::string("mpd")) {
+            m_source = new fifo(m_cfg);
+        } else {
+            m_source = new obs_internal_source(m_cfg);
         }
     }
+}
 
-    void audio_visualizer::tick(float seconds)
-    {
-        if (m_source)
-            m_data_read = m_source->tick(seconds);
-        else
-            m_data_read = false;
-    }
+void audio_visualizer::tick(float seconds)
+{
+    if (m_source)
+        m_data_read = m_source->tick(seconds);
+    else
+        m_data_read = false;
+}
 }

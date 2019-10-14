@@ -22,17 +22,17 @@
 #include <vector>
 
 /* Logging */
-#define log_src(log_level, format, ...)                            \
-    blog(log_level, "[spectralizer: '%s'] " format,             \
-         obs_source_get_name(context->source), ##__VA_ARGS__)
-#define write_log(log_level, format, ...)                            \
+#define log_src(log_level, format, ...)             \
+    blog(log_level, "[spectralizer: '%s'] " format, \
+        obs_source_get_name(context->source), ##__VA_ARGS__)
+#define write_log(log_level, format, ...) \
     blog(log_level, "[spectralizer] " format, ##__VA_ARGS__)
 
-#define debug(format, ...)                      \
+#define debug(format, ...) \
     write_log(LOG_DEBUG, format, ##__VA_ARGS__)
-#define info(format, ...)                       \
+#define info(format, ...) \
     write_log(LOG_INFO, format, ##__VA_ARGS__)
-#define warn(format, ...)                       \
+#define warn(format, ...) \
     write_log(LOG_WARNING, format, ##__VA_ARGS__)
 
 /* clang-format off */
@@ -128,7 +128,7 @@ struct stereo_sample_frame
 };
 
 using pcm_stereo_sample = struct stereo_sample_frame;
-#define CNST		static const constexpr
+#define CNST			static const constexpr
 
 namespace defaults {
     CNST channel_mode 	channel 		= CM_LEFT;
@@ -162,5 +162,14 @@ namespace defaults {
     CNST char			*fifo_path		= "/tmp/mpd.fifo";
     CNST char			*audio_source	= "none";
 };
+
+namespace constants {
+    CNST int auto_scale_span 						= 30;
+    CNST double auto_scaling_reset_window			= 0.1;
+    CNST double auto_scaling_erase_percent 			= 0.75;
+    /* Amount of deviation needed between short term and long
+     * term moving max height averages to trigger an autoscaling reset */
+    CNST double deviation_amount_to_reset 			= 1.0;
+}
 
 /* clang-format on */

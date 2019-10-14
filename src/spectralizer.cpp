@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *************************************************************************/
 
-#include <obs-module.h>
 #include "source/visualizer_source.hpp"
+#include <obs-module.h>
 
 OBS_DECLARE_MODULE()
 
@@ -31,5 +31,5 @@ bool obs_module_load()
 
 void obs_module_unload()
 {
-    /* TODO: MPD disconnecting? */
+    /* NO-OP */
 }

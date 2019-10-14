@@ -10,8 +10,6 @@ endif ()
 if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
     add_definitions(-DLINUX=1)
     add_definitions(-DUNIX=1)
-    set(spectralizer_PLATFORM_DEPS
-            mpdclient)
 endif ()
 
 set(spectralizer_SOURCES

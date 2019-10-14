@@ -21,31 +21,28 @@
 #include <graphics/graphics.h>
 #include <string>
 
-namespace source
-{
-    struct config;
+namespace source {
+struct config;
 }
 
-namespace audio
-{
-    class audio_source;
+namespace audio {
+class audio_source;
 
-    class audio_visualizer
-    {
-    protected:
-        audio::audio_source* m_source = nullptr;
-        source::config* m_cfg = nullptr;
-        std::string m_source_id = "none"; /* where to read audio from */
-        bool m_data_read = false; /* Audio source will return false if reading failed */
+class audio_visualizer {
+protected:
+    audio::audio_source* m_source = nullptr;
+    source::config* m_cfg = nullptr;
+    std::string m_source_id = "none"; /* where to read audio from */
+    bool m_data_read = false; /* Audio source will return false if reading failed */
 
-    public:
-        audio_visualizer(source::config* cfg);
-        virtual ~audio_visualizer();
+public:
+    audio_visualizer(source::config* cfg);
+    virtual ~audio_visualizer();
 
-        virtual void update();
+    virtual void update();
 
-        virtual void tick(float seconds);
+    virtual void tick(float seconds);
 
-        virtual void render(gs_effect_t* effect) = 0;
-    };
+    virtual void render(gs_effect_t* effect) = 0;
+};
 }

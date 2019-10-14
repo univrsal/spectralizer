@@ -30,10 +30,9 @@ namespace audio
         bool open_fifo();
     public:
         fifo(source::config* cfg);
-
+        ~fifo() override;
         void update() override;
         bool tick(float seconds) override;
-        void clean_up() override;
     };
 
 }

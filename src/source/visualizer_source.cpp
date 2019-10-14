@@ -27,7 +27,8 @@
 /* Keeps track of local mpd instance
  * which is needed to stop reading from the fifo,
  * while mpd is paused, since reading will block the
- * video thread otherwise*/
+ * video thread otherwise
+ * TODO: remove this? */
 struct mpd_connection* local_mpd_connection = nullptr;
 struct mpd_status* local_mpd_state = nullptr;
 
@@ -49,19 +50,14 @@ visualizer_source::visualizer_source(obs_source_t* source, obs_data_t* settings)
     m_config.settings = settings;
     m_config.source = source;
 
-    /* Defaults are technically loaded by obs over update() */
-    m_config.cx = m_config.detail * (m_config.bar_width + m_config.bar_space) - m_config.bar_space;
-    m_config.cy = m_config.bar_height;
-
-    m_config.buffer = static_cast<pcm_stereo_sample*>(bzalloc(m_config.sample_size * sizeof(pcm_stereo_sample)));
-    update(settings);
-
     switch (m_config.visual) {
         case VM_BARS:
             m_visualizer = new audio::spectrum_visualizer(&m_config);
             break;
         default:;
     }
+
+    update(settings);
 }
 
 visualizer_source::~visualizer_source()
@@ -105,8 +101,12 @@ void visualizer_source::update(obs_data_t* settings)
             .bar_space, 10);
     m_config.cy                 = UTIL_MAX(m_config.bar_height, 10);
 
-    if (m_visualizer)
+    if (m_visualizer) /* this modifies sample size, if an internal audio source is used */
         m_visualizer->update();
+
+    if (m_config.buffer)
+        bfree(m_config.buffer);
+    m_config.buffer = static_cast<pcm_stereo_sample*>(bzalloc(m_config.sample_size * sizeof(pcm_stereo_sample)));
 
     m_config.value_mutex.unlock();
 }
@@ -233,7 +233,7 @@ obs_properties_t* get_properties_for_visualiser(void* data)
     obs_properties_add_int_slider(props, S_INTEGRAL, T_INTEGRAl, 0, 100, 1);
     obs_properties_add_int_slider(props, S_SENSITIVITY, T_SENSITIVITY, 1, 600, 1);
 
-    obs_property_list_add_string(src, T_AUDIO_SOURCE_NONE, "none");
+    obs_property_list_add_string(src, T_AUDIO_SOURCE_NONE, defaults::audio_source);
 #ifdef LINUX
     /* Add MPD stuff */
     if (local_mpd_connection) {
@@ -293,9 +293,9 @@ void register_visualiser()
         obs_data_set_default_int(settings, S_DETAIL, defaults::detail);
         obs_data_set_default_double(settings, S_REFRESH_RATE, defaults::fps);
         obs_data_set_default_bool(settings, S_STEREO, false);
-        obs_data_set_default_bool(settings, S_CLAMP, false);
+        obs_data_set_default_bool(settings, S_CLAMP, true);
         obs_data_set_default_int(settings, S_SOURCE_MODE, (int) VM_BARS);
-        obs_data_set_default_string(settings, S_AUDIO_SOURCE, "none");
+        obs_data_set_default_string(settings, S_AUDIO_SOURCE, defaults::audio_source);
         obs_data_set_default_int(settings, S_SAMPLE_RATE, defaults::sample_rate);
         obs_data_set_default_int(settings, S_FILTER_MODE, (int) SM_NONE);
         obs_data_set_default_double(settings, S_FILTER_STRENGTH, defaults::mcat_smooth);

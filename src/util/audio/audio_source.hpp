@@ -33,14 +33,12 @@ namespace audio
     protected:
         source::config *m_cfg;
     public:
-        explicit audio_source(source::config *cfg) : m_cfg(cfg) { update(); };
+        explicit audio_source(source::config *cfg) : m_cfg(cfg) { }
 
-        virtual ~audio_source() { clean_up(); }
+        virtual ~audio_source() {}
 
-        /* Setup/Cleanup */
-        virtual void clean_up() {}
-        virtual void update() {}
-        virtual bool tick(float seconds) {}
+        /* obs_source methods */
+        virtual void update() = 0;
+        virtual bool tick(float seconds) = 0;
     };
-
 }

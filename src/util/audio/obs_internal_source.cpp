@@ -34,34 +34,57 @@ static void audio_capture(void *param, obs_source_t *src,
 }
 
 obs_internal_source::obs_internal_source(source::config *cfg)
-    : audio_source(cfg),
-      m_buffer_index(0)
+    : audio_source(cfg)
 {
+    circlebuf_init(&m_audio_data[0]);
+    circlebuf_init(&m_audio_data[1]);
+    update();
 }
 
 obs_internal_source::~obs_internal_source()
 {
-	clean_up();
+    if (m_capture_source) {
+        obs_source_t *source = obs_weak_source_get_source(m_capture_source);
+        if (source) {
+            obs_source_remove_audio_capture_callback(source, audio_capture, this);
+            obs_source_release(source);
+        }
+        obs_weak_source_release(m_capture_source);
+    }
+
+    for (size_t i = 0; i < 2; i++) {
+        circlebuf_free(&m_audio_data[i]);
+        bfree(m_audio_buf[i]);
+    }
 }
 
 void obs_internal_source::capture(obs_source_t *src, const struct audio_data *data, bool muted)
 {
-	std::lock_guard<std::mutex> lock(m_cfg->value_mutex);
-	float *l = (float *) data->data[0];
-	float *r = (float *) data->data[1];
+    m_cfg->value_mutex.lock();
+    if (m_max_capture_frames < data->frames)
+        m_max_capture_frames = data->frames;
 
-	if (!muted && data->frames > 0) {
-		for (int i = 0; i < data->frames; i++) {
-			m_cfg->buffer[m_buffer_index + i].l = l[i] * (UINT16_MAX / 2);
-			m_cfg->buffer[m_buffer_index + i].r = r[i] * (UINT16_MAX / 2);
-			m_buffer_index++;
+    size_t expected = m_max_capture_frames * sizeof(float);
 
-			if (m_buffer_index >= m_cfg->sample_size) {
-				m_buffer_index = 0;
-				m_data_ready; /* TODO: Break here? */
-			}
-		}
-	}
+    if (expected) {
+        if (m_audio_data[0].size > expected * 2) {
+            for (auto &buf : m_audio_data) {
+                circlebuf_pop_front(&buf, nullptr, expected);
+            }
+        }
+
+        if (muted) {
+            for (size_t i = 0; i < UTIL_MIN(m_num_channels, 2); i++) {
+                circlebuf_push_back_zero(&m_audio_data[i], data->frames * sizeof(float));
+            }
+        } else {
+            for (size_t i = 0; i < UTIL_MIN(m_num_channels, 2); i++) {
+                circlebuf_push_back(&m_audio_data[i], data->data[i],
+                                    data->frames * sizeof(float));
+            }
+        }
+    }
+    m_cfg->value_mutex.unlock();
 }
 
 bool obs_internal_source::tick(float seconds)
@@ -98,18 +121,56 @@ bool obs_internal_source::tick(float seconds)
 		}
 	}
 
-	/* copy & convert data */
-//    bool cpy = m_data_ready;
-//    if (m_data_ready)
-//        m_data_ready = false;
-//    return cpy;
+	/* Copy captured data */
+	size_t data_size = m_audio_buf_len * sizeof(float);
+	if (!data_size)
+		return false;
+
+	if (m_audio_data[0].size < data_size) {
+		/* Clear buffers */
+		memset(m_audio_buf[0], 0, data_size);
+		memset(m_audio_buf[1], 0, data_size);
+		return false;
+	} else {
+		/* Otherwise copy & convert */
+		for (size_t i = 0; i < UTIL_MIN(m_num_channels, 2); i++) {
+			circlebuf_pop_front(&m_audio_data[i], m_audio_buf[i], data_size);
+		}
+
+		/* Convert to int16 */
+		for (size_t chan = 0; chan < UTIL_MIN(m_num_channels, 2); chan++) {
+			if (!m_audio_buf[chan])
+				continue;
+
+			for (uint32_t i = 0; i < m_audio_buf_len; i++) {
+				if (chan == 0) {
+					m_cfg->buffer[i].l = static_cast<int16_t>
+					                     (m_audio_buf[chan][i] * (UINT16_MAX / 2));
+				} else {
+					m_cfg->buffer[i].r = static_cast<int16_t>
+					                     (m_audio_buf[chan][i] * (UINT16_MAX / 2));
+				}
+			}
+		}
+	}
+
 	return true;
+}
+
+void obs_internal_source::resize_audio_buf(size_t new_len)
+{
+	m_audio_buf_len = new_len;
+	m_audio_buf[0] = static_cast<float *>(brealloc(m_audio_buf[0],
+	                                      new_len * sizeof(float)));
+	m_audio_buf[1] = static_cast<float *>(brealloc(m_audio_buf[1],
+	                                      new_len * sizeof(float)));
 }
 
 void obs_internal_source::update()
 {
     m_cfg->sample_rate = audio_output_get_sample_rate(obs_get_audio());
-    m_cfg->sample_size = m_cfg->sample_rate * DEFAULT_AUDIO_BUF_MS / MS_IN_S;
+    m_cfg->sample_size = m_cfg->sample_rate / m_cfg->fps;
+    m_num_channels = audio_output_get_channels(obs_get_audio());
     obs_weak_source_t *old = nullptr;
 
     if (m_cfg->audio_source_name.empty()) {
@@ -138,10 +199,9 @@ void obs_internal_source::update()
         }
         obs_weak_source_release(old);
     }
-}
 
-void obs_internal_source::clean_up()
-{
+	if (m_audio_buf_len == 0)
+		resize_audio_buf(m_cfg->sample_size);
 }
 
 }

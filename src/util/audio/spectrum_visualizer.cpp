@@ -44,27 +44,27 @@ namespace audio
 
     spectrum_visualizer::~spectrum_visualizer()
     {
-        fftw_free(m_fftw_input_left);
-        fftw_free(m_fftw_input_right);
-        fftw_free(m_fftw_output_left);
-        fftw_free(m_fftw_output_right);
+        bfree(m_fftw_input_left);
+        bfree(m_fftw_input_right);
+        bfree(m_fftw_output_left);
+        bfree(m_fftw_output_right);
     }
 
     void spectrum_visualizer::update()
     {
         audio_visualizer::update();
-        fftw_free(m_fftw_input_left);
-        fftw_free(m_fftw_input_right);
-        fftw_free(m_fftw_output_left);
-        fftw_free(m_fftw_output_right);
+        bfree(m_fftw_input_left);
+        bfree(m_fftw_input_right);
+        bfree(m_fftw_output_left);
+        bfree(m_fftw_output_right);
 
         m_fftw_results = (size_t) m_cfg->sample_size / 2 + 1;
-        m_fftw_input_left = (double*) fftw_malloc(sizeof(double) * m_cfg->sample_size);
-        m_fftw_input_right = (double*) fftw_malloc(sizeof(double) * m_cfg->sample_size);
+        m_fftw_input_left = (double*) bzalloc(sizeof(double) * m_cfg->sample_size);
+        m_fftw_input_right = (double*) bzalloc(sizeof(double) * m_cfg->sample_size);
 
-        m_fftw_output_left = (fftw_complex*) fftw_malloc(sizeof(fftw_complex)
+        m_fftw_output_left = (fftw_complex*) bzalloc(sizeof(fftw_complex)
                                                          * m_fftw_results);
-        m_fftw_output_right = (fftw_complex*) fftw_malloc(sizeof(fftw_complex)
+        m_fftw_output_right = (fftw_complex*) bzalloc(sizeof(fftw_complex)
                                                          * m_fftw_results);
     }
 
@@ -138,7 +138,7 @@ namespace audio
             if (m_cfg->channel == CM_BOTH)
                 fftw_destroy_plan(m_fftw_plan_right);
         } else {
-            debug("No input sleeping for %d ms.", 250);
+            debug("No input; sleeping for %d ms.", 250);
             m_sleeping = true;
         }
     }
@@ -149,16 +149,18 @@ namespace audio
 
         } else {
             int i = -1, pos_x = 0;
-            uint32_t height;
+            int32_t height;
             for (auto val : m_bars_left) {
                 i++;
-                if (val <= 1) {
+                height = static_cast<int32_t>(round(val));
+
+                if (height <= 1) {
                     if (m_cfg->clamp)
-                        val = m_cfg->bar_min_height;
+                        height = m_cfg->bar_min_height;
                     else
                         continue; /* Don't draw this bar */
                 }
-                height = round(val);
+
                 pos_x = i * (m_cfg->bar_width + m_cfg->bar_space);
                 gs_matrix_push();
                 gs_matrix_translate3f(pos_x, (m_cfg->bar_height - height), 0);

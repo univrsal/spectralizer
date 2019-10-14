@@ -35,6 +35,7 @@
 #define warn(format, ...)                       \
     write_log(LOG_WARNING, format, ##__VA_ARGS__)
 
+/* clang-format off */
 
 #define UTIL_EULER 2.7182818284590452353
 #define UTIL_SWAP(a, b) do { typeof(a) tmp = a; a = b; b = tmp; } while (0)
@@ -63,7 +64,7 @@
 #define T_INTEGRAl                      T_("Spectralizer.Integral")
 #define T_SENSITIVITY                   T_("Spectralizer.Sensitivity")
 #define T_FILTER_MODE                   T_("Spectralizer.Filter.Mode")
-#define T_FILTER_NONE                   T_("Spectralizer.Filter.None")
+#define T_FILTER_NONE                  	T_AUDIO_SOURCE_NONE
 #define T_FILTER_MONSTERCAT             T_("Spectralizer.Filter.Monstercat")
 #define T_MCAT_BAR_SPACE				T_("Spectralizer.Filter.Monstercat.Bar.Space")
 #define T_MCAT_BAR_WIDTH				T_("Spectralizer.Filter.Monstercat.Bar.Width")
@@ -133,32 +134,33 @@ namespace defaults {
     CNST channel_mode 	channel 		= CM_LEFT;
     CNST visual_mode 	visual			= VM_BARS;
     CNST smooting_mode	smoothing		= SM_NONE;
-    CNST uint32_t	color			= 0xffffffff;
+    CNST uint32_t		color			= 0xffffffff;
 
-    CNST uint16_t	detail			= 32,
-                        cx			= 50,
-                        cy			= 50,
-                        fps			= 30;
+    CNST uint16_t		detail			= 32,
+                        cx				= 50,
+                        cy				= 50,
+                        fps				= 30;
 
-    CNST uint32_t	sample_rate		= 44100,
-                    buffer_size		= 8129,
-                    sample_size 	= sample_rate / fps;
-    CNST uint16_t	audio_source	= 0;
+    CNST uint32_t		sample_rate		= 44100,
+                        sample_size 	= sample_rate / fps;
 
-    CNST double		lfreq_cut		= 30,
-                    hfreq_cut		= 22050,
-                    falloff_weight	= .95;
-    CNST uint32_t	sgs_points		= 3,		/* Should be a odd number */
-                    sgs_passes		= 2;
+    CNST double			lfreq_cut		= 30,
+                        hfreq_cut		= 22050,
+                        falloff_weight	= .95;
+    CNST uint32_t		sgs_points		= 3,		/* Should be a odd number */
+                        sgs_passes		= 2;
 
-    CNST double		mcat_smooth		= 1.5;
-    CNST uint32_t	mcat_bar_width	= 1,
-                    mcat_bar_space	= 0;
+    CNST double			mcat_smooth		= 1.5;
+    CNST uint32_t		mcat_bar_width	= 1,
+                        mcat_bar_space	= 0;
 
-    CNST uint16_t	bar_space		= 2,
-                    bar_width		= 5,
-                    bar_height		= 100,
-                    bar_min_height	= 5;
+    CNST uint16_t		bar_space		= 2,
+                        bar_width		= 5,
+                        bar_height		= 100,
+                        bar_min_height	= 5;
 
-    CNST char		*fifo_path		= "/tmp/mpd.fifo";
+    CNST char			*fifo_path		= "/tmp/mpd.fifo";
+    CNST char			*audio_source	= "none";
 };
+
+/* clang-format on */

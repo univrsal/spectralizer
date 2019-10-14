@@ -30,6 +30,14 @@ namespace audio
 
     fifo::fifo(source::config* cfg) : audio_source(cfg)
     {
+        update();
+    }
+
+    fifo::~fifo()
+    {
+        if (m_fifo_fd)
+            close(m_fifo_fd);
+        m_fifo_fd = 0;
     }
 
     void fifo::update()
@@ -77,14 +85,6 @@ namespace audio
         }
 
         return true;
-    }
-
-    void fifo::clean_up()
-    {
-        audio_source::clean_up();
-        if (m_fifo_fd)
-            close(m_fifo_fd);
-        m_fifo_fd = 0;
     }
 
     bool fifo::open_fifo()

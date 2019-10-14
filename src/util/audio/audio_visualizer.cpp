@@ -33,8 +33,6 @@ namespace audio
 
     audio_visualizer::~audio_visualizer()
     {
-        if (m_source)
-            m_source->clean_up();
         delete m_source;
         m_source = nullptr;
     }
@@ -47,7 +45,10 @@ namespace audio
             m_source_id = m_cfg->audio_source_name;
             if (m_source)
                 delete m_source;
-            if (m_cfg->audio_source_name == std::string("mpd")) {
+            if (m_cfg->audio_source_name.empty() ||
+                m_cfg->audio_source_name == std::string(defaults::audio_source)) {
+                m_source = nullptr;
+            } else if (m_cfg->audio_source_name == std::string("mpd")) {
                 m_source = new fifo(m_cfg);
             } else {
                 m_source = new obs_internal_source(m_cfg);
@@ -59,5 +60,7 @@ namespace audio
     {
         if (m_source)
             m_data_read = m_source->tick(seconds);
+        else
+            m_data_read = false;
     }
 }

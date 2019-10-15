@@ -19,82 +19,73 @@ class audio_visualizer;
 namespace source {
 
 struct config {
-    std::mutex value_mutex;
+	std::mutex value_mutex;
 
-    /* obs source stuff */
-    obs_source_t* source = nullptr;
-    obs_data_t* settings = nullptr;
+	/* obs source stuff */
+	obs_source_t *source = nullptr;
+	obs_data_t *settings = nullptr;
 
-    /* Misc */
-    const char* fifo_path = defaults::fifo_path;
+	/* Misc */
+	const char *fifo_path = defaults::fifo_path;
 
-    pcm_stereo_sample* buffer = nullptr;
+	pcm_stereo_sample *buffer = nullptr;
 
-    /* Appearance settings */
-    channel_mode channel = defaults::channel;
-    visual_mode visual = defaults::visual;
-    smooting_mode smoothing = defaults::smoothing;
-    uint32_t color = defaults::color;
-    uint16_t detail = defaults::detail,
-             cx = defaults::cx, cy = defaults::cy;
-    uint16_t fps = defaults::fps;
-    float refresh_rate = 1.f / fps,
-          refresh_counter = 0.f;
+	/* Appearance settings */
+	channel_mode channel = defaults::channel;
+	visual_mode visual = defaults::visual;
+	smooting_mode smoothing = defaults::smoothing;
+	uint32_t color = defaults::color;
+	uint16_t detail = defaults::detail, cx = defaults::cx, cy = defaults::cy;
+	uint16_t fps = defaults::fps;
+	float refresh_rate = 1.f / fps, refresh_counter = 0.f;
 
-    /* Audio settings */
-    uint32_t sample_rate = defaults::sample_rate;
-    uint32_t sample_size = defaults::sample_size;
+	/* Audio settings */
+	uint32_t sample_rate = defaults::sample_rate;
+	uint32_t sample_size = defaults::sample_size;
 
-    std::string audio_source_name = "";
-    double low_cutoff_freq = defaults::lfreq_cut;
-    double high_cutoff_freq = defaults::hfreq_cut;
+	std::string audio_source_name = "";
+	double low_cutoff_freq = defaults::lfreq_cut;
+	double high_cutoff_freq = defaults::hfreq_cut;
 
-    /* smoothing */
-    uint32_t sgs_points = defaults::sgs_points,
-             sgs_passes = defaults::sgs_passes;
+	/* smoothing */
+	uint32_t sgs_points = defaults::sgs_points, sgs_passes = defaults::sgs_passes;
 
-    double mcat_smoothing_factor = defaults::mcat_smooth;
-    uint32_t mcat_bar_width = defaults::mcat_bar_width;
-    uint32_t mcat_bar_space = defaults::mcat_bar_space;
+	double mcat_smoothing_factor = defaults::mcat_smooth;
+	uint32_t mcat_bar_width = defaults::mcat_bar_width;
+	uint32_t mcat_bar_space = defaults::mcat_bar_space;
 
-    /* Bar visualizer_source settings */
-    uint16_t bar_space = defaults::bar_space;
-    uint16_t bar_width = defaults::bar_width;
-    uint16_t bar_height = defaults::bar_height;
-    uint16_t bar_min_height = defaults::bar_min_height;
-    double falloff_weight = defaults::falloff_weight;
-    bool clamp = true;
+	/* Bar visualizer_source settings */
+	uint16_t bar_space = defaults::bar_space;
+	uint16_t bar_width = defaults::bar_width;
+	uint16_t bar_height = defaults::bar_height;
+	uint16_t bar_min_height = defaults::bar_min_height;
+	double falloff_weight = defaults::falloff_weight;
+	bool clamp = true;
 };
 
 class visualizer_source {
-    config m_config;
-    audio::audio_visualizer* m_visualizer = nullptr;
-    std::map<uint16_t, std::string> m_source_names;
+	config m_config;
+	audio::audio_visualizer *m_visualizer = nullptr;
+	std::map<uint16_t, std::string> m_source_names;
 
 public:
-    visualizer_source(obs_source_t* source, obs_data_t* settings);
-    ~visualizer_source();
+	visualizer_source(obs_source_t *source, obs_data_t *settings);
+	~visualizer_source();
 
-    inline void update(obs_data_t* settings);
-    inline void tick(float seconds);
-    inline void render(gs_effect_t* effect);
+	inline void update(obs_data_t *settings);
+	inline void tick(float seconds);
+	inline void render(gs_effect_t *effect);
 
-    uint32_t get_width() const
-    {
-        return m_config.cx;
-    }
+	uint32_t get_width() const { return m_config.cx; }
 
-    uint32_t get_height() const
-    {
-        return m_config.cy;
-    }
+	uint32_t get_height() const { return m_config.cy; }
 
-    void clear_source_names() { m_source_names.clear(); }
-    void add_source(uint16_t id, const char* name) { m_source_names[id] = name; }
+	void clear_source_names() { m_source_names.clear(); }
+	void add_source(uint16_t id, const char *name) { m_source_names[id] = name; }
 };
 
 /* Util for registering the source */
-static obs_properties_t* get_properties_for_visualiser(void* data);
+static obs_properties_t *get_properties_for_visualiser(void *data);
 
 void register_visualiser();
 }

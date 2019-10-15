@@ -28,18 +28,15 @@ namespace audio {
 /* Base class for audio reading */
 class audio_source {
 protected:
-    source::config* m_cfg;
+	source::config *m_cfg;
 
 public:
-    explicit audio_source(source::config* cfg)
-        : m_cfg(cfg)
-    {
-    }
+	explicit audio_source(source::config *cfg) : m_cfg(cfg) {}
 
-    virtual ~audio_source() {}
+	virtual ~audio_source() {}
 
-    /* obs_source methods */
-    virtual void update() = 0;
-    virtual bool tick(float seconds) = 0;
+	/* obs_source methods */
+	virtual void update() = 0;
+	virtual bool tick(float seconds) = 0;
 };
 }

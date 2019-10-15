@@ -26,26 +26,26 @@
 namespace audio {
 
 class obs_internal_source : public audio_source {
-    std::string m_capture_name = "";
-    obs_weak_source_t* m_capture_source = nullptr;
-    size_t m_max_capture_frames = 0;
-    uint8_t m_num_channels = 0;
-    uint64_t m_capture_check_time = 0;
-    circlebuf m_audio_data[2]; /* Left & Right data from capture callback */
+	std::string m_capture_name = "";
+	obs_weak_source_t *m_capture_source = nullptr;
+	size_t m_max_capture_frames = 0;
+	uint8_t m_num_channels = 0;
+	uint64_t m_capture_check_time = 0;
+	circlebuf m_audio_data[2]; /* Left & Right data from capture callback */
 
-    float* m_audio_buf[2] {}; /* Copy of captured audio */
-    size_t m_audio_buf_len = 0;
+	float *m_audio_buf[2]{}; /* Copy of captured audio */
+	size_t m_audio_buf_len = 0;
 
-    void resize_audio_buf(size_t new_len);
+	void resize_audio_buf(size_t new_len);
 
 public:
-    obs_internal_source(source::config* cfg);
-    ~obs_internal_source() override;
+	obs_internal_source(source::config *cfg);
+	~obs_internal_source() override;
 
-    bool tick(float seconds) override;
-    void update() override;
+	bool tick(float seconds) override;
+	void update() override;
 
-    void capture(obs_source_t* src, const struct audio_data* data, bool muted);
+	void capture(obs_source_t *src, const struct audio_data *data, bool muted);
 };
 
 }

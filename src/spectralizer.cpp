@@ -25,11 +25,11 @@ OBS_MODULE_USE_DEFAULT_LOCALE("spectralizer", "en-US")
 
 bool obs_module_load()
 {
-    source::register_visualiser();
-    return true;
+	source::register_visualiser();
+	return true;
 }
 
 void obs_module_unload()
 {
-    /* NO-OP */
+	/* NO-OP */
 }

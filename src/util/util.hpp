@@ -22,18 +22,13 @@
 #include <vector>
 
 /* Logging */
-#define log_src(log_level, format, ...)             \
-    blog(log_level, "[spectralizer: '%s'] " format, \
-        obs_source_get_name(context->source), ##__VA_ARGS__)
-#define write_log(log_level, format, ...) \
-    blog(log_level, "[spectralizer] " format, ##__VA_ARGS__)
+#define log_src(log_level, format, ...) \
+	blog(log_level, "[spectralizer: '%s'] " format, obs_source_get_name(context->source), ##__VA_ARGS__)
+#define write_log(log_level, format, ...) blog(log_level, "[spectralizer] " format, ##__VA_ARGS__)
 
-#define debug(format, ...) \
-    write_log(LOG_DEBUG, format, ##__VA_ARGS__)
-#define info(format, ...) \
-    write_log(LOG_INFO, format, ##__VA_ARGS__)
-#define warn(format, ...) \
-    write_log(LOG_WARNING, format, ##__VA_ARGS__)
+#define debug(format, ...) write_log(LOG_DEBUG, format, ##__VA_ARGS__)
+#define info(format, ...) write_log(LOG_INFO, format, ##__VA_ARGS__)
+#define warn(format, ...) write_log(LOG_WARNING, format, ##__VA_ARGS__)
 
 /* clang-format off */
 

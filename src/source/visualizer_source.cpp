@@ -38,7 +38,8 @@ visualizer_source::visualizer_source(obs_source_t *source, obs_data_t *settings)
 	switch (m_config.visual) {
 	case VM_BARS:
 		m_visualizer = new audio::spectrum_visualizer(&m_config);
-		break;
+        break;
+        /* TODO: Wire visualizer? */
 	default:;
 	}
 
@@ -74,14 +75,12 @@ void visualizer_source::update(obs_data_t *settings)
 	m_config.detail = obs_data_get_int(settings, S_DETAIL);
 	m_config.fifo_path = obs_data_get_string(settings, S_FIFO_PATH);
 	m_config.bar_height = obs_data_get_int(settings, S_BAR_HEIGHT);
-	m_config.clamp = obs_data_get_bool(settings, S_CLAMP);
 	m_config.smoothing = (smooting_mode)obs_data_get_int(settings, S_FILTER_MODE);
 	m_config.sgs_passes = obs_data_get_int(settings, S_SGS_PASSES);
 	m_config.sgs_points = obs_data_get_int(settings, S_SGS_POINTS);
-	m_config.mcat_bar_space = obs_data_get_int(settings, S_MCAT_BAR_SPACE);
-	m_config.mcat_bar_width = obs_data_get_int(settings, S_MCAT_BAR_WIDTH);
-	m_config.falloff_weight = obs_data_get_double(settings, S_GRAVITY);
-
+    m_config.falloff_weight = obs_data_get_double(settings, S_FALLOFF);
+    m_config.gravity = obs_data_get_double(settings, S_GRAVITY);
+    m_config.mcat_smoothing_factor = obs_data_get_double(settings, S_FILTER_STRENGTH);
 	m_config.cx = UTIL_MAX(m_config.detail * (m_config.bar_width + m_config.bar_space) - m_config.bar_space, 10);
 	m_config.cy = UTIL_MAX(m_config.bar_height, 10);
 
@@ -136,24 +135,16 @@ bool filter_changed(obs_properties_t *props, obs_property_t *p, obs_data_t *data
 	auto *strength = obs_properties_get(props, S_FILTER_STRENGTH);
 	auto *sgs_pass = obs_properties_get(props, S_SGS_PASSES);
 	auto *sgs_points = obs_properties_get(props, S_SGS_POINTS);
-	auto *mcat_width = obs_properties_get(props, S_MCAT_BAR_WIDTH);
-	auto *mcat_space = obs_properties_get(props, S_MCAT_BAR_SPACE);
 
 	if (mode == SM_NONE) {
 		obs_property_set_visible(strength, false);
 		obs_property_set_visible(sgs_pass, false);
 		obs_property_set_visible(sgs_points, false);
-		obs_property_set_visible(mcat_width, false);
-		obs_property_set_visible(mcat_space, false);
 	} else if (mode == SM_SGS) {
 		obs_property_set_visible(sgs_pass, true);
 		obs_property_set_visible(sgs_points, true);
-		obs_property_set_visible(mcat_width, false);
-		obs_property_set_visible(mcat_space, false);
 		obs_property_set_visible(strength, false);
 	} else if (mode == SM_MONSTERCAT) {
-		obs_property_set_visible(mcat_width, true);
-		obs_property_set_visible(mcat_space, true);
 		obs_property_set_visible(strength, true);
 		obs_property_set_visible(sgs_pass, false);
 		obs_property_set_visible(sgs_points, false);
@@ -217,10 +208,7 @@ obs_properties_t *get_properties_for_visualiser(void *data)
 							 false);
 	obs_property_set_visible(obs_properties_add_int(props, S_SGS_POINTS, T_SGS_POINTS, 1, 32, 1), false);
 	obs_property_set_visible(obs_properties_add_int(props, S_SGS_PASSES, T_SGS_PASSES, 1, 32, 1), false);
-	obs_property_set_visible(obs_properties_add_int(props, S_MCAT_BAR_SPACE, T_MCAT_BAR_SPACE, 0, 32, 1), false);
-	obs_property_set_visible(obs_properties_add_int(props, S_MCAT_BAR_WIDTH, T_MCAT_BAR_WIDTH, 1, 32, 1), false);
 
-	obs_properties_add_bool(props, S_CLAMP, T_CLAMP);
 	obs_properties_add_color(props, S_COLOR, T_COLOR);
 	auto *w = obs_properties_add_int(props, S_BAR_WIDTH, T_BAR_WIDTH, 1, UINT16_MAX, 1);
 	auto *h = obs_properties_add_int(props, S_BAR_HEIGHT, T_BAR_HEIGHT, 10, UINT16_MAX, 1);
@@ -234,9 +222,8 @@ obs_properties_t *get_properties_for_visualiser(void *data)
 	obs_property_set_visible(sr, false); /* Sampel rate is only needed for fifo */
 
 	/* Smoothing stuff */
-	obs_properties_add_float_slider(props, S_GRAVITY, T_GRAVITY, 0, 2, 0.01);
-	obs_properties_add_int_slider(props, S_INTEGRAL, T_INTEGRAl, 0, 100, 1);
-	obs_properties_add_int_slider(props, S_SENSITIVITY, T_SENSITIVITY, 1, 600, 1);
+    obs_properties_add_float_slider(props, S_GRAVITY, T_GRAVITY, 0, 1, 0.01);
+    obs_properties_add_float_slider(props, S_FALLOFF, T_FALLOFF, 0, 2, 0.01);
 
 	obs_property_list_add_string(src, T_AUDIO_SOURCE_NONE, defaults::audio_source);
 #ifdef LINUX
@@ -283,25 +270,21 @@ void register_visualiser()
 	si.get_width = [](void *data) { return reinterpret_cast<visualizer_source *>(data)->get_width(); };
 	si.get_height = [](void *data) { return reinterpret_cast<visualizer_source *>(data)->get_height(); };
 
-	si.get_defaults = [](obs_data_t *settings) {
+    si.get_defaults = [](obs_data_t *settings) {
+        obs_data_set_default_int(settings, S_COLOR, 0xFFFFFFFF);
 		obs_data_set_default_int(settings, S_DETAIL, defaults::detail);
 		obs_data_set_default_double(settings, S_REFRESH_RATE, defaults::fps);
 		obs_data_set_default_bool(settings, S_STEREO, false);
-		obs_data_set_default_bool(settings, S_CLAMP, true);
 		obs_data_set_default_int(settings, S_SOURCE_MODE, (int)VM_BARS);
 		obs_data_set_default_string(settings, S_AUDIO_SOURCE, defaults::audio_source);
 		obs_data_set_default_int(settings, S_SAMPLE_RATE, defaults::sample_rate);
 		obs_data_set_default_int(settings, S_FILTER_MODE, (int)SM_NONE);
 		obs_data_set_default_double(settings, S_FILTER_STRENGTH, defaults::mcat_smooth);
-		obs_data_set_default_int(settings, S_GRAVITY, 100);
-		obs_data_set_default_int(settings, S_INTEGRAL, 10);
-		obs_data_set_default_int(settings, S_SENSITIVITY, 100);
-		obs_data_set_default_string(settings, S_FIFO_PATH, defaults::fifo_path);
-		obs_data_set_default_int(settings, S_MCAT_BAR_WIDTH, defaults::mcat_bar_width);
-		obs_data_set_default_int(settings, S_MCAT_BAR_SPACE, defaults::mcat_bar_space);
+        obs_data_set_default_double(settings, S_GRAVITY, defaults::gravity);
+        obs_data_set_default_double(settings, S_FALLOFF, defaults::falloff_weight);
+        obs_data_set_default_string(settings, S_FIFO_PATH, defaults::fifo_path);
 		obs_data_set_default_int(settings, S_SGS_PASSES, defaults::sgs_passes);
 		obs_data_set_default_int(settings, S_SGS_POINTS, defaults::sgs_points);
-
 		obs_data_set_default_int(settings, S_BAR_WIDTH, defaults::bar_width);
 		obs_data_set_default_int(settings, S_BAR_HEIGHT, defaults::bar_height);
 		obs_data_set_default_int(settings, S_BAR_SPACE, defaults::bar_space);

@@ -56,18 +56,14 @@
 #define T_BAR_SPACING                   T_("Spectralizer.Bar.Space")
 #define T_COLOR                         T_("Spectralizer.Color")
 #define T_GRAVITY                       T_("Spectralizer.Gravity")
-#define T_INTEGRAl                      T_("Spectralizer.Integral")
-#define T_SENSITIVITY                   T_("Spectralizer.Sensitivity")
+#define T_FALLOFF						T_("Spectralizer.Falloff")
 #define T_FILTER_MODE                   T_("Spectralizer.Filter.Mode")
 #define T_FILTER_NONE                  	T_AUDIO_SOURCE_NONE
 #define T_FILTER_MONSTERCAT             T_("Spectralizer.Filter.Monstercat")
-#define T_MCAT_BAR_SPACE				T_("Spectralizer.Filter.Monstercat.Bar.Space")
-#define T_MCAT_BAR_WIDTH				T_("Spectralizer.Filter.Monstercat.Bar.Width")
 #define T_FILTER_SGS					T_("Spectralizer.Filter.SGS")
 #define T_SGS_PASSES					T_("Spectralizer.Filter.SGS.Passes")
 #define T_SGS_POINTS					T_("Spectralizer.Filter.SGS.Points")
 #define T_FILTER_STRENGTH    			T_("Spectralizer.Filter.Strength")
-#define T_CLAMP                         T_("Spectralizer.Clamp")
 
 #define S_SOURCE_MODE                   "source_mode"
 #define S_STEREO                        "stereo"
@@ -83,11 +79,8 @@
 #define S_FILTER_MODE                   "filter_mode"
 #define S_SGS_PASSES					"sgs_passes"
 #define S_SGS_POINTS					"sgs_points"
-#define S_MCAT_BAR_SPACE				"mcat_bar_space"
-#define S_MCAT_BAR_WIDTH				"mcat_bar_width"
 #define S_GRAVITY                       "gravity"
-#define S_INTEGRAL                      "integral"
-#define S_SENSITIVITY                   "sensitivity"
+#define S_FALLOFF						"falloff"
 #define S_FILTER_STRENGTH   			"filter_strength"
 #define S_CLAMP                         "clamp"
 
@@ -141,13 +134,12 @@ namespace defaults {
 
     CNST double			lfreq_cut		= 30,
                         hfreq_cut		= 22050,
-                        falloff_weight	= .95;
+                        falloff_weight	= .95,
+                        gravity			= .8;
     CNST uint32_t		sgs_points		= 3,		/* Should be a odd number */
                         sgs_passes		= 2;
 
     CNST double			mcat_smooth		= 1.5;
-    CNST uint32_t		mcat_bar_width	= 1,
-                        mcat_bar_space	= 0;
 
     CNST uint16_t		bar_space		= 2,
                         bar_width		= 5,

@@ -51,16 +51,14 @@ struct config {
 	uint32_t sgs_points = defaults::sgs_points, sgs_passes = defaults::sgs_passes;
 
 	double mcat_smoothing_factor = defaults::mcat_smooth;
-	uint32_t mcat_bar_width = defaults::mcat_bar_width;
-	uint32_t mcat_bar_space = defaults::mcat_bar_space;
 
 	/* Bar visualizer_source settings */
 	uint16_t bar_space = defaults::bar_space;
 	uint16_t bar_width = defaults::bar_width;
 	uint16_t bar_height = defaults::bar_height;
 	uint16_t bar_min_height = defaults::bar_min_height;
-	double falloff_weight = defaults::falloff_weight;
-	bool clamp = true;
+    double falloff_weight = defaults::falloff_weight;
+    double gravity = defaults::gravity;
 };
 
 class visualizer_source {

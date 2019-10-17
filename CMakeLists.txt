@@ -1,11 +1,7 @@
 project(spectralizer)
 
-message(STATUS "[spectralizer] On windows fftw3 is available in three versions. fftw3-3, fftw3f-3 and fftw3l-3. Going from least precision to most precesion. For this plugin least precision should be fine")
-
-find_path(FFTW_INCLUDE_DIRS fftw3.h)
-find_library(FFTW_LIBRARIES fftw3)
-
 if (MSVC)
+message(STATUS "[spectralizer] On windows fftw3 is available in three versions. fftw3-3, fftw3f-3 and fftw3l-3. Going from least precision to most precesion. For this plugin least precision should be fine")
     set(spectralizer_PLATFORM_DEPS
             w32-pthreads)
 endif ()
@@ -14,6 +10,10 @@ if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
     add_definitions(-DLINUX=1)
     add_definitions(-DUNIX=1)
 endif ()
+
+find_path(FFTW_INCLUDE_DIRS fftw3.h)
+find_library(FFTW_LIBRARIES fftw3)
+
 
 set(spectralizer_SOURCES
         src/spectralizer.cpp

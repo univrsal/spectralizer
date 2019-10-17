@@ -143,11 +143,9 @@ void spectrum_visualizer::render(gs_effect_t *effect)
 			i++;
 			height = static_cast<int32_t>(round(val));
 
-			if (height <= 1) {
-				if (m_cfg->clamp)
-					height = m_cfg->bar_min_height;
-				else
-					continue; /* Don't draw this bar */
+            if (height <= 1) {
+                /* Cannot draw a rectangle with no area */
+                height = m_cfg->bar_min_height;
 			}
 
 			pos_x = i * (m_cfg->bar_width + m_cfg->bar_space);

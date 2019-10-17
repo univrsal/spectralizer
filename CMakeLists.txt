@@ -1,7 +1,10 @@
 project(spectralizer)
 
+message(STATUS "[spectralizer] On windows fftw3 is available in three versions. fftw3-3, fftw3f-3 and fftw3l-3. Going from least precision to most precesion. For this plugin least precision should be fine")
+
 find_path(FFTW_INCLUDE_DIRS fftw3.h)
 find_library(FFTW_LIBRARIES fftw3)
+
 if (MSVC)
     set(spectralizer_PLATFORM_DEPS
             w32-pthreads)

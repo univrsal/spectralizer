@@ -16,6 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *************************************************************************/
 
+#ifdef LINUX
 #include "fifo.hpp"
 #include "../../source/visualizer_source.hpp"
 #include <fcntl.h>
@@ -107,3 +108,4 @@ bool fifo::open_fifo()
 	return false;
 }
 } /* namespace audio */
+#endif /* LINUX */

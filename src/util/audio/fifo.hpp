@@ -16,14 +16,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *************************************************************************/
 
-#ifdef LINUX
 
 #include "audio_source.hpp"
 
 namespace audio {
 class fifo : public audio_source {
 private:
-	const char *m_file_path = nullptr;
+#ifdef LINUX
+    const char *m_file_path = nullptr;
 	int m_fifo_fd = 0;
 	bool open_fifo();
 
@@ -32,7 +32,14 @@ public:
 	~fifo() override;
 	void update() override;
 	bool tick(float seconds) override;
+#endif //LINUX
+    /* Stub on windows */
+public:
+    fifo(source::config *cfg) : audio_source(cfg) {}
+    ~fifo() override {}
+    void update() override {}
+    bool tick(float seconds) override { return false; }
+
 };
 
 }
-#endif //LINUX

@@ -236,7 +236,7 @@ void spectrum_visualizer::monstercat_smoothing(doublev *bars)
 	// re-compute weights if needed, this is a performance tweak to computer the
 	// smoothing considerably faster
 	if (m_monstercat_smoothing_weights.size() != bars->size()) {
-		m_monstercat_smoothing_weights.reserve(bars->size());
+        m_monstercat_smoothing_weights.resize(bars->size());
 		for (auto i = 0u; i < bars->size(); ++i) {
 			m_monstercat_smoothing_weights[i] = std::pow(m_cfg->mcat_smoothing_factor, i);
 		}

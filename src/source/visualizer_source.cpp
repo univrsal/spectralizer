@@ -249,9 +249,17 @@ obs_properties_t *get_properties_for_visualiser(void *data)
 	obs_properties_add_bool(props, S_STEREO, T_STEREO);
 	obs_properties_add_int(props, S_DETAIL, T_DETAIL, 1, UINT16_MAX, 1);
 
+    struct obs_video_info ovi;
+    uint32_t max_fps = 30;
+    if (obs_get_video_info(&ovi)) {
+        max_fps = ovi.fps_num;
+    } else {
+        warn("[spectralizer] Couldn't determine max fps, setting fps higher than output will crash obs!");
+    }
+
 	auto *fps = obs_properties_add_int(props, S_REFRESH_RATE, T_REFRESH_RATE, 1, 255, 5);
 	obs_property_int_set_suffix(fps, " FPS");
-
+    obs_property_int_set_limits(fps, 1, max_fps, 1);
 	enum_data d;
 	d.list = src;
 	d.vis = reinterpret_cast<visualizer_source *>(data);

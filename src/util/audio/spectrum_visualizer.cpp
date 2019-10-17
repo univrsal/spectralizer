@@ -101,8 +101,10 @@ void spectrum_visualizer::tick(float seconds)
         if (m_cfg->stereo) {
 			m_fftw_plan_right = fftw_plan_dft_r2c_1d(static_cast<int>(m_cfg->sample_size), m_fftw_input_right,
 													 m_fftw_output_right, FFTW_ESTIMATE);
-			if (!m_fftw_plan_right)
-				return;
+            if (!m_fftw_plan_right) {
+                fftw_destroy_plan(m_fftw_plan_left);
+                return;
+            }
 			fftw_execute(m_fftw_plan_right);
 			height /= 2;
         }
@@ -115,13 +117,13 @@ void spectrum_visualizer::tick(float seconds)
 			create_spectrum_bars(m_fftw_output_right, m_fftw_results, height, m_cfg->detail, &m_bars_right_new,
 								 &m_bars_falloff_right);
 
-            m_bars_right.resize(m_bars_right_new.size());
+            m_bars_right.resize(m_bars_right_new.size(), 0.0);
             for (int i = 0; i < m_bars_right.size(); i++) {
                 m_bars_right[i] = m_bars_right[i] * m_cfg->gravity + m_bars_right_new[i] * grav;
             }
         }
 
-        m_bars_left.resize(m_bars_left_new.size());
+        m_bars_left.resize(m_bars_left_new.size(), 0.0);
         for (int i = 0; i < m_bars_left.size(); i++) {
             m_bars_left[i] = m_bars_left[i] * m_cfg->gravity + m_bars_left_new[i] * grav;
         }
@@ -142,6 +144,13 @@ void spectrum_visualizer::render(gs_effect_t *effect)
         int32_t height_l, height_r;
         int center = m_cfg->bar_height / 2;
         int offset = m_cfg->stereo_space / 2;
+
+        /* Just in case */
+        if (m_bars_left.size() != m_cfg->detail)
+            m_bars_left.resize(m_cfg->detail, 0.0);
+        if (m_bars_right.size() != m_cfg->detail)
+            m_bars_right.resize(m_cfg->detail, 0.0);
+
         for (; i < m_cfg->detail; i++) {
             height_l = UTIL_MAX(static_cast<int32_t>(round(m_bars_left[i])), 1);
             height_r = UTIL_MAX(static_cast<int32_t>(round(m_bars_right[i])), 1);

@@ -50,17 +50,12 @@ spectrum_visualizer::~spectrum_visualizer()
 void spectrum_visualizer::update()
 {
 	audio_visualizer::update();
-	bfree(m_fftw_input_left);
-	bfree(m_fftw_input_right);
-	bfree(m_fftw_output_left);
-	bfree(m_fftw_output_right);
-
 	m_fftw_results = (size_t)m_cfg->sample_size / 2 + 1;
-	m_fftw_input_left = (double *)bzalloc(sizeof(double) * m_cfg->sample_size);
-	m_fftw_input_right = (double *)bzalloc(sizeof(double) * m_cfg->sample_size);
+    m_fftw_input_left = (double *)brealloc(m_fftw_input_left, sizeof(double) * m_cfg->sample_size);
+    m_fftw_input_right = (double *)brealloc(m_fftw_input_right, sizeof(double) * m_cfg->sample_size);
 
-	m_fftw_output_left = (fftw_complex *)bzalloc(sizeof(fftw_complex) * m_fftw_results);
-	m_fftw_output_right = (fftw_complex *)bzalloc(sizeof(fftw_complex) * m_fftw_results);
+    m_fftw_output_left = (fftw_complex *)brealloc(m_fftw_output_left, sizeof(fftw_complex) * m_fftw_results);
+    m_fftw_output_right = (fftw_complex *)brealloc(m_fftw_output_right, sizeof(fftw_complex) * m_fftw_results);
 }
 
 void spectrum_visualizer::tick(float seconds)
@@ -82,9 +77,9 @@ void spectrum_visualizer::tick(float seconds)
 	const auto win_height = m_cfg->bar_height;
 	bool is_silent_left = true, is_silent_right = true;
 
-	if (m_cfg->channel == CM_BOTH) {
+    if (m_cfg->stereo) {
 		is_silent_left = prepare_fft_input(m_cfg->buffer, m_cfg->sample_size, m_fftw_input_left, CM_LEFT);
-		is_silent_right = prepare_fft_input(m_cfg->buffer, m_cfg->sample_rate, m_fftw_input_right, CM_RIGHT);
+        is_silent_right = prepare_fft_input(m_cfg->buffer, m_cfg->sample_size, m_fftw_input_right, CM_RIGHT);
 	} else {
 		is_silent_left = prepare_fft_input(m_cfg->buffer, m_cfg->sample_size, m_fftw_input_left, CM_LEFT);
 	}
@@ -98,33 +93,41 @@ void spectrum_visualizer::tick(float seconds)
 	/* TODO make this a constant */
 	if (m_silent_runs < 30) {
 		auto height = win_height;
-		m_fftw_plan_left = fftw_plan_dft_r2c_1d(static_cast<int>(m_cfg->sample_size), m_fftw_input_left,
+        double grav = 1 - m_cfg->gravity;
+        m_fftw_plan_left = fftw_plan_dft_r2c_1d(static_cast<int>(m_cfg->sample_size), m_fftw_input_left,
 												m_fftw_output_left, FFTW_ESTIMATE);
 		if (!m_fftw_plan_left)
 			return;
-		if (m_cfg->channel == CM_BOTH) {
+        if (m_cfg->stereo) {
 			m_fftw_plan_right = fftw_plan_dft_r2c_1d(static_cast<int>(m_cfg->sample_size), m_fftw_input_right,
 													 m_fftw_output_right, FFTW_ESTIMATE);
 			if (!m_fftw_plan_right)
 				return;
 			fftw_execute(m_fftw_plan_right);
 			height /= 2;
-		}
+        }
 
 		fftw_execute(m_fftw_plan_left);
 
 		create_spectrum_bars(m_fftw_output_left, m_fftw_results, height, m_cfg->detail, &m_bars_left_new,
 							 &m_bars_falloff_left);
-		if (m_cfg->channel == CM_BOTH)
+        if (m_cfg->stereo) {
 			create_spectrum_bars(m_fftw_output_right, m_fftw_results, height, m_cfg->detail, &m_bars_right_new,
 								 &m_bars_falloff_right);
 
-		m_bars_left.resize(m_bars_left_new.size());
-		for (int i = 0; i < m_bars_left.size(); i++)
-			m_bars_left[i] = (m_bars_left[i] * 2 + m_bars_left_new[i] + 3) / 3;
+            m_bars_right.resize(m_bars_right_new.size());
+            for (int i = 0; i < m_bars_right.size(); i++) {
+                m_bars_right[i] = m_bars_right[i] * m_cfg->gravity + m_bars_right_new[i] * grav;
+            }
+        }
+
+        m_bars_left.resize(m_bars_left_new.size());
+        for (int i = 0; i < m_bars_left.size(); i++) {
+            m_bars_left[i] = m_bars_left[i] * m_cfg->gravity + m_bars_left_new[i] * grav;
+        }
 
 		fftw_destroy_plan(m_fftw_plan_left);
-		if (m_cfg->channel == CM_BOTH)
+        if (m_cfg->stereo)
 			fftw_destroy_plan(m_fftw_plan_right);
 	} else {
 		debug("No input; sleeping for %d ms.", 250);
@@ -134,26 +137,42 @@ void spectrum_visualizer::tick(float seconds)
 
 void spectrum_visualizer::render(gs_effect_t *effect)
 {
-	if (m_cfg->channel == CM_BOTH) {
+    if (m_cfg->stereo) {
+        int i = 0, pos_x = 0;
+        int32_t height_l, height_r;
+        int center = m_cfg->bar_height / 2;
+        int offset = m_cfg->stereo_space / 2;
+        for (; i < m_cfg->detail; i++) {
+            height_l = UTIL_MAX(static_cast<int32_t>(round(m_bars_left[i])), 1);
+            height_r = UTIL_MAX(static_cast<int32_t>(round(m_bars_right[i])), 1);
 
+            pos_x = i * (m_cfg->bar_width + m_cfg->bar_space);
+
+            /* Top */
+            gs_matrix_push();
+            gs_matrix_translate3f(pos_x, (center - height_l) - offset, 0);
+            gs_draw_sprite(nullptr, 0, m_cfg->bar_width, height_l);
+            gs_matrix_pop();
+
+            /* Bottom */
+            gs_matrix_push();
+            gs_matrix_translate3f(pos_x, center + offset, 0);
+            gs_draw_sprite(nullptr, 0, m_cfg->bar_width, height_r);
+            gs_matrix_pop();
+        }
 	} else {
-		int i = -1, pos_x = 0;
+        int i = 0, pos_x = 0;
 		int32_t height;
 		for (auto val : m_bars_left) {
-			i++;
-			height = static_cast<int32_t>(round(val));
-
-            if (height <= 1) {
-                /* Cannot draw a rectangle with no area */
-                height = m_cfg->bar_min_height;
-			}
+            height = UTIL_MAX(static_cast<int32_t>(round(val)), 1);
 
 			pos_x = i * (m_cfg->bar_width + m_cfg->bar_space);
 			gs_matrix_push();
 			gs_matrix_translate3f(pos_x, (m_cfg->bar_height - height), 0);
 			gs_draw_sprite(nullptr, 0, m_cfg->bar_width, height);
 			gs_matrix_pop();
-		}
+            i++;
+        }
 	}
 	UNUSED_PARAMETER(effect);
 }
@@ -168,10 +187,10 @@ bool spectrum_visualizer::prepare_fft_input(pcm_stereo_sample *buffer, uint32_t 
 		case CM_LEFT:
 			fftw_input[i] = buffer[i].l;
 			break;
-		case CM_RIGHT:
-			fftw_input[i] = buffer[i].r;
-			break;
-		case CM_BOTH:
+        case CM_RIGHT:
+            fftw_input[i] = buffer[i].r;
+            break;
+        case CM_BOTH:
 			fftw_input[i] = buffer[i].l + buffer[i].r;
 			break;
 		}

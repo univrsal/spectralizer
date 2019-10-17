@@ -68,7 +68,8 @@ void visualizer_source::update(obs_data_t *settings)
 	m_config.refresh_rate = 1.f / m_config.fps;
 	m_config.audio_source_name = obs_data_get_string(settings, S_AUDIO_SOURCE);
 	m_config.visual = (visual_mode)(obs_data_get_int(settings, S_SOURCE_MODE));
-	m_config.channel = (channel_mode)obs_data_get_bool(settings, S_STEREO);
+    m_config.stereo = obs_data_get_bool(settings, S_STEREO);
+    m_config.stereo_space = obs_data_get_int(settings, S_STEREO_SPACE);
 	m_config.color = obs_data_get_int(settings, S_COLOR);
 	m_config.bar_width = obs_data_get_int(settings, S_BAR_WIDTH);
 	m_config.bar_space = obs_data_get_int(settings, S_BAR_SPACE);
@@ -82,7 +83,7 @@ void visualizer_source::update(obs_data_t *settings)
     m_config.gravity = obs_data_get_double(settings, S_GRAVITY);
     m_config.mcat_smoothing_factor = obs_data_get_double(settings, S_FILTER_STRENGTH);
 	m_config.cx = UTIL_MAX(m_config.detail * (m_config.bar_width + m_config.bar_space) - m_config.bar_space, 10);
-	m_config.cy = UTIL_MAX(m_config.bar_height, 10);
+    m_config.cy = UTIL_MAX(m_config.bar_height + m_config.stereo_space, 10);
 
 	if (m_visualizer) /* this modifies sample size, if an internal audio source is used */
 		m_visualizer->update();
@@ -169,6 +170,15 @@ bool source_changed(obs_properties_t *props, obs_property_t *p, obs_data_t *data
 	return true;
 }
 
+bool stereo_changed(obs_properties_t *props, obs_property_t *p, obs_data_t *data)
+{
+
+    auto stereo = obs_data_get_bool(data, S_STEREO);
+    auto *space = obs_properties_get(props, S_STEREO_SPACE);
+    obs_property_set_visible(space, stereo);
+    return true;
+}
+
 static bool add_source(void *data, obs_source_t *src)
 {
 	uint32_t caps = obs_source_get_output_flags(src);
@@ -234,7 +244,9 @@ obs_properties_t *get_properties_for_visualiser(void *data)
 #endif
 
 	obs_properties_add_bool(props, S_STEREO, T_STEREO);
-	obs_properties_add_int(props, S_DETAIL, T_DETAIL, 1, UINT16_MAX, 1);
+    auto* space = obs_properties_add_int(props, S_STEREO_SPACE, T_STEREO_SPACE, 0, UINT16_MAX, 1);
+    obs_property_int_set_suffix(space, " Pixel");
+    obs_properties_add_int(props, S_DETAIL, T_DETAIL, 1, UINT16_MAX, 1);
 
     struct obs_video_info ovi;
     uint32_t max_fps = 30;
@@ -274,7 +286,7 @@ void register_visualiser()
         obs_data_set_default_int(settings, S_COLOR, 0xFFFFFFFF);
 		obs_data_set_default_int(settings, S_DETAIL, defaults::detail);
 		obs_data_set_default_double(settings, S_REFRESH_RATE, defaults::fps);
-		obs_data_set_default_bool(settings, S_STEREO, false);
+        obs_data_set_default_bool(settings, S_STEREO, defaults::stereo);
 		obs_data_set_default_int(settings, S_SOURCE_MODE, (int)VM_BARS);
 		obs_data_set_default_string(settings, S_AUDIO_SOURCE, defaults::audio_source);
 		obs_data_set_default_int(settings, S_SAMPLE_RATE, defaults::sample_rate);

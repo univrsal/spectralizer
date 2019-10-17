@@ -18,6 +18,7 @@ find_library(FFTW_LIBRARIES fftw3)
 set(spectralizer_SOURCES
         src/spectralizer.cpp
         src/source/visualizer_source.cpp
+        src/source/visualizer_source.hpp
         src/util/util.hpp
         src/util/audio/spectrum_visualizer.cpp
         src/util/audio/spectrum_visualizer.hpp

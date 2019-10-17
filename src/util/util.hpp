@@ -44,6 +44,7 @@
 #define T_MODE_BARS                     T_("Spectralizer.Mode.Bars")
 #define T_MODE_WIRE                     T_("Spectralizer.Mode.Wire")
 #define T_STEREO                        T_("Spectralizer.Stereo")
+#define T_STEREO_SPACE					T_("Spectralizer.Stereo.Space")
 #define T_DETAIL                        T_("Spectralizer.Detail")
 #define T_REFRESH_RATE                  T_("Spectralizer.RefreshRate")
 #define T_AUDIO_SOURCE                  T_("Spectralizer.AudioSource")
@@ -67,6 +68,7 @@
 
 #define S_SOURCE_MODE                   "source_mode"
 #define S_STEREO                        "stereo"
+#define S_STEREO_SPACE					"stereo_space"
 #define S_DETAIL                        "detail"
 #define S_REFRESH_RATE                  "refresh_rate"
 #define S_AUDIO_SOURCE                  "audio_source"
@@ -119,7 +121,7 @@ using pcm_stereo_sample = struct stereo_sample_frame;
 #define CNST			static const constexpr
 
 namespace defaults {
-    CNST channel_mode 	channel 		= CM_LEFT;
+    CNST bool			stereo			= false;
     CNST visual_mode 	visual			= VM_BARS;
     CNST smooting_mode	smoothing		= SM_NONE;
     CNST uint32_t		color			= 0xffffffff;

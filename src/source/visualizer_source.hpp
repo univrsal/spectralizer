@@ -27,17 +27,17 @@ struct config {
 
 	/* Misc */
 	const char *fifo_path = defaults::fifo_path;
-
+	bool auto_clear = false;
 	pcm_stereo_sample *buffer = nullptr;
 
-	/* Appearance settings */
+    /* Appearance settings */
     bool stereo = defaults::stereo;
-	visual_mode visual = defaults::visual;
-	smooting_mode smoothing = defaults::smoothing;
-	uint32_t color = defaults::color;
-	uint16_t detail = defaults::detail, cx = defaults::cx, cy = defaults::cy;
-	uint16_t fps = defaults::fps;
-	float refresh_rate = 1.f / fps, refresh_counter = 0.f;
+    visual_mode visual = defaults::visual;
+    smooting_mode smoothing = defaults::smoothing;
+    uint32_t color = defaults::color;
+    uint16_t detail = defaults::detail, cx = defaults::cx, cy = defaults::cy;
+    uint16_t fps = defaults::fps;
+    float refresh_rate = 1.f / fps, refresh_counter = 0.f;
 
 	/* Audio settings */
 	uint32_t sample_rate = defaults::sample_rate;
@@ -56,10 +56,10 @@ struct config {
 	uint16_t bar_space = defaults::bar_space;
 	uint16_t bar_width = defaults::bar_width;
 	uint16_t bar_height = defaults::bar_height;
-    uint16_t bar_min_height = defaults::bar_min_height;
-    uint16_t stereo_space = 0;
-    double falloff_weight = defaults::falloff_weight;
-    double gravity = defaults::gravity;
+	uint16_t bar_min_height = defaults::bar_min_height;
+	uint16_t stereo_space = 0;
+	double falloff_weight = defaults::falloff_weight;
+	double gravity = defaults::gravity;
 };
 
 class visualizer_source {

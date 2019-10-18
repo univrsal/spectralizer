@@ -81,12 +81,17 @@ void obs_internal_source::capture(obs_source_t *src, const struct audio_data *da
 			}
 		}
 	}
+
+#ifdef LINUX
+	if (m_cfg->auto_clear)
+		m_last_capture = os_gettime_ns();
+#endif
 	m_cfg->value_mutex.unlock();
 }
 
 bool obs_internal_source::tick(float seconds)
 {
-	/* Audio capturing is done in separate callback
+    /* Audio capturing is done in separate callback
      * and is technically only done, once the circle buffer is
      * filled, but we'll just assume that's always the case */
 

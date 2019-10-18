@@ -59,5 +59,12 @@ void audio_visualizer::tick(float seconds)
 		m_data_read = m_source->tick(seconds);
 	else
 		m_data_read = false;
+
+#ifdef LINUX
+	if (m_cfg->auto_clear && !m_data_read) {
+		/* Clear buffer */
+		memset(m_cfg->buffer, 0, m_cfg->sample_size * sizeof(pcm_stereo_sample));
+	}
+#endif
 }
 }

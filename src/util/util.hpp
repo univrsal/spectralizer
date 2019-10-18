@@ -23,7 +23,7 @@
 
 /* Logging */
 #define log_src(log_level, format, ...) \
-	blog(log_level, "[spectralizer: '%s'] " format, obs_source_get_name(context->source), ##__VA_ARGS__)
+    blog(log_level, "[spectralizer: '%s'] " format, obs_source_get_name(context->source), ##__VA_ARGS__)
 #define write_log(log_level, format, ...) blog(log_level, "[spectralizer] " format, ##__VA_ARGS__)
 
 #define debug(format, ...) write_log(LOG_DEBUG, format, ##__VA_ARGS__)
@@ -65,6 +65,7 @@
 #define T_SGS_PASSES					T_("Spectralizer.Filter.SGS.Passes")
 #define T_SGS_POINTS					T_("Spectralizer.Filter.SGS.Points")
 #define T_FILTER_STRENGTH    			T_("Spectralizer.Filter.Strength")
+#define T_AUTO_CLEAR					T_("Spectralizer.AutoClear")
 
 #define S_SOURCE_MODE                   "source_mode"
 #define S_STEREO                        "stereo"
@@ -84,7 +85,7 @@
 #define S_GRAVITY                       "gravity"
 #define S_FALLOFF						"falloff"
 #define S_FILTER_STRENGTH   			"filter_strength"
-#define S_CLAMP                         "clamp"
+#define S_AUTO_CLEAR  					"auto_clear"
 
 enum visual_mode
 {

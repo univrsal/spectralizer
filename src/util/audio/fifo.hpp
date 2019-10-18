@@ -21,8 +21,8 @@
 
 namespace audio {
 class fifo : public audio_source {
-private:
 #ifdef LINUX
+private:
     const char *m_file_path = nullptr;
 	int m_fifo_fd = 0;
 	bool open_fifo();
@@ -32,14 +32,13 @@ public:
 	~fifo() override;
 	void update() override;
 	bool tick(float seconds) override;
-#endif //LINUX
-    /* Stub on windows */
+#else /* Stubs on Windows */
 public:
     fifo(source::config *cfg) : audio_source(cfg) {}
     ~fifo() override {}
     void update() override {}
     bool tick(float seconds) override { return false; }
-
+#endif /* Linux */
 };
 
 }

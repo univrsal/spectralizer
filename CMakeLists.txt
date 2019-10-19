@@ -14,6 +14,15 @@ endif ()
 find_path(FFTW_INCLUDE_DIRS fftw3.h)
 find_library(FFTW_LIBRARIES fftw3)
 
+if (WIN32)
+        set(FFTW_BINARY fftw3-3.dll)
+	math(EXPR BITS "8*${CMAKE_SIZEOF_VOID_P}")
+	add_custom_command(TARGET obs-browser POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy_directory
+		"./fftw3/bin/${BITS}bit/${FFTW_BINARY}"
+		"${CMAKE_BINARY_DIR}/rundir/$<CONFIGURATION>/obs-plugins/${BITS}bit/"
+	)
+endif()
 
 set(spectralizer_SOURCES
         src/spectralizer.cpp
@@ -36,5 +45,6 @@ target_link_libraries(spectralizer
         libobs
         ${FFTW_LIBRARIES}
         ${spectralizer_PLATFORM_DEPS})
+
 include_directories(${FFTW_INCLUDE_DIRS})
 install_obs_plugin_with_data(spectralizer data)

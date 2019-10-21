@@ -1,7 +1,8 @@
 project(spectralizer)
 
 if (MSVC)
-message(STATUS "[spectralizer] On windows fftw3 is available in three versions. fftw3-3, fftw3f-3 and fftw3l-3. Going from least precision to most precesion. For this plugin least precision should be fine")
+message(STATUS "[spectralizer] On windows fftw3 is available in three versions. fftw3-3, fftw3f-3 and fftw3l-3."
+             "\n               Going from least precision to most precision. Least precision should be fine")
     set(spectralizer_PLATFORM_DEPS
             w32-pthreads)
 endif ()
@@ -13,16 +14,6 @@ endif ()
 
 find_path(FFTW_INCLUDE_DIRS fftw3.h)
 find_library(FFTW_LIBRARIES fftw3)
-
-if (WIN32)
-        set(FFTW_BINARY fftw3-3.dll)
-	math(EXPR BITS "8*${CMAKE_SIZEOF_VOID_P}")
-	add_custom_command(TARGET obs-browser POST_BUILD
-		COMMAND ${CMAKE_COMMAND} -E copy_directory
-		"./fftw3/bin/${BITS}bit/${FFTW_BINARY}"
-		"${CMAKE_BINARY_DIR}/rundir/$<CONFIGURATION>/obs-plugins/${BITS}bit/"
-	)
-endif()
 
 set(spectralizer_SOURCES
         src/spectralizer.cpp
@@ -48,3 +39,13 @@ target_link_libraries(spectralizer
 
 include_directories(${FFTW_INCLUDE_DIRS})
 install_obs_plugin_with_data(spectralizer data)
+
+if (WIN32)
+        set(FFTW_BINARY libfftw3-3.dll)
+        math(EXPR BITS "8*${CMAKE_SIZEOF_VOID_P}")
+        add_custom_command(TARGET spectralizer POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy
+                "${CMAKE_CURRENT_SOURCE_DIR}/fftw3/bin/${BITS}bit/${FFTW_BINARY}"
+                "${CMAKE_BINARY_DIR}/rundir/$<CONFIGURATION>/obs-plugins/${BITS}bit/"
+        )
+endif()

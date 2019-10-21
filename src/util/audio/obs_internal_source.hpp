@@ -46,7 +46,7 @@ public:
 	obs_internal_source(source::config *cfg);
 	~obs_internal_source() override;
 
-	bool tick(float seconds) override;
+    bool tick(float seconds) override;
 	void update() override;
 
 	void capture(obs_source_t *src, const struct audio_data *data, bool muted);

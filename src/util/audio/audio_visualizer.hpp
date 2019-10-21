@@ -41,7 +41,9 @@ public:
 
 	virtual void update();
 
-	virtual void tick(float seconds);
+    /* Active is set to true, if the current tick is in sync with the
+     * user configured fps */
+    virtual void tick(float seconds);
 
 	virtual void render(gs_effect_t *effect) = 0;
 };

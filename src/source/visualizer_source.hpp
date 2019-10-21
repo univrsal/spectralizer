@@ -37,7 +37,6 @@ struct config {
     uint32_t color = defaults::color;
     uint16_t detail = defaults::detail, cx = defaults::cx, cy = defaults::cy;
     uint16_t fps = defaults::fps;
-    float refresh_rate = 1.f / fps, refresh_counter = 0.f;
 
 	/* Audio settings */
 	uint32_t sample_rate = defaults::sample_rate;
@@ -72,7 +71,7 @@ public:
 	~visualizer_source();
 
 	inline void update(obs_data_t *settings);
-	inline void tick(float seconds);
+    inline void tick(float seconds);
 	inline void render(gs_effect_t *effect);
 
 	uint32_t get_width() const { return m_config.cx; }

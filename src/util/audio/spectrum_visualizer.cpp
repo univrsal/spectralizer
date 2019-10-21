@@ -69,10 +69,7 @@ void spectrum_visualizer::tick(float seconds)
 		return;
 	}
 
-	audio_visualizer::tick(seconds);
-	/* TODO: Check if data was read? */
-	if (!m_data_read)
-		debug("No data was read...");
+    audio_visualizer::tick(seconds);
 
 	const auto win_height = m_cfg->bar_height;
 	bool is_silent_left = true, is_silent_right = true;
@@ -132,7 +129,7 @@ void spectrum_visualizer::tick(float seconds)
         if (m_cfg->stereo)
             fftw_destroy_plan(m_fftw_plan_right);
     } else {
-        debug("No input; sleeping for %d ms.", 250);
+        info("No input; sleeping for %d ms.", 250);
         m_sleeping = true;
     }
 }
@@ -142,8 +139,8 @@ void spectrum_visualizer::render(gs_effect_t *effect)
     if (m_cfg->stereo) {
         int i = 0, pos_x = 0;
         int32_t height_l, height_r;
-        int center = m_cfg->bar_height / 2;
         int offset = m_cfg->stereo_space / 2;
+        int center = m_cfg->bar_height / 2 + offset;
 
         /* Just in case */
         if (m_bars_left.size() != m_cfg->detail)

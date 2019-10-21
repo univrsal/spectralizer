@@ -62,11 +62,9 @@ visualizer_source::~visualizer_source()
 void visualizer_source::update(obs_data_t *settings)
 {
 	m_config.value_mutex.lock();
-	m_config.sample_rate = obs_data_get_int(settings, S_SAMPLE_RATE);
-	m_config.fps = UTIL_MAX(obs_data_get_int(settings, S_REFRESH_RATE), 1);
+    m_config.audio_source_name = obs_data_get_string(settings, S_AUDIO_SOURCE);
+    m_config.sample_rate = obs_data_get_int(settings, S_SAMPLE_RATE);
 	m_config.sample_size = m_config.sample_rate / m_config.fps;
-	m_config.refresh_rate = 1.f / m_config.fps;
-	m_config.audio_source_name = obs_data_get_string(settings, S_AUDIO_SOURCE);
 	m_config.visual = (visual_mode)(obs_data_get_int(settings, S_SOURCE_MODE));
 	m_config.stereo = obs_data_get_bool(settings, S_STEREO);
 	m_config.stereo_space = obs_data_get_int(settings, S_STEREO_SPACE);
@@ -83,11 +81,20 @@ void visualizer_source::update(obs_data_t *settings)
 	m_config.gravity = obs_data_get_double(settings, S_GRAVITY);
 	m_config.mcat_smoothing_factor = obs_data_get_double(settings, S_FILTER_STRENGTH);
 	m_config.cx = UTIL_MAX(m_config.detail * (m_config.bar_width + m_config.bar_space) - m_config.bar_space, 10);
-	m_config.cy = UTIL_MAX(m_config.bar_height + m_config.stereo_space, 10);
+    m_config.cy = UTIL_MAX(m_config.bar_height + (m_config.stereo ? m_config.stereo_space : 0), 10);
 
 #ifdef LINUX
 	m_config.auto_clear = obs_data_get_bool(settings, S_AUTO_CLEAR);
+
+    struct obs_video_info ovi;
+    if (obs_get_video_info(&ovi)) {
+        m_config.fps = ovi.fps_num;
+    } else {
+        m_config.fps = 30;
+        warn("Couldn't fps, mpd fifo might not work as intended!");
+    }
 #endif
+
 	if (m_visualizer) /* this modifies sample size, if an internal audio source is used */
 		m_visualizer->update();
 
@@ -101,14 +108,11 @@ void visualizer_source::update(obs_data_t *settings)
 void visualizer_source::tick(float seconds)
 {
 	m_config.value_mutex.lock();
-	m_config.refresh_counter += seconds;
 
-	if (m_config.refresh_counter >= m_config.refresh_rate) {
-		if (m_visualizer)
-			m_visualizer->tick(seconds);
-		m_config.refresh_counter = 0.f;
-	}
-	m_config.value_mutex.unlock();
+    if (m_visualizer)
+        m_visualizer->tick(seconds);
+
+    m_config.value_mutex.unlock();
 }
 
 void visualizer_source::render(gs_effect_t *effect)
@@ -249,22 +253,14 @@ obs_properties_t *get_properties_for_visualiser(void *data)
 	obs_properties_add_bool(props, S_AUTO_CLEAR, T_AUTO_CLEAR);
 #endif
 
-    obs_properties_add_bool(props, S_STEREO, T_STEREO);
+    auto* stereo = obs_properties_add_bool(props, S_STEREO, T_STEREO);
     auto* space = obs_properties_add_int(props, S_STEREO_SPACE, T_STEREO_SPACE, 0, UINT16_MAX, 1);
     obs_property_int_set_suffix(space, " Pixel");
     obs_properties_add_int(props, S_DETAIL, T_DETAIL, 1, UINT16_MAX, 1);
+    obs_property_set_visible(space, false);
+    obs_property_set_modified_callback(stereo, stereo_changed);
 
-    struct obs_video_info ovi;
-    uint32_t max_fps = 30;
-    if (obs_get_video_info(&ovi)) {
-        max_fps = ovi.fps_num;
-    } else {
-        warn("[spectralizer] Couldn't determine max fps, setting fps higher than output will crash obs!");
-    }
 
-	auto *fps = obs_properties_add_int(props, S_REFRESH_RATE, T_REFRESH_RATE, 1, 255, 5);
-	obs_property_int_set_suffix(fps, " FPS");
-	obs_property_int_set_limits(fps, 1, max_fps, 1);
 	enum_data d;
 	d.list = src;
 	d.vis = reinterpret_cast<visualizer_source *>(data);
@@ -291,7 +287,6 @@ void register_visualiser()
     si.get_defaults = [](obs_data_t *settings) {
         obs_data_set_default_int(settings, S_COLOR, 0xFFFFFFFF);
         obs_data_set_default_int(settings, S_DETAIL, defaults::detail);
-        obs_data_set_default_double(settings, S_REFRESH_RATE, defaults::fps);
         obs_data_set_default_bool(settings, S_STEREO, defaults::stereo);
         obs_data_set_default_int(settings, S_SOURCE_MODE, (int)VM_BARS);
         obs_data_set_default_string(settings, S_AUDIO_SOURCE, defaults::audio_source);

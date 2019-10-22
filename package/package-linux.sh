@@ -1,11 +1,20 @@
 #!/bin/sh
 # Automatic packaging for linux builds
 
+MACHINE_TYPE=`uname -m`
+if [ ${MACHINE_TYPE} == 'x86_64' ]; then
+	echo "Preparing 64bit build"
+	bits="64"
+else
+	echo "Preparing 32bit build"
+	bits="32"
+fi
+
 version=$1
 data_dir="../data"
 project="spectralizer"
-arch="linux64"
-build_location="../../../qtc-relwithdeb/rundir/RelWithDebInfo/obs-plugins/64bit"
+arch="linux$bits"
+build_location="../../../qtc-relwithdeb/rundir/RelWithDebInfo/obs-plugins/${bits}bit"
 build_dir=$project.v$version.$arch
 
 if [ -z "$version" ]; then
@@ -15,10 +24,10 @@ fi
 
 echo "Creating build directory"
 mkdir -p $build_dir/plugin
-mkdir -p $build_dir/plugin/bin/64bit
+mkdir -p $build_dir/plugin/bin/${bits}bit
 
 echo "Fetching build from $build_location"
-cp $build_location/$project.so $build_dir/plugin/bin/64bit/
+cp $build_location/$project.so $build_dir/plugin/bin/${bits}bit/
 
 echo "Fetching locale from $data_dir"
 cp -R $data_dir $build_dir/plugin

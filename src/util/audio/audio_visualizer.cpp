@@ -56,7 +56,7 @@ void audio_visualizer::update()
 void audio_visualizer::tick(float seconds)
 {
 	if (m_source)
-        m_data_read = m_source->tick(seconds);
+		m_data_read = m_source->tick(seconds);
 	else
 		m_data_read = false;
 

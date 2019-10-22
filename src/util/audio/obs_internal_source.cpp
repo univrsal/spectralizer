@@ -44,8 +44,8 @@ obs_internal_source::~obs_internal_source()
 	if (m_capture_source) {
 		obs_source_t *source = obs_weak_source_get_source(m_capture_source);
 		if (source) {
-            info("Removed audio capture from '%s'", obs_source_get_name(source));
-            obs_source_remove_audio_capture_callback(source, audio_capture, this);
+			info("Removed audio capture from '%s'", obs_source_get_name(source));
+			obs_source_remove_audio_capture_callback(source, audio_capture, this);
 			obs_source_release(source);
 		}
 		obs_weak_source_release(m_capture_source);
@@ -61,8 +61,8 @@ void obs_internal_source::capture(obs_source_t *src, const struct audio_data *da
 {
 	m_cfg->value_mutex.lock();
 
-    if (m_max_capture_frames < data->frames)
-        m_max_capture_frames = data->frames;
+	if (m_max_capture_frames < data->frames)
+		m_max_capture_frames = data->frames;
 
 	size_t expected = m_max_capture_frames * sizeof(float);
 
@@ -80,7 +80,7 @@ void obs_internal_source::capture(obs_source_t *src, const struct audio_data *da
 		} else {
 			for (size_t i = 0; i < UTIL_MIN(m_num_channels, 2); i++) {
 				circlebuf_push_back(&m_audio_data[i], data->data[i], data->frames * sizeof(float));
-            }
+			}
 		}
 	}
 
@@ -93,7 +93,7 @@ void obs_internal_source::capture(obs_source_t *src, const struct audio_data *da
 
 bool obs_internal_source::tick(float seconds)
 {
-    /* Audio capturing is done in separate callback
+	/* Audio capturing is done in separate callback
      * and is technically only done, once the circle buffer is
      * filled, but we'll just assume that's always the case */
 
@@ -117,8 +117,8 @@ bool obs_internal_source::tick(float seconds)
 			weak_capture = nullptr;
 		}
 
-        if (capture) {
-            info("Added audio capture to '%s'", obs_source_get_name(capture));
+		if (capture) {
+			info("Added audio capture to '%s'", obs_source_get_name(capture));
 			obs_source_add_audio_capture_callback(capture, audio_capture, this);
 			obs_weak_source_release(weak_capture);
 			obs_source_release(capture);
@@ -127,17 +127,17 @@ bool obs_internal_source::tick(float seconds)
 
 	/* Copy captured data */
 	size_t data_size = m_audio_buf_len * sizeof(float);
-    if (!data_size) {
-        debug("Buffer is empty");
-        return false;
-    }
+	if (!data_size) {
+		debug("Buffer is empty");
+		return false;
+	}
 
 	if (m_audio_data[0].size < data_size) {
 		/* Clear buffers */
 		memset(m_audio_buf[0], 0, data_size);
-        memset(m_audio_buf[1], 0, data_size);
-        debug("No Data in circle buffer");
-        return false;
+		memset(m_audio_buf[1], 0, data_size);
+		debug("No Data in circle buffer");
+		return false;
 	} else {
 		/* Otherwise copy & convert */
 		for (size_t i = 0; i < UTIL_MIN(m_num_channels, 2); i++) {
@@ -171,12 +171,12 @@ void obs_internal_source::resize_audio_buf(size_t new_len)
 
 void obs_internal_source::update()
 {
-    m_cfg->sample_rate = audio_output_get_sample_rate(obs_get_audio());
-    /* Usually the frame rate is used as a divisor, but
+	m_cfg->sample_rate = audio_output_get_sample_rate(obs_get_audio());
+	/* Usually the frame rate is used as a divisor, but
      * it seems that rates below 60 result in a sample size that's too large
      * and therefore will break the visualizer so I'll just use 60 as a constant here
      */
-    m_cfg->sample_size = m_cfg->sample_rate / 60;
+	m_cfg->sample_size = m_cfg->sample_rate / 60;
 	m_num_channels = audio_output_get_channels(obs_get_audio());
 	obs_weak_source_t *old = nullptr;
 
@@ -199,15 +199,15 @@ void obs_internal_source::update()
 
 	if (old) {
 		obs_source_t *old_source = obs_weak_source_get_source(old);
-        if (old_source) {
-            info("Removed audio capture from '%s'", obs_source_get_name(old_source));
+		if (old_source) {
+			info("Removed audio capture from '%s'", obs_source_get_name(old_source));
 			obs_source_remove_audio_capture_callback(old_source, audio_capture, this);
 			obs_source_release(old_source);
 		}
 		obs_weak_source_release(old);
 	}
 
-    if (m_audio_buf_len != m_cfg->sample_size)
+	if (m_audio_buf_len != m_cfg->sample_size)
 		resize_audio_buf(m_cfg->sample_size);
 }
 

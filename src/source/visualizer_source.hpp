@@ -30,13 +30,13 @@ struct config {
 	bool auto_clear = false;
 	pcm_stereo_sample *buffer = nullptr;
 
-    /* Appearance settings */
-    bool stereo = defaults::stereo;
-    visual_mode visual = defaults::visual;
-    smooting_mode smoothing = defaults::smoothing;
-    uint32_t color = defaults::color;
-    uint16_t detail = defaults::detail, cx = defaults::cx, cy = defaults::cy;
-    uint16_t fps = defaults::fps;
+	/* Appearance settings */
+	bool stereo = defaults::stereo;
+	visual_mode visual = defaults::visual;
+	smooting_mode smoothing = defaults::smoothing;
+	uint32_t color = defaults::color;
+	uint16_t detail = defaults::detail, cx = defaults::cx, cy = defaults::cy;
+	uint16_t fps = defaults::fps;
 
 	/* Audio settings */
 	uint32_t sample_rate = defaults::sample_rate;
@@ -71,7 +71,7 @@ public:
 	~visualizer_source();
 
 	inline void update(obs_data_t *settings);
-    inline void tick(float seconds);
+	inline void tick(float seconds);
 	inline void render(gs_effect_t *effect);
 
 	uint32_t get_width() const { return m_config.cx; }

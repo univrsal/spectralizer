@@ -37,6 +37,6 @@ public:
 
 	/* obs_source methods */
 	virtual void update() = 0;
-    virtual bool tick(float seconds) = 0;
+	virtual bool tick(float seconds) = 0;
 };
 }

@@ -42,7 +42,6 @@ fifo::~fifo()
 
 void fifo::update()
 {
-	audio_source::update();
 	m_file_path = m_cfg->fifo_path;
 	open_fifo();
 }

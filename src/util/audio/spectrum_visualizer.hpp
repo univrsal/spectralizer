@@ -84,7 +84,7 @@ public:
 
 	void update() override;
 
-    void tick(float seconds) override;
+	void tick(float seconds) override;
 
 	void render(gs_effect_t *effect) override;
 };

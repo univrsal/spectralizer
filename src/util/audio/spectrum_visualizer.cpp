@@ -25,18 +25,18 @@
 
 namespace audio {
 spectrum_visualizer::spectrum_visualizer(source::config *cfg)
-    : audio_visualizer(cfg),
-      m_fftw_input_left(nullptr),
-      m_fftw_input_right(nullptr),
-      m_fftw_output_left(nullptr),
-      m_fftw_output_right(nullptr),
-      m_fftw_plan_left(nullptr),
-      m_fftw_plan_right(nullptr),
-      m_fftw_results(0),
-      m_silent_runs(0u),
-      m_last_bar_count(0)
+	: audio_visualizer(cfg),
+	  m_fftw_input_left(nullptr),
+	  m_fftw_input_right(nullptr),
+	  m_fftw_output_left(nullptr),
+	  m_fftw_output_right(nullptr),
+	  m_fftw_plan_left(nullptr),
+	  m_fftw_plan_right(nullptr),
+	  m_fftw_results(0),
+	  m_silent_runs(0u),
+	  m_last_bar_count(0)
 {
-    update();
+	update();
 }
 
 spectrum_visualizer::~spectrum_visualizer()
@@ -54,8 +54,8 @@ void spectrum_visualizer::update()
 	m_fftw_input_left = (double *)brealloc(m_fftw_input_left, sizeof(double) * m_cfg->sample_size);
 	m_fftw_input_right = (double *)brealloc(m_fftw_input_right, sizeof(double) * m_cfg->sample_size);
 
-    m_fftw_output_left = (fftw_complex *)brealloc(m_fftw_output_left, sizeof(fftw_complex) * m_fftw_results);
-    m_fftw_output_right = (fftw_complex *)brealloc(m_fftw_output_right, sizeof(fftw_complex) * m_fftw_results);
+	m_fftw_output_left = (fftw_complex *)brealloc(m_fftw_output_left, sizeof(fftw_complex) * m_fftw_results);
+	m_fftw_output_right = (fftw_complex *)brealloc(m_fftw_output_right, sizeof(fftw_complex) * m_fftw_results);
 }
 
 void spectrum_visualizer::tick(float seconds)
@@ -69,7 +69,7 @@ void spectrum_visualizer::tick(float seconds)
 		return;
 	}
 
-    audio_visualizer::tick(seconds);
+	audio_visualizer::tick(seconds);
 
 	const auto win_height = m_cfg->bar_height;
 	bool is_silent_left = true, is_silent_right = true;
@@ -92,12 +92,12 @@ void spectrum_visualizer::tick(float seconds)
 		auto height = win_height;
 		double grav = 1 - m_cfg->gravity;
 		m_fftw_plan_left = fftw_plan_dft_r2c_1d(static_cast<int>(m_cfg->sample_size), m_fftw_input_left,
-		                                        m_fftw_output_left, FFTW_ESTIMATE);
+												m_fftw_output_left, FFTW_ESTIMATE);
 		if (!m_fftw_plan_left)
 			return;
 		if (m_cfg->stereo) {
 			m_fftw_plan_right = fftw_plan_dft_r2c_1d(static_cast<int>(m_cfg->sample_size), m_fftw_input_right,
-			                                         m_fftw_output_right, FFTW_ESTIMATE);
+													 m_fftw_output_right, FFTW_ESTIMATE);
 			if (!m_fftw_plan_right) {
 				fftw_destroy_plan(m_fftw_plan_left);
 				return;
@@ -109,68 +109,68 @@ void spectrum_visualizer::tick(float seconds)
 		fftw_execute(m_fftw_plan_left);
 
 		create_spectrum_bars(m_fftw_output_left, m_fftw_results, height, m_cfg->detail, &m_bars_left_new,
-		                     &m_bars_falloff_left);
+							 &m_bars_falloff_left);
 		if (m_cfg->stereo) {
 			create_spectrum_bars(m_fftw_output_right, m_fftw_results, height, m_cfg->detail, &m_bars_right_new,
-			                     &m_bars_falloff_right);
+								 &m_bars_falloff_right);
 
-            m_bars_right.resize(m_bars_right_new.size(), 0.0);
-            for (int i = 0; i < m_bars_right.size(); i++) {
-                m_bars_right[i] = m_bars_right[i] * m_cfg->gravity + m_bars_right_new[i] * grav;
-            }
-        }
+			m_bars_right.resize(m_bars_right_new.size(), 0.0);
+			for (int i = 0; i < m_bars_right.size(); i++) {
+				m_bars_right[i] = m_bars_right[i] * m_cfg->gravity + m_bars_right_new[i] * grav;
+			}
+		}
 
-        m_bars_left.resize(m_bars_left_new.size(), 0.0);
-        for (int i = 0; i < m_bars_left.size(); i++) {
-            m_bars_left[i] = m_bars_left[i] * m_cfg->gravity + m_bars_left_new[i] * grav;
-        }
+		m_bars_left.resize(m_bars_left_new.size(), 0.0);
+		for (int i = 0; i < m_bars_left.size(); i++) {
+			m_bars_left[i] = m_bars_left[i] * m_cfg->gravity + m_bars_left_new[i] * grav;
+		}
 
-        fftw_destroy_plan(m_fftw_plan_left);
-        if (m_cfg->stereo)
-            fftw_destroy_plan(m_fftw_plan_right);
-    } else {
-        info("No input; sleeping for %d ms.", 250);
-        m_sleeping = true;
-    }
+		fftw_destroy_plan(m_fftw_plan_left);
+		if (m_cfg->stereo)
+			fftw_destroy_plan(m_fftw_plan_right);
+	} else {
+		info("No input; sleeping for %d ms.", 250);
+		m_sleeping = true;
+	}
 }
 
 void spectrum_visualizer::render(gs_effect_t *effect)
 {
-    if (m_cfg->stereo) {
-        int i = 0, pos_x = 0;
-        int32_t height_l, height_r;
-        int offset = m_cfg->stereo_space / 2;
-        int center = m_cfg->bar_height / 2 + offset;
+	if (m_cfg->stereo) {
+		int i = 0, pos_x = 0;
+		int32_t height_l, height_r;
+		int offset = m_cfg->stereo_space / 2;
+		int center = m_cfg->bar_height / 2 + offset;
 
-        /* Just in case */
-        if (m_bars_left.size() != m_cfg->detail)
-            m_bars_left.resize(m_cfg->detail, 0.0);
-        if (m_bars_right.size() != m_cfg->detail)
-            m_bars_right.resize(m_cfg->detail, 0.0);
+		/* Just in case */
+		if (m_bars_left.size() != m_cfg->detail)
+			m_bars_left.resize(m_cfg->detail, 0.0);
+		if (m_bars_right.size() != m_cfg->detail)
+			m_bars_right.resize(m_cfg->detail, 0.0);
 
-        for (; i < m_cfg->detail; i++) {
-            height_l = UTIL_MAX(static_cast<int32_t>(round(m_bars_left[i])), 1);
-            height_r = UTIL_MAX(static_cast<int32_t>(round(m_bars_right[i])), 1);
+		for (; i < m_cfg->detail; i++) {
+			height_l = UTIL_MAX(static_cast<int32_t>(round(m_bars_left[i])), 1);
+			height_r = UTIL_MAX(static_cast<int32_t>(round(m_bars_right[i])), 1);
 
-            pos_x = i * (m_cfg->bar_width + m_cfg->bar_space);
+			pos_x = i * (m_cfg->bar_width + m_cfg->bar_space);
 
-            /* Top */
-            gs_matrix_push();
-            gs_matrix_translate3f(pos_x, (center - height_l) - offset, 0);
-            gs_draw_sprite(0, 0, m_cfg->bar_width, height_l);
-            gs_matrix_pop();
+			/* Top */
+			gs_matrix_push();
+			gs_matrix_translate3f(pos_x, (center - height_l) - offset, 0);
+			gs_draw_sprite(0, 0, m_cfg->bar_width, height_l);
+			gs_matrix_pop();
 
-            /* Bottom */
-            gs_matrix_push();
-            gs_matrix_translate3f(pos_x, center + offset, 0);
-            gs_draw_sprite(0, 0, m_cfg->bar_width, height_r);
-            gs_matrix_pop();
-        }
-    } else {
-        int i = 0, pos_x = 0;
-        int32_t height;
-        for (auto val : m_bars_left) {
-            height = UTIL_MAX(static_cast<int32_t>(round(val)), 1);
+			/* Bottom */
+			gs_matrix_push();
+			gs_matrix_translate3f(pos_x, center + offset, 0);
+			gs_draw_sprite(0, 0, m_cfg->bar_width, height_r);
+			gs_matrix_pop();
+		}
+	} else {
+		int i = 0, pos_x = 0;
+		int32_t height;
+		for (auto val : m_bars_left) {
+			height = UTIL_MAX(static_cast<int32_t>(round(val)), 1);
 
 			pos_x = i * (m_cfg->bar_width + m_cfg->bar_space);
 			gs_matrix_push();
@@ -184,19 +184,19 @@ void spectrum_visualizer::render(gs_effect_t *effect)
 }
 
 bool spectrum_visualizer::prepare_fft_input(pcm_stereo_sample *buffer, uint32_t sample_size, double *fftw_input,
-                                            channel_mode channel_mode)
+											channel_mode channel_mode)
 {
-    bool is_silent = true;
+	bool is_silent = true;
 
 	for (auto i = 0u; i < sample_size; ++i) {
 		switch (channel_mode) {
 		case CM_LEFT:
 			fftw_input[i] = buffer[i].l;
 			break;
-			case CM_RIGHT:
-				fftw_input[i] = buffer[i].r;
-				break;
-			case CM_BOTH:
+		case CM_RIGHT:
+			fftw_input[i] = buffer[i].r;
+			break;
+		case CM_BOTH:
 			fftw_input[i] = buffer[i].l + buffer[i].r;
 			break;
 		}
@@ -278,7 +278,7 @@ void spectrum_visualizer::monstercat_smoothing(doublev *bars)
 				if (i != j) {
 					const auto index = static_cast<size_t>(j);
 					const auto weighted_value =
-					    (*bars)[outer_index] / m_monstercat_smoothing_weights[static_cast<size_t>(std::abs(i - j))];
+						(*bars)[outer_index] / m_monstercat_smoothing_weights[static_cast<size_t>(std::abs(i - j))];
 
 					// Note: do not use max here, since it's actually slower.
 					// Separating the assignment from the comparison avoids an
@@ -310,8 +310,8 @@ void spectrum_visualizer::apply_falloff(const doublev &bars, doublev *falloff_ba
 }
 
 void spectrum_visualizer::calculate_moving_average_and_std_dev(double new_value, size_t max_number_of_elements,
-                                                               doublev *old_values, double *moving_average,
-                                                               double *std_dev) const
+															   doublev *old_values, double *moving_average,
+															   double *std_dev) const
 {
 	if (old_values->size() > max_number_of_elements)
 		old_values->erase(old_values->begin());
@@ -334,15 +334,15 @@ void spectrum_visualizer::scale_bars(int32_t height, doublev *bars)
 
 	// max number of elements to calculate for moving average
 	const auto max_number_of_elements = static_cast<size_t>(
-	    ((constants::auto_scale_span * m_cfg->sample_rate) / (static_cast<double>(m_cfg->sample_size))) * 2.0);
+		((constants::auto_scale_span * m_cfg->sample_rate) / (static_cast<double>(m_cfg->sample_size))) * 2.0);
 
 	double std_dev = 0.0;
 	double moving_average = 0.0;
 	calculate_moving_average_and_std_dev(*max_height_iter, max_number_of_elements, &m_previous_max_heights,
-	                                     &moving_average, &std_dev);
+										 &moving_average, &std_dev);
 
 	maybe_reset_scaling_window(*max_height_iter, max_number_of_elements, &m_previous_max_heights, &moving_average,
-	                           &std_dev);
+							   &std_dev);
 
 	auto max_height = moving_average + (2 * std_dev);
 	max_height = std::max(max_height, 1.0); // avoid division by zero when
@@ -355,7 +355,7 @@ void spectrum_visualizer::scale_bars(int32_t height, doublev *bars)
 }
 
 void spectrum_visualizer::maybe_reset_scaling_window(double current_max_height, size_t max_number_of_elements,
-                                                     doublev *values, double *moving_average, double *std_dev)
+													 doublev *values, double *moving_average, double *std_dev)
 {
 	const auto reset_window_size = (constants::auto_scaling_reset_window * max_number_of_elements);
 	// Current max height is much larger than moving average, so throw away most
@@ -363,31 +363,31 @@ void spectrum_visualizer::maybe_reset_scaling_window(double current_max_height, 
 	if (static_cast<double>(values->size()) > reset_window_size) {
 		// get average over scaling window
 		auto average_over_reset_window =
-		    std::accumulate(values->begin(), values->begin() + static_cast<int64_t>(reset_window_size), 0.0) /
-		    reset_window_size;
+			std::accumulate(values->begin(), values->begin() + static_cast<int64_t>(reset_window_size), 0.0) /
+			reset_window_size;
 
 		// if short term average very different from long term moving average,
 		// reset window and re-calculate
 		if (std::abs(average_over_reset_window - *moving_average) >
-		    (constants::deviation_amount_to_reset * (*std_dev))) {
+			(constants::deviation_amount_to_reset * (*std_dev))) {
 			values->erase(values->begin(),
-			              values->begin() + static_cast<int64_t>((static_cast<double>(values->size()) *
-			                                                      constants::auto_scaling_erase_percent)));
+						  values->begin() + static_cast<int64_t>((static_cast<double>(values->size()) *
+																  constants::auto_scaling_erase_percent)));
 
 			calculate_moving_average_and_std_dev(current_max_height, max_number_of_elements, values, moving_average,
-			                                     std_dev);
+												 std_dev);
 		}
 	}
 }
 
 void spectrum_visualizer::create_spectrum_bars(fftw_complex *fftw_output, size_t fftw_results, int32_t win_height,
-                                               uint32_t number_of_bars, doublev *bars, doublev *bars_falloff)
+											   uint32_t number_of_bars, doublev *bars, doublev *bars_falloff)
 {
 	// cut off frequencies only have to be re-calculated if number of bars
 	// change
 	if (m_last_bar_count != number_of_bars) {
 		recalculate_cutoff_frequencies(number_of_bars, &m_low_cutoff_frequencies, &m_high_cutoff_frequencies,
-		                               &m_frequency_constants_per_bin);
+									   &m_frequency_constants_per_bin);
 		m_last_bar_count = number_of_bars;
 	}
 
@@ -406,10 +406,10 @@ void spectrum_visualizer::create_spectrum_bars(fftw_complex *fftw_output, size_t
 }
 
 void spectrum_visualizer::recalculate_cutoff_frequencies(uint32_t number_of_bars, uint32v *low_cutoff_frequencies,
-                                                         uint32v *high_cutoff_frequencies, doublev *freqconst_per_bin)
+														 uint32v *high_cutoff_frequencies, doublev *freqconst_per_bin)
 {
 	auto freq_const =
-	    std::log10((m_cfg->low_cutoff_freq / m_cfg->high_cutoff_freq)) / ((1.0 / number_of_bars + 1.0) - 1.0);
+		std::log10((m_cfg->low_cutoff_freq / m_cfg->high_cutoff_freq)) / ((1.0 / number_of_bars + 1.0) - 1.0);
 
 	(*low_cutoff_frequencies) = std::vector<uint32_t>(number_of_bars + 1);
 	(*high_cutoff_frequencies) = std::vector<uint32_t>(number_of_bars + 1);
@@ -417,13 +417,13 @@ void spectrum_visualizer::recalculate_cutoff_frequencies(uint32_t number_of_bars
 
 	for (auto i = 0u; i <= number_of_bars; i++) {
 		(*freqconst_per_bin)[i] =
-		    static_cast<double>(m_cfg->high_cutoff_freq) *
-		    std::pow(10.0, (freq_const * -1) + (((i + 1.0) / (number_of_bars + 1.0)) * freq_const));
+			static_cast<double>(m_cfg->high_cutoff_freq) *
+			std::pow(10.0, (freq_const * -1) + (((i + 1.0) / (number_of_bars + 1.0)) * freq_const));
 
 		auto frequency = (*freqconst_per_bin)[i] / (m_cfg->sample_rate / 2.0);
 
 		(*low_cutoff_frequencies)[i] =
-		    static_cast<uint32_t>(std::floor(frequency * static_cast<double>(m_cfg->sample_size) / 4.0));
+			static_cast<uint32_t>(std::floor(frequency * static_cast<double>(m_cfg->sample_size) / 4.0));
 
 		if (i > 0) {
 			if ((*low_cutoff_frequencies)[i] <= (*low_cutoff_frequencies)[i - 1]) {
@@ -435,8 +435,8 @@ void spectrum_visualizer::recalculate_cutoff_frequencies(uint32_t number_of_bars
 }
 
 void spectrum_visualizer::generate_bars(uint32_t number_of_bars, size_t fftw_results,
-                                        const uint32v &low_cutoff_frequencies, const uint32v &high_cutoff_frequencies,
-                                        const fftw_complex *fftw_output, doublev *bars) const
+										const uint32v &low_cutoff_frequencies, const uint32v &high_cutoff_frequencies,
+										const fftw_complex *fftw_output, doublev *bars) const
 {
 	if (bars->size() != number_of_bars) {
 		bars->resize(number_of_bars, 0.0);
@@ -445,9 +445,9 @@ void spectrum_visualizer::generate_bars(uint32_t number_of_bars, size_t fftw_res
 	for (auto i = 0u; i < number_of_bars; i++) {
 		double freq_magnitude = 0.0;
 		for (auto cutoff_freq = low_cutoff_frequencies[i];
-		     cutoff_freq <= high_cutoff_frequencies[i] && cutoff_freq < fftw_results; ++cutoff_freq) {
+			 cutoff_freq <= high_cutoff_frequencies[i] && cutoff_freq < fftw_results; ++cutoff_freq) {
 			freq_magnitude += std::sqrt((fftw_output[cutoff_freq][0] * fftw_output[cutoff_freq][0]) +
-			                            (fftw_output[cutoff_freq][1] * fftw_output[cutoff_freq][1]));
+										(fftw_output[cutoff_freq][1] * fftw_output[cutoff_freq][1]));
 		}
 		(*bars)[i] = freq_magnitude / (high_cutoff_frequencies[i] - low_cutoff_frequencies[i] + 1);
 

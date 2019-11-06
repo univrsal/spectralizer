@@ -129,7 +129,6 @@ void spectrum_visualizer::tick(float seconds)
 		if (m_cfg->stereo)
 			fftw_destroy_plan(m_fftw_plan_right);
 	} else {
-		info("No input; sleeping for %d ms.", 250);
 		m_sleeping = true;
 	}
 }

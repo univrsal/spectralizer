@@ -1,7 +1,7 @@
 /*************************************************************************
  * This file is part of spectralizer
  * github.con/univrsal/spectralizer
- * Copyright 2019 univrsal <universailp@web.de>.
+ * Copyright 2020 univrsal <universailp@web.de>.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,11 +25,11 @@ OBS_MODULE_USE_DEFAULT_LOCALE("spectralizer", "en-US")
 
 bool obs_module_load()
 {
-	source::register_visualiser();
-	return true;
+    source::register_visualiser();
+    return true;
 }
 
 void obs_module_unload()
 {
-	/* NO-OP */
+    /* NO-OP */
 }

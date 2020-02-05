@@ -1,7 +1,7 @@
 /*************************************************************************
  * This file is part of spectralizer
  * github.con/univrsal/spectralizer
- * Copyright 2019 univrsal <universailp@web.de>.
+ * Copyright 2020 univrsal <universailp@web.de>.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@
 
 /* Logging */
 #define log_src(log_level, format, ...) \
-	blog(log_level, "[spectralizer: '%s'] " format, obs_source_get_name(context->source), ##__VA_ARGS__)
+    blog(log_level, "[spectralizer: '%s'] " format, obs_source_get_name(context->source), ##__VA_ARGS__)
 #define write_log(log_level, format, ...) blog(log_level, "[spectralizer] " format, ##__VA_ARGS__)
 
 #define debug(format, ...) write_log(LOG_DEBUG, format, ##__VA_ARGS__)
@@ -66,6 +66,9 @@
 #define T_SGS_POINTS					T_("Spectralizer.Filter.SGS.Points")
 #define T_FILTER_STRENGTH    			T_("Spectralizer.Filter.Strength")
 #define T_AUTO_CLEAR					T_("Spectralizer.AutoClear")
+#define T_AUTO_SCALE					T_("Spectralizer.Use.AutoScale")
+#define T_SCALE_BOOST					T_("Spectralizer.Scale.Boost")
+#define T_SCALE_SIZE					T_("Spectralizer.Scale.Size")
 
 #define S_SOURCE_MODE                   "source_mode"
 #define S_STEREO                        "stereo"
@@ -86,6 +89,9 @@
 #define S_FALLOFF						"falloff"
 #define S_FILTER_STRENGTH   			"filter_strength"
 #define S_AUTO_CLEAR  					"auto_clear"
+#define S_AUTO_SCALE					"use_auto_scale"
+#define S_SCALE_BOOST					"scale_boost"
+#define S_SCALE_SIZE					"scale_size"
 
 enum visual_mode
 {
@@ -151,6 +157,10 @@ namespace defaults {
 
     CNST char			*fifo_path		= "/tmp/mpd.fifo";
     CNST char			*audio_source	= "none";
+
+    CNST bool			use_auto_scale	= true;
+    CNST double			scale_boost		= 0.0;
+    CNST double			scale_size		= 1.0;
 };
 
 namespace constants {

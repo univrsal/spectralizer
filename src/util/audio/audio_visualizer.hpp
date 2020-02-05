@@ -1,7 +1,7 @@
 /*************************************************************************
  * This file is part of spectralizer
  * github.con/univrsal/spectralizer
- * Copyright 2019 univrsal <universailp@web.de>.
+ * Copyright 2020 univrsal <universailp@web.de>.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,21 +30,21 @@ class audio_source;
 
 class audio_visualizer {
 protected:
-	audio::audio_source *m_source = nullptr;
-	source::config *m_cfg = nullptr;
-	std::string m_source_id = "none"; /* where to read audio from */
-	bool m_data_read = false;         /* Audio source will return false if reading failed */
+    audio::audio_source* m_source = nullptr;
+    source::config* m_cfg = nullptr;
+    std::string m_source_id = "none"; /* where to read audio from */
+    bool m_data_read = false; /* Audio source will return false if reading failed */
 
 public:
-	audio_visualizer(source::config *cfg);
-	virtual ~audio_visualizer();
+    audio_visualizer(source::config* cfg);
+    virtual ~audio_visualizer();
 
-	virtual void update();
+    virtual void update();
 
-	/* Active is set to true, if the current tick is in sync with the
+    /* Active is set to true, if the current tick is in sync with the
      * user configured fps */
-	virtual void tick(float seconds);
+    virtual void tick(float seconds);
 
-	virtual void render(gs_effect_t *effect) = 0;
+    virtual void render(gs_effect_t* effect) = 0;
 };
 }

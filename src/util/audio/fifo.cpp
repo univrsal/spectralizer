@@ -28,84 +28,83 @@
 
 namespace audio {
 
-fifo::fifo(source::config* cfg)
-    : audio_source(cfg)
+fifo::fifo(source::config *cfg) : audio_source(cfg)
 {
-    update();
+	update();
 }
 
 fifo::~fifo()
 {
-    if (m_fifo_fd)
-        close(m_fifo_fd);
-    m_fifo_fd = 0;
+	if (m_fifo_fd)
+		close(m_fifo_fd);
+	m_fifo_fd = 0;
 }
 
 void fifo::update()
 {
-    m_file_path = m_cfg->fifo_path;
-    open_fifo();
+	m_file_path = m_cfg->fifo_path;
+	open_fifo();
 }
 
 bool fifo::tick(float seconds)
 {
-    if (m_fifo_fd < 0 && !open_fifo())
-        return false;
+	if (m_fifo_fd < 0 && !open_fifo())
+		return false;
 
-    auto buffer_size_bytes = static_cast<size_t>(sizeof(pcm_stereo_sample) * m_cfg->sample_size);
-    size_t bytes_left = buffer_size_bytes;
-    auto attempts = 0;
-    memset(m_cfg->buffer, 0, buffer_size_bytes);
+	auto buffer_size_bytes = static_cast<size_t>(sizeof(pcm_stereo_sample) * m_cfg->sample_size);
+	size_t bytes_left = buffer_size_bytes;
+	auto attempts = 0;
+	memset(m_cfg->buffer, 0, buffer_size_bytes);
 
-    while (bytes_left > 0) {
-        int64_t bytes_read = read(m_fifo_fd, m_cfg->buffer, bytes_left);
+	while (bytes_left > 0) {
+		int64_t bytes_read = read(m_fifo_fd, m_cfg->buffer, bytes_left);
 
-        if (bytes_read == 0) {
-            debug("Could not read any bytes");
-            return false;
-        } else if (bytes_read == -1) {
-            if (errno == EAGAIN) {
-                if (attempts > MAX_READ_ATTEMPTS) {
-                    debug("Couldn't finish reading buffer, bytes read: %d,"
-                          "buffer size: %d",
-                        bytes_read, buffer_size_bytes);
-                    memset(m_cfg->buffer, 0, buffer_size_bytes);
-                    close(m_fifo_fd);
-                    m_fifo_fd = -1;
-                    return false;
-                }
-                /* TODO: Sleep? Would delay thread */
-                ++attempts;
-            } else {
-                debug("Error reading file: %d %s", errno, strerror(errno));
-            }
-        } else {
-            bytes_left -= (size_t)bytes_read;
-        }
-    }
+		if (bytes_read == 0) {
+			debug("Could not read any bytes");
+			return false;
+		} else if (bytes_read == -1) {
+			if (errno == EAGAIN) {
+				if (attempts > MAX_READ_ATTEMPTS) {
+					debug("Couldn't finish reading buffer, bytes read: %d,"
+						  "buffer size: %d",
+						  bytes_read, buffer_size_bytes);
+					memset(m_cfg->buffer, 0, buffer_size_bytes);
+					close(m_fifo_fd);
+					m_fifo_fd = -1;
+					return false;
+				}
+				/* TODO: Sleep? Would delay thread */
+				++attempts;
+			} else {
+				debug("Error reading file: %d %s", errno, strerror(errno));
+			}
+		} else {
+			bytes_left -= (size_t)bytes_read;
+		}
+	}
 
-    return true;
+	return true;
 }
 
 bool fifo::open_fifo()
 {
-    if (m_fifo_fd)
-        close(m_fifo_fd);
+	if (m_fifo_fd)
+		close(m_fifo_fd);
 
-    if (m_file_path && strlen(m_file_path) > 0) {
-        m_fifo_fd = open(m_file_path, O_RDONLY);
+	if (m_file_path && strlen(m_file_path) > 0) {
+		m_fifo_fd = open(m_file_path, O_RDONLY);
 
-        if (m_fifo_fd < 0) {
-            warn("Failed to open fifo '%s'", m_file_path);
-        } else {
-            auto flags = fcntl(m_fifo_fd, F_GETFL, 0);
-            auto ret = fcntl(m_fifo_fd, F_SETFL, flags | O_NONBLOCK);
-            if (ret < 0)
-                warn("Failed to set fifo flags!");
-            return ret >= 0;
-        }
-    }
-    return false;
+		if (m_fifo_fd < 0) {
+			warn("Failed to open fifo '%s'", m_file_path);
+		} else {
+			auto flags = fcntl(m_fifo_fd, F_GETFL, 0);
+			auto ret = fcntl(m_fifo_fd, F_SETFL, flags | O_NONBLOCK);
+			if (ret < 0)
+				warn("Failed to set fifo flags!");
+			return ret >= 0;
+		}
+	}
+	return false;
 }
 } /* namespace audio */
 #endif /* LINUX */

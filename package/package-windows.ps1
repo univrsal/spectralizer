@@ -2,7 +2,7 @@
 param([string]$version)
 [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
 
-$base_dir = "C:\Users\usr\Documents\git\"
+$base_dir = "E:\projects\obs\"
 $data_dir = "../data"
 $project = "spectralizer"
 $arch_both = "win32.64"
@@ -10,10 +10,10 @@ $arch_64 = "win64"
 $msvc = "2017"
 $qt = "5_12_0"
 
-$build_location_x32 = $base_dir + "build\x32\rundir\Release\obs-plugins\32bit"
+$build_location_x32 = $base_dir + "build32\plugins\" + $project + "\RelWithDebInfo"
 $qtc_build_location_x32 = $base_dir + "build-obs-studio-Desktop_Qt_" + $qt + "_MSVC" + $msvc + "_32bit-Release-with-Debug-Information\rundir\RelWithDebInfo\obs-plugins\32bit"
 
-$build_location_x64 = $base_dir + "build\x64\rundir\Release\obs-plugins\64bit"
+$build_location_x64 = $base_dir + "build64\plugins\" + $project + "\RelWithDebInfo"
 $qtc_build_location_x64 = $base_dir + "build-obs-studio-Desktop_Qt_" + $qt + "_MSVC" + $msvc + "_64bit-Release-with-Debug-Information\rundir\RelWithDebInfo\obs-plugins\64bit"
 
 $fftw="../fftw3/bin"
@@ -67,10 +67,12 @@ New-Item $build_dir/plugin/obs-plugins/64bit -itemtype directory
 if ($x86) {
     echo("Fetching build from $build_location_x32")
     Copy-Item $build_location_x32/$project.dll -Destination $build_dir/plugin/obs-plugins/32bit/
+    Copy-Item $build_location_x32/$project.pdb -Destination $build_dir/plugin/obs-plugins/32bit/
 }
 
 echo("Fetching build from $build_location_x64")
 Copy-Item $build_location_x64/$project.dll -Destination $build_dir/plugin/obs-plugins/64bit/
+Copy-Item $build_location_x64/$project.pdb -Destination $build_dir/plugin/obs-plugins/32bit/
 
 echo("Fetching dependencies from $fftw")
 Copy-Item $fftw/64bit/libfftw3-3.dll -Destination $build_dir/plugin/obs-plugins/64bit/

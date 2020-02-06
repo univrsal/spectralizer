@@ -23,6 +23,8 @@
 #include <cmath>
 #include <numeric>
 
+#define DEAD_BAR_OFFSET     4 /* The last four bars seem to always be silent, so we cut them off */
+
 namespace audio {
 spectrum_visualizer::spectrum_visualizer(source::config* cfg)
     : audio_visualizer(cfg)
@@ -108,10 +110,10 @@ void spectrum_visualizer::tick(float seconds)
 
         fftw_execute(m_fftw_plan_left);
 
-        create_spectrum_bars(m_fftw_output_left, m_fftw_results, height, m_cfg->detail, &m_bars_left_new,
+        create_spectrum_bars(m_fftw_output_left, m_fftw_results, height, m_cfg->detail + DEAD_BAR_OFFSET, &m_bars_left_new,
             &m_bars_falloff_left);
         if (m_cfg->stereo) {
-            create_spectrum_bars(m_fftw_output_right, m_fftw_results, height, m_cfg->detail, &m_bars_right_new,
+            create_spectrum_bars(m_fftw_output_right, m_fftw_results, height, m_cfg->detail + DEAD_BAR_OFFSET, &m_bars_right_new,
                 &m_bars_falloff_right);
 
             m_bars_right.resize(m_bars_right_new.size(), 0.0);
@@ -142,12 +144,12 @@ void spectrum_visualizer::render(gs_effect_t* effect)
         int center = m_cfg->bar_height / 2 + offset;
 
         /* Just in case */
-        if (m_bars_left.size() != m_cfg->detail)
-            m_bars_left.resize(m_cfg->detail, 0.0);
-        if (m_bars_right.size() != m_cfg->detail)
-            m_bars_right.resize(m_cfg->detail, 0.0);
+        if (m_bars_left.size() != m_cfg->detail + DEAD_BAR_OFFSET)
+            m_bars_left.resize(m_cfg->detail + DEAD_BAR_OFFSET, 0.0);
+        if (m_bars_right.size() != m_cfg->detail + DEAD_BAR_OFFSET)
+            m_bars_right.resize(m_cfg->detail + DEAD_BAR_OFFSET, 0.0);
 
-        for (; i < m_cfg->detail; i++) {
+        for (; i < m_cfg->detail; i++) { /* Leave the four dead bars the end */
             height_l = UTIL_MAX(static_cast<int32_t>(round(m_bars_left[i])), 1);
             height_r = UTIL_MAX(static_cast<int32_t>(round(m_bars_right[i])), 1);
 

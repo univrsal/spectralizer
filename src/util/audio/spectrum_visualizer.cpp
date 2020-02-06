@@ -23,7 +23,7 @@
 #include <cmath>
 #include <numeric>
 
-#define DEAD_BAR_OFFSET     4 /* The last four bars seem to always be silent, so we cut them off */
+#define DEAD_BAR_OFFSET     5 /* The last five bars seem to always be silent, so we cut them off */
 
 namespace audio {
 spectrum_visualizer::spectrum_visualizer(source::config* cfg)
@@ -52,6 +52,8 @@ spectrum_visualizer::~spectrum_visualizer()
 void spectrum_visualizer::update()
 {
     audio_visualizer::update();
+	m_monstercat_smoothing_weights.clear(); /* Force recomputing of smoothing */
+
     m_fftw_results = (size_t)m_cfg->sample_size / 2 + 1;
     m_fftw_input_left = (double*)brealloc(m_fftw_input_left, sizeof(double) * m_cfg->sample_size);
     m_fftw_input_right = (double*)brealloc(m_fftw_input_right, sizeof(double) * m_cfg->sample_size);
@@ -149,7 +151,7 @@ void spectrum_visualizer::render(gs_effect_t* effect)
         if (m_bars_right.size() != m_cfg->detail + DEAD_BAR_OFFSET)
             m_bars_right.resize(m_cfg->detail + DEAD_BAR_OFFSET, 0.0);
 
-        for (; i < m_cfg->detail; i++) { /* Leave the four dead bars the end */
+        for (; i < m_bars_left.size() - DEAD_BAR_OFFSET; i++) { /* Leave the four dead bars the end */
             height_l = UTIL_MAX(static_cast<int32_t>(round(m_bars_left[i])), 1);
             height_r = UTIL_MAX(static_cast<int32_t>(round(m_bars_right[i])), 1);
 
@@ -170,15 +172,15 @@ void spectrum_visualizer::render(gs_effect_t* effect)
     } else {
         int i = 0, pos_x = 0;
         int32_t height;
-        for (auto val : m_bars_left) {
-            height = UTIL_MAX(static_cast<int32_t>(round(val)), 1);
+		for (; i < m_bars_left.size() - DEAD_BAR_OFFSET; i++) { /* Leave the four dead bars the end */
+			auto val = m_bars_left[i];
+			height = UTIL_MAX(static_cast<int32_t>(round(val)), 1);
 
             pos_x = i * (m_cfg->bar_width + m_cfg->bar_space);
             gs_matrix_push();
             gs_matrix_translate3f(pos_x, (m_cfg->bar_height - height), 0);
             gs_draw_sprite(nullptr, 0, m_cfg->bar_width, height);
             gs_matrix_pop();
-            i++;
         }
     }
     UNUSED_PARAMETER(effect);

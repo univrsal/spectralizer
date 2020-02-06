@@ -235,7 +235,7 @@ obs_properties_t* get_properties_for_visualiser(void* data)
     obs_property_list_add_int(filter, T_FILTER_MONSTERCAT, (int)SM_MONSTERCAT);
     obs_property_list_add_int(filter, T_FILTER_SGS, (int)SM_SGS);
 
-    obs_property_set_visible(obs_properties_add_float_slider(props, S_FILTER_STRENGTH, T_FILTER_STRENGTH, 0, 15, 0.1),
+    obs_property_set_visible(obs_properties_add_float_slider(props, S_FILTER_STRENGTH, T_FILTER_STRENGTH, 1, 1.5, 0.01),
         false);
     obs_property_set_visible(obs_properties_add_int(props, S_SGS_POINTS, T_SGS_POINTS, 1, 32, 1), false);
     obs_property_set_visible(obs_properties_add_int(props, S_SGS_PASSES, T_SGS_PASSES, 1, 32, 1), false);
@@ -255,8 +255,8 @@ obs_properties_t* get_properties_for_visualiser(void* data)
     /* Scale stuff */
     auto auto_scale = obs_properties_add_bool(props, S_AUTO_SCALE, T_AUTO_SCALE);
     obs_property_set_modified_callback(auto_scale, use_auto_scale_changed);
-    obs_properties_add_float_slider(props, S_SCALE_SIZE, T_SCALE_SIZE, 0.0001, 2, 0.01);
-    obs_properties_add_float_slider(props, S_SCALE_BOOST, T_SCALE_BOOST, 0.0001, 100, 0.01);
+    obs_properties_add_float_slider(props, S_SCALE_SIZE, T_SCALE_SIZE, 0.001, 2, 0.001);
+    obs_properties_add_float_slider(props, S_SCALE_BOOST, T_SCALE_BOOST, 0.001, 100, 0.001);
 
     /* Smoothing stuff */
     obs_properties_add_float_slider(props, S_GRAVITY, T_GRAVITY, 0, 1, 0.01);

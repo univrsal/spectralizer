@@ -28,7 +28,7 @@
 
 # misc
 *.zip
-
+.DS_Store
 # Executables
 *.exe
 *.out

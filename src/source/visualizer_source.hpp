@@ -31,7 +31,6 @@ struct config {
 	pcm_stereo_sample *buffer = nullptr;
 
 	/* Appearance settings */
-	bool stereo = defaults::stereo;
 	visual_mode visual = defaults::visual;
 	smooting_mode smoothing = defaults::smoothing;
 	uint32_t color = defaults::color;
@@ -56,11 +55,18 @@ struct config {
 
 	double mcat_smoothing_factor = defaults::mcat_smooth;
 
-	/* Bar visualizer_source settings */
+	/* Bar visualizer settings */
 	uint16_t bar_space = defaults::bar_space;
 	uint16_t bar_width = defaults::bar_width;
 	uint16_t bar_height = defaults::bar_height;
 	uint16_t bar_min_height = defaults::bar_min_height;
+
+	/* Wire visualizer settings */
+	uint16_t wire_thickness = defaults::wire_thickness;
+	enum wire_mode wire_mode = defaults::wire_mode;
+
+	/* General spectrum settings */
+	bool stereo = defaults::stereo;
 	uint16_t stereo_space = 0;
 	double falloff_weight = defaults::falloff_weight;
 	double gravity = defaults::gravity;

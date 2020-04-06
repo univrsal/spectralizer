@@ -22,6 +22,10 @@ set(spectralizer_SOURCES
         src/util/util.hpp
         src/util/audio/spectrum_visualizer.cpp
         src/util/audio/spectrum_visualizer.hpp
+        src/util/audio/bar_visualizer.cpp
+        src/util/audio/bar_visualizer.hpp
+        src/util/audio/wire_visualizer.cpp
+        src/util/audio/wire_visualizer.hpp
         src/util/audio/fifo.cpp
         src/util/audio/fifo.hpp
         src/util/audio/obs_internal_source.cpp

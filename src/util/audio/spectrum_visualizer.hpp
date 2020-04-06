@@ -22,6 +22,8 @@
 #include <fftw3.h>
 #include <vector>
 
+#define DEAD_BAR_OFFSET 5 /* The last five bars seem to always be silent, so we cut them off */
+
 /* Save some writing */
 using doublev = std::vector<double>;
 using uint32v = std::vector<uint32_t>;
@@ -49,12 +51,6 @@ class spectrum_visualizer : public audio_visualizer {
 	doublev m_frequency_constants_per_bin;
 
 	uint64_t m_silent_runs; /* determines sleep state */
-	/* New values are smoothly copied over if smoothing is used
-         * otherwise they're directly copied */
-	doublev m_bars_left, m_bars_right, m_bars_left_new, m_bars_right_new;
-	doublev m_bars_falloff_left, m_bars_falloff_right;
-	doublev m_previous_max_heights;
-	doublev m_monstercat_smoothing_weights;
 
 	bool prepare_fft_input(pcm_stereo_sample *buffer, uint32_t sample_size, double *fftw_input,
 						   channel_mode channel_mode);
@@ -77,6 +73,14 @@ class spectrum_visualizer : public audio_visualizer {
 	void sgs_smoothing(doublev *bars);
 	void monstercat_smoothing(doublev *bars);
 
+protected:
+	/* New values are smoothly copied over if smoothing is used
+     * otherwise they're directly copied */
+	doublev m_bars_left, m_bars_right, m_bars_left_new, m_bars_right_new;
+	doublev m_bars_falloff_left, m_bars_falloff_right;
+	doublev m_previous_max_heights;
+	doublev m_monstercat_smoothing_weights;
+
 public:
 	explicit spectrum_visualizer(source::config *cfg);
 
@@ -85,8 +89,6 @@ public:
 	void update() override;
 
 	void tick(float seconds) override;
-
-	void render(gs_effect_t *effect) override;
 };
 
 }

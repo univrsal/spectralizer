@@ -36,7 +36,7 @@
 #define UTIL_SWAP(a, b) do { typeof(a) tmp = a; a = b; b = tmp; } while (0)
 #define UTIL_MAX(a, b)                  (((a) > (b)) ? (a) : (b))
 #define UTIL_MIN(a, b)                  (((a) < (b)) ? (a) : (b))
-#define UTIL_CLAMP(lower, x, upper) (UTIL_MIN(upper, UTIL_MAX(x, lower)))
+#define UTIL_CLAMP(lower, x, upper) 	(UTIL_MIN(upper, UTIL_MAX(x, lower)))
 #define T_(v)                           obs_module_text(v)
 
 #define T_SOURCE                        T_("Spectralizer.Source")
@@ -55,6 +55,8 @@
 #define T_BAR_HEIGHT                    T_("Spectralizer.Bar.Height")
 #define T_SAMPLE_RATE                   T_("Spectralizer.SampleRate")
 #define T_BAR_SPACING                   T_("Spectralizer.Bar.Space")
+#define T_WIRE_SPACING                  T_("Spectralizer.Wire.Space")
+#define T_WIRE_HEIGHT					T_("Spectralizer.Wire.Height")
 #define T_COLOR                         T_("Spectralizer.Color")
 #define T_GRAVITY                       T_("Spectralizer.Gravity")
 #define T_FALLOFF						T_("Spectralizer.Falloff")
@@ -69,6 +71,12 @@
 #define T_AUTO_SCALE					T_("Spectralizer.Use.AutoScale")
 #define T_SCALE_BOOST					T_("Spectralizer.Scale.Boost")
 #define T_SCALE_SIZE					T_("Spectralizer.Scale.Size")
+#define T_WIRE_MODE_THIN				T_("Spectralizer.Wire.Mode.Thin")
+#define T_WIRE_MODE_THICK				T_("Spectralizer.Wire.Mode.Thick")
+#define T_WIRE_MODE_FILL				T_("Spectralizer.Wire.Mode.Fill")
+#define T_WIRE_MODE_FILL_INVERTED		T_("Spectralizer.Wire.Mode.Fill.Invert")
+#define T_WIRE_MODE						T_("Spectralizer.Wire.Mode")
+#define T_WIRE_THICKNESS				T_("Spectralizer.Wire.Thickness")
 
 #define S_SOURCE_MODE                   "source_mode"
 #define S_STEREO                        "stereo"
@@ -92,10 +100,17 @@
 #define S_AUTO_SCALE					"use_auto_scale"
 #define S_SCALE_BOOST					"scale_boost"
 #define S_SCALE_SIZE					"scale_size"
+#define S_WIRE_MODE						"wire_mode"
+#define S_WIRE_THICKNESS				"wire_thickness"
 
 enum visual_mode
 {
     VM_BARS, VM_WIRE
+};
+
+enum wire_mode
+{
+    WM_THIN, WM_THICK, WM_FILL, WM_FILL_INVERTED
 };
 
 enum smooting_mode
@@ -154,6 +169,9 @@ namespace defaults {
                         bar_width		= 5,
                         bar_height		= 100,
                         bar_min_height	= 5;
+
+    CNST uint16_t		wire_thickness	= 5;
+    CNST wire_mode		wire_mode		= WM_THIN;
 
     CNST char			*fifo_path		= "/tmp/mpd.fifo";
     CNST char			*audio_source	= "none";

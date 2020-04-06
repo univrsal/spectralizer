@@ -23,20 +23,18 @@
 #include <cmath>
 #include <numeric>
 
-#define DEAD_BAR_OFFSET 5 /* The last five bars seem to always be silent, so we cut them off */
-
 namespace audio {
 spectrum_visualizer::spectrum_visualizer(source::config *cfg)
 	: audio_visualizer(cfg),
+	  m_last_bar_count(0),
+	  m_fftw_results(0),
 	  m_fftw_input_left(nullptr),
 	  m_fftw_input_right(nullptr),
 	  m_fftw_output_left(nullptr),
 	  m_fftw_output_right(nullptr),
 	  m_fftw_plan_left(nullptr),
 	  m_fftw_plan_right(nullptr),
-	  m_fftw_results(0),
-	  m_silent_runs(0u),
-	  m_last_bar_count(0)
+	  m_silent_runs(0u)
 {
 	update();
 }
@@ -66,7 +64,7 @@ void spectrum_visualizer::tick(float seconds)
 {
 	if (m_sleeping) {
 		m_sleep_count += seconds;
-		if (m_sleep_count >= 0.25) {
+		if (m_sleep_count >= 0.25f) {
 			m_sleeping = false;
 			m_sleep_count = 0.f;
 		}
@@ -119,13 +117,13 @@ void spectrum_visualizer::tick(float seconds)
 								 &m_bars_right_new, &m_bars_falloff_right);
 
 			m_bars_right.resize(m_bars_right_new.size(), 0.0);
-			for (int i = 0; i < m_bars_right.size(); i++) {
+			for (size_t i = 0; i < m_bars_right.size(); i++) {
 				m_bars_right[i] = m_bars_right[i] * m_cfg->gravity + m_bars_right_new[i] * grav;
 			}
 		}
 
 		m_bars_left.resize(m_bars_left_new.size(), 0.0);
-		for (int i = 0; i < m_bars_left.size(); i++) {
+		for (size_t i = 0; i < m_bars_left.size(); i++) {
 			m_bars_left[i] = m_bars_left[i] * m_cfg->gravity + m_bars_left_new[i] * grav;
 		}
 
@@ -135,55 +133,6 @@ void spectrum_visualizer::tick(float seconds)
 	} else {
 		m_sleeping = true;
 	}
-}
-
-void spectrum_visualizer::render(gs_effect_t *effect)
-{
-	if (m_cfg->stereo) {
-		int i = 0, pos_x = 0;
-		int32_t height_l, height_r;
-		int offset = m_cfg->stereo_space / 2;
-		int center = m_cfg->bar_height / 2 + offset;
-
-		/* Just in case */
-		if (m_bars_left.size() != m_cfg->detail + DEAD_BAR_OFFSET)
-			m_bars_left.resize(m_cfg->detail + DEAD_BAR_OFFSET, 0.0);
-		if (m_bars_right.size() != m_cfg->detail + DEAD_BAR_OFFSET)
-			m_bars_right.resize(m_cfg->detail + DEAD_BAR_OFFSET, 0.0);
-
-		for (; i < m_bars_left.size() - DEAD_BAR_OFFSET; i++) { /* Leave the four dead bars the end */
-			height_l = UTIL_MAX(static_cast<int32_t>(round(m_bars_left[i])), 1);
-			height_r = UTIL_MAX(static_cast<int32_t>(round(m_bars_right[i])), 1);
-
-			pos_x = i * (m_cfg->bar_width + m_cfg->bar_space);
-
-			/* Top */
-			gs_matrix_push();
-			gs_matrix_translate3f(pos_x, (center - height_l) - offset, 0);
-			gs_draw_sprite(0, 0, m_cfg->bar_width, height_l);
-			gs_matrix_pop();
-
-			/* Bottom */
-			gs_matrix_push();
-			gs_matrix_translate3f(pos_x, center + offset, 0);
-			gs_draw_sprite(0, 0, m_cfg->bar_width, height_r);
-			gs_matrix_pop();
-		}
-	} else {
-		int i = 0, pos_x = 0;
-		int32_t height;
-		for (; i < m_bars_left.size() - DEAD_BAR_OFFSET; i++) { /* Leave the four dead bars the end */
-			auto val = m_bars_left[i];
-			height = UTIL_MAX(static_cast<int32_t>(round(val)), 1);
-
-			pos_x = i * (m_cfg->bar_width + m_cfg->bar_space);
-			gs_matrix_push();
-			gs_matrix_translate3f(pos_x, (m_cfg->bar_height - height), 0);
-			gs_draw_sprite(nullptr, 0, m_cfg->bar_width, height);
-			gs_matrix_pop();
-		}
-	}
-	UNUSED_PARAMETER(effect);
 }
 
 bool spectrum_visualizer::prepare_fft_input(pcm_stereo_sample *buffer, uint32_t sample_size, double *fftw_input,

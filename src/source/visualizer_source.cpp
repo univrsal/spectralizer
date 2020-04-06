@@ -17,7 +17,8 @@
  *************************************************************************/
 
 #include "visualizer_source.hpp"
-#include "../util/audio/spectrum_visualizer.hpp"
+#include "../util/audio/bar_visualizer.hpp"
+#include "../util/audio/wire_visualizer.hpp"
 #include "../util/util.hpp"
 
 namespace source {
@@ -34,14 +35,6 @@ visualizer_source::visualizer_source(obs_source_t *source, obs_data_t *settings)
 {
 	m_config.settings = settings;
 	m_config.source = source;
-
-	switch (m_config.visual) {
-	case VM_BARS:
-		m_visualizer = new audio::spectrum_visualizer(&m_config);
-		break;
-		/* TODO: Wire visualizer? */
-	default:;
-	}
 
 	update(settings);
 }
@@ -61,6 +54,8 @@ visualizer_source::~visualizer_source()
 
 void visualizer_source::update(obs_data_t *settings)
 {
+	visual_mode old_mode = m_config.visual;
+
 	m_config.value_mutex.lock();
 	m_config.audio_source_name = obs_data_get_string(settings, S_AUDIO_SOURCE);
 	m_config.sample_rate = obs_data_get_int(settings, S_SAMPLE_RATE);
@@ -85,6 +80,8 @@ void visualizer_source::update(obs_data_t *settings)
 	m_config.use_auto_scale = obs_data_get_bool(settings, S_AUTO_SCALE);
 	m_config.scale_boost = obs_data_get_double(settings, S_SCALE_BOOST);
 	m_config.scale_size = obs_data_get_double(settings, S_SCALE_SIZE);
+	m_config.wire_mode = (wire_mode)obs_data_get_int(settings, S_WIRE_MODE);
+	m_config.wire_thickness = obs_data_get_int(settings, S_WIRE_THICKNESS);
 
 #ifdef LINUX
 	m_config.auto_clear = obs_data_get_bool(settings, S_AUTO_CLEAR);
@@ -94,7 +91,7 @@ void visualizer_source::update(obs_data_t *settings)
 		m_config.fps = ovi.fps_num;
 	} else {
 		m_config.fps = 30;
-		warn("Couldn't fps, mpd fifo might not work as intended!");
+		warn("Couldn't determine fps, mpd fifo might not work as intended!");
 	}
 #endif
 
@@ -103,7 +100,21 @@ void visualizer_source::update(obs_data_t *settings)
 
 	if (m_config.buffer)
 		bfree(m_config.buffer);
+
 	m_config.buffer = static_cast<pcm_stereo_sample *>(bzalloc(m_config.sample_size * sizeof(pcm_stereo_sample)));
+
+	if (old_mode != m_config.visual || !m_visualizer) {
+		delete m_visualizer;
+
+		switch (m_config.visual) {
+		case VM_BARS:
+			m_visualizer = new audio::bar_visualizer(&m_config);
+			break;
+		case VM_WIRE:
+			m_visualizer = new audio::wire_visualizer(&m_config);
+			break;
+		}
+	}
 
 	m_config.value_mutex.unlock();
 }
@@ -134,7 +145,7 @@ void visualizer_source::render(gs_effect_t *effect)
 		gs_technique_begin(tech);
 		gs_technique_begin_pass(tech, 0);
 
-		m_visualizer->render(effect);
+		m_visualizer->render(solid);
 
 		gs_technique_end_pass(tech);
 		gs_technique_end(tech);
@@ -142,7 +153,7 @@ void visualizer_source::render(gs_effect_t *effect)
 	}
 }
 
-bool filter_changed(obs_properties_t *props, obs_property_t *p, obs_data_t *data)
+static bool filter_changed(obs_properties_t *props, obs_property_t *p, obs_data_t *data)
 {
 	int mode = obs_data_get_int(data, S_FILTER_MODE);
 	auto *strength = obs_properties_get(props, S_FILTER_STRENGTH);
@@ -165,7 +176,7 @@ bool filter_changed(obs_properties_t *props, obs_property_t *p, obs_data_t *data
 	return true;
 }
 
-bool use_auto_scale_changed(obs_properties_t *props, obs_property_t *p, obs_data_t *data)
+static bool use_auto_scale_changed(obs_properties_t *props, obs_property_t *p, obs_data_t *data)
 {
 	auto state = !obs_data_get_bool(data, S_AUTO_SCALE);
 	auto boost = obs_properties_get(props, S_SCALE_BOOST);
@@ -176,7 +187,7 @@ bool use_auto_scale_changed(obs_properties_t *props, obs_property_t *p, obs_data
 	return true;
 }
 
-bool source_changed(obs_properties_t *props, obs_property_t *p, obs_data_t *data)
+static bool source_changed(obs_properties_t *props, obs_property_t *p, obs_data_t *data)
 {
 	auto *id = obs_data_get_string(data, S_AUDIO_SOURCE);
 	auto *sr = obs_properties_get(props, S_SAMPLE_RATE);
@@ -193,12 +204,34 @@ bool source_changed(obs_properties_t *props, obs_property_t *p, obs_data_t *data
 	return true;
 }
 
-bool stereo_changed(obs_properties_t *props, obs_property_t *p, obs_data_t *data)
+static bool stereo_changed(obs_properties_t *props, obs_property_t *p, obs_data_t *data)
 {
-
 	auto stereo = obs_data_get_bool(data, S_STEREO);
 	auto *space = obs_properties_get(props, S_STEREO_SPACE);
 	obs_property_set_visible(space, stereo);
+	return true;
+}
+
+static bool visual_mode_changed(obs_properties_t *props, obs_property_t *p, obs_data_t *data)
+{
+	visual_mode vm = (visual_mode)obs_data_get_int(data, S_SOURCE_MODE);
+	auto *wire_mode = obs_properties_get(props, S_WIRE_MODE);
+	auto *height = obs_properties_get(props, S_BAR_HEIGHT);
+	auto *width = obs_properties_get(props, S_BAR_WIDTH);
+	auto *space = obs_properties_get(props, S_BAR_SPACE);
+
+	obs_property_set_visible(width, vm != VM_WIRE);
+	obs_property_set_description(space, vm == VM_WIRE ? T_WIRE_SPACING : T_BAR_SPACING);
+	obs_property_set_description(height, vm == VM_WIRE ? T_WIRE_HEIGHT : T_BAR_HEIGHT);
+	obs_property_set_visible(wire_mode, vm == VM_WIRE);
+	return true;
+}
+
+static bool wire_mode_changed(obs_properties_t *props, obs_property_t *p, obs_data_t *data)
+{
+	wire_mode wm = (wire_mode)obs_data_get_int(data, S_WIRE_MODE);
+	auto *wire_thickness = obs_properties_get(props, S_WIRE_THICKNESS);
+	obs_property_set_visible(wire_thickness, wm == WM_THICK);
 	return true;
 }
 
@@ -219,15 +252,15 @@ obs_properties_t *get_properties_for_visualiser(void *data)
 	UNUSED_PARAMETER(data);
 	obs_properties_t *props = obs_properties_create();
 
-	auto mode = obs_properties_add_list(props, S_SOURCE_MODE, T_SOURCE_MODE, OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+	auto *mode =
+		obs_properties_add_list(props, S_SOURCE_MODE, T_SOURCE_MODE, OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 	obs_property_list_add_int(mode, T_MODE_BARS, (int)VM_BARS);
-	/* TODO */
-	obs_property_set_visible(mode, false);
-	//    obs_property_list_add_int(mode, T_MODE_WIRE, (int) VM_WIRE);
+	obs_property_list_add_int(mode, T_MODE_WIRE, (int)VM_WIRE);
+	obs_property_set_modified_callback(mode, visual_mode_changed);
 
-	auto src =
+	auto *src =
 		obs_properties_add_list(props, S_AUDIO_SOURCE, T_AUDIO_SOURCE, OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
-	auto filter =
+	auto *filter =
 		obs_properties_add_list(props, S_FILTER_MODE, T_FILTER_MODE, OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 
 	obs_property_set_modified_callback(filter, filter_changed);
@@ -243,6 +276,8 @@ obs_properties_t *get_properties_for_visualiser(void *data)
 	obs_property_set_visible(obs_properties_add_int(props, S_SGS_PASSES, T_SGS_PASSES, 1, 32, 1), false);
 
 	obs_properties_add_color(props, S_COLOR, T_COLOR);
+
+	/* Bar settings */
 	auto *w = obs_properties_add_int(props, S_BAR_WIDTH, T_BAR_WIDTH, 1, UINT16_MAX, 1);
 	auto *h = obs_properties_add_int(props, S_BAR_HEIGHT, T_BAR_HEIGHT, 10, UINT16_MAX, 1);
 	auto *s = obs_properties_add_int(props, S_BAR_SPACE, T_BAR_SPACING, 0, UINT16_MAX, 1);
@@ -253,6 +288,19 @@ obs_properties_t *get_properties_for_visualiser(void *data)
 	obs_property_int_set_suffix(s, " Pixel");
 
 	obs_property_set_visible(sr, false); /* Sampel rate is only needed for fifo */
+
+	/* Wire settings */
+	auto *wm = obs_properties_add_list(props, S_WIRE_MODE, T_WIRE_MODE, OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+	auto *th = obs_properties_add_int(props, S_WIRE_THICKNESS, T_WIRE_THICKNESS, 2, 0xffff, 1);
+	obs_property_int_set_suffix(th, " Pixel");
+
+	obs_property_list_add_int(wm, T_WIRE_MODE_THIN, WM_THIN);
+	obs_property_list_add_int(wm, T_WIRE_MODE_THICK, WM_THICK);
+	obs_property_list_add_int(wm, T_WIRE_MODE_FILL, WM_FILL);
+	obs_property_list_add_int(wm, T_WIRE_MODE_FILL_INVERTED, WM_FILL_INVERTED);
+	obs_property_set_visible(wm, false);
+	obs_property_set_visible(th, false);
+	obs_property_set_modified_callback(wm, wire_mode_changed);
 
 	/* Scale stuff */
 	auto auto_scale = obs_properties_add_bool(props, S_AUTO_SCALE, T_AUTO_SCALE);
@@ -276,7 +324,8 @@ obs_properties_t *get_properties_for_visualiser(void *data)
 	auto *stereo = obs_properties_add_bool(props, S_STEREO, T_STEREO);
 	auto *space = obs_properties_add_int(props, S_STEREO_SPACE, T_STEREO_SPACE, 0, UINT16_MAX, 1);
 	obs_property_int_set_suffix(space, " Pixel");
-	obs_properties_add_int(props, S_DETAIL, T_DETAIL, 1, UINT16_MAX, 1);
+	auto *dt = obs_properties_add_int(props, S_DETAIL, T_DETAIL, 1, UINT16_MAX, 1);
+	obs_property_int_set_suffix(dt, " Bins");
 	obs_property_set_visible(space, false);
 	obs_property_set_modified_callback(stereo, stereo_changed);
 
@@ -323,6 +372,8 @@ void register_visualiser()
 		obs_data_set_default_bool(settings, S_AUTO_SCALE, defaults::use_auto_scale);
 		obs_data_set_default_double(settings, S_SCALE_SIZE, defaults::scale_size);
 		obs_data_set_default_double(settings, S_SCALE_BOOST, defaults::scale_boost);
+		obs_data_set_default_int(settings, S_WIRE_MODE, defaults::wire_mode);
+		obs_data_set_default_int(settings, S_WIRE_THICKNESS, defaults::wire_thickness);
 	};
 
 	si.update = [](void *data, obs_data_t *settings) { reinterpret_cast<visualizer_source *>(data)->update(settings); };

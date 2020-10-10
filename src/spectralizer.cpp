@@ -17,7 +17,7 @@
  *************************************************************************/
 
 #include "source/visualizer_source.hpp"
-#include <obs-module.h>
+#include <obs/obs-module.h>
 
 OBS_DECLARE_MODULE()
 

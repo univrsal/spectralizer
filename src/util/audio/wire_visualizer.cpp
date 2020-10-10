@@ -18,7 +18,7 @@
 
 #include "wire_visualizer.hpp"
 #include "../../source/visualizer_source.hpp"
-#include <graphics/matrix4.h>
+#include <obs/graphics/matrix4.h>
 
 namespace audio {
 wire_visualizer::wire_visualizer(source::config *cfg) : spectrum_visualizer(cfg) {}

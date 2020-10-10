@@ -21,7 +21,7 @@
 #include "../../source/visualizer_source.hpp"
 #include <fcntl.h>
 #include <unistd.h>
-#include <util/platform.h>
+#include <obs/util/platform.h>
 
 #define MAX_READ_ATTEMPTS 100
 #define READ_ATTEMPT_SLEEP 1L * 1000000L

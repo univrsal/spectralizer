@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <obs-module.h>
+#include <obs/obs-module.h>
 #include <vector>
 
 /* Logging */
@@ -77,6 +77,7 @@
 #define T_WIRE_MODE_FILL_INVERTED		T_("Spectralizer.Wire.Mode.Fill.Invert")
 #define T_WIRE_MODE						T_("Spectralizer.Wire.Mode")
 #define T_WIRE_THICKNESS				T_("Spectralizer.Wire.Thickness")
+#define T_LOG_FREQ_SCALE				T_("Spectralizer.FreqScale.Log")
 
 #define S_SOURCE_MODE                   "source_mode"
 #define S_STEREO                        "stereo"
@@ -102,6 +103,7 @@
 #define S_SCALE_SIZE					"scale_size"
 #define S_WIRE_MODE						"wire_mode"
 #define S_WIRE_THICKNESS				"wire_thickness"
+#define S_LOG_FREQ_SCALE				"log_freq_scale"
 
 enum visual_mode
 {
@@ -134,6 +136,12 @@ enum channel_mode
     CM_BOTH
 };
 
+enum freq_scale
+{
+    FS_LIN = 0,
+    FS_LOG
+};
+
 struct stereo_sample_frame
 {
     int16_t l, r;
@@ -144,6 +152,7 @@ using pcm_stereo_sample = struct stereo_sample_frame;
 
 namespace defaults {
     CNST bool			stereo			= false;
+    CNST bool			log_freq_scale	= false;
     CNST visual_mode 	visual			= VM_BARS;
     CNST smooting_mode	smoothing		= SM_NONE;
     CNST uint32_t		color			= 0xffffffff;

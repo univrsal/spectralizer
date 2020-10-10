@@ -82,6 +82,7 @@ void visualizer_source::update(obs_data_t *settings)
 	m_config.scale_size = obs_data_get_double(settings, S_SCALE_SIZE);
 	m_config.wire_mode = (wire_mode)obs_data_get_int(settings, S_WIRE_MODE);
 	m_config.wire_thickness = obs_data_get_int(settings, S_WIRE_THICKNESS);
+	m_config.log_freq_scale = obs_data_get_bool(settings, S_LOG_FREQ_SCALE);
 
 #ifdef LINUX
 	m_config.auto_clear = obs_data_get_bool(settings, S_AUTO_CLEAR);
@@ -321,6 +322,7 @@ obs_properties_t *get_properties_for_visualiser(void *data)
 	obs_properties_add_bool(props, S_AUTO_CLEAR, T_AUTO_CLEAR);
 #endif
 
+	obs_properties_add_bool(props, S_LOG_FREQ_SCALE, T_LOG_FREQ_SCALE);
 	auto *stereo = obs_properties_add_bool(props, S_STEREO, T_STEREO);
 	auto *space = obs_properties_add_int(props, S_STEREO_SPACE, T_STEREO_SPACE, 0, UINT16_MAX, 1);
 	obs_property_int_set_suffix(space, " Pixel");
@@ -374,6 +376,7 @@ void register_visualiser()
 		obs_data_set_default_double(settings, S_SCALE_BOOST, defaults::scale_boost);
 		obs_data_set_default_int(settings, S_WIRE_MODE, defaults::wire_mode);
 		obs_data_set_default_int(settings, S_WIRE_THICKNESS, defaults::wire_thickness);
+		obs_data_set_default_bool(settings, S_LOG_FREQ_SCALE, defaults::log_freq_scale);
 	};
 
 	si.update = [](void *data, obs_data_t *settings) { reinterpret_cast<visualizer_source *>(data)->update(settings); };

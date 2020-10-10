@@ -18,7 +18,7 @@
 
 #include "obs_internal_source.hpp"
 #include "../../source/visualizer_source.hpp"
-#include <util/platform.h>
+#include <obs/util/platform.h>
 
 #define DEFAULT_AUDIO_BUF_MS 10
 #define MS_IN_S 100

@@ -10,7 +10,7 @@
 #include <cstdint>
 #include <map>
 #include <mutex>
-#include <obs-module.h>
+#include <obs/obs-module.h>
 
 namespace audio {
 class audio_visualizer;
@@ -54,6 +54,8 @@ struct config {
 	double scale_size = defaults::scale_size;
 
 	double mcat_smoothing_factor = defaults::mcat_smooth;
+
+	bool log_freq_scale = defaults::log_freq_scale;
 
 	/* Bar visualizer settings */
 	uint16_t bar_space = defaults::bar_space;

@@ -23,7 +23,7 @@
 
 /* Logging */
 #define log_src(log_level, format, ...) \
-	blog(log_level, "[spectralizer: '%s'] " format, obs_source_get_name(context->source), ##__VA_ARGS__)
+    blog(log_level, "[spectralizer: '%s'] " format, obs_source_get_name(context->source), ##__VA_ARGS__)
 #define write_log(log_level, format, ...) blog(log_level, "[spectralizer] " format, ##__VA_ARGS__)
 
 #define debug(format, ...) write_log(LOG_DEBUG, format, ##__VA_ARGS__)
@@ -134,12 +134,15 @@ enum channel_mode
     CM_BOTH
 };
 
+template<class T>
 struct stereo_sample_frame
 {
-    int16_t l, r;
+    T l, r;
 };
 
-using pcm_stereo_sample = struct stereo_sample_frame;
+using i16_stereo_sample = struct stereo_sample_frame<int16_t>;
+using f32_stereo_sample = struct stereo_sample_frame<float>;
+
 #define CNST			static const constexpr
 
 namespace defaults {

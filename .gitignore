@@ -1,6 +1,10 @@
 # Prerequisites
 *.d
-
+*.user
+build-*/
+*.iss
+*.pkgproj
+README.txt
 # Compiled Object files
 *.slo
 *.lo

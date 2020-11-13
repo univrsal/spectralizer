@@ -9,7 +9,8 @@ on:
       - '**.md'
       - '**.ini'
     branches:
-    - master
+      - master
+      - dev 
     tags:
     - "v*"
 jobs:

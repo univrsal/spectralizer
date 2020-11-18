@@ -55,7 +55,12 @@ struct config {
 
 	double mcat_smoothing_factor = defaults::mcat_smooth;
 
+	/* log frequency scale */
 	bool log_freq_scale = defaults::log_freq_scale;
+	log_freq_qual log_freq_quality = defaults::log_freq_quality;
+	double log_freq_start = defaults::log_freq_start;
+	bool log_freq_use_hpf = defaults::log_freq_use_hpf;
+	double log_freq_hpf_curve = defaults::log_freq_hpf_curve;
 
 	/* Bar visualizer settings */
 	uint16_t bar_space = defaults::bar_space;

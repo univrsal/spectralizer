@@ -32,12 +32,16 @@ namespace audio {
 
 class spectrum_visualizer : public audio_visualizer {
 	uint32_t m_last_bar_count;
+	double m_last_log_freq_start;
 	bool m_sleeping = false;
 	float m_sleep_count = 0.f;
 	/* fft calculation vars */
 	size_t m_fftw_results;
 	double *m_fftw_input_left;
 	double *m_fftw_input_right;
+	/* log scale related containers */
+	doublev m_bar_freq;
+	doublev m_fftw_magnitudes;
 
 	fftw_complex *m_fftw_output_left;
 	fftw_complex *m_fftw_output_right;
@@ -60,9 +64,12 @@ class spectrum_visualizer : public audio_visualizer {
 
 	void generate_bars(uint32_t number_of_bars, size_t fftw_results, const uint32v &low_cutoff_frequencies,
 					   const uint32v &high_cutoff_frequencies, const fftw_complex *fftw_output, doublev *bars) const;
+	void generate_log_bars(uint32_t number_of_bars, size_t fftw_results, const fftw_complex *fftw_output,
+						   doublev& magnitudes, doublev& bars) const;
 
 	void recalculate_cutoff_frequencies(uint32_t number_of_bars, uint32v *low_cutoff_frequencies,
 										uint32v *high_cutoff_frequencies, doublev *freqconst_per_bin);
+	void recalculate_target_log_frequencies(uint32_t number_of_bars);
 	void smooth_bars(doublev *bars);
 	void apply_falloff(const doublev &bars, doublev *falloff_bars) const;
 	void calculate_moving_average_and_std_dev(double new_value, size_t max_number_of_elements, doublev *old_values,

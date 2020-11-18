@@ -23,6 +23,54 @@
 #include <cmath>
 #include <numeric>
 
+
+namespace {
+
+inline double logspace(double start, double end, uint32_t n, uint32_t N)
+{
+	return start * std::pow(end/start, n/static_cast<double>(N-1));
+}
+
+inline double lerp(double a, double b, double t)
+{
+	return a + t * (b - a);
+}
+
+inline double sinc(double x)
+{
+	if (x == 0.0)
+		return 1.0;
+	else {
+		const double pix = M_PI * x;
+		return sin(pix) / pix;
+	}
+}
+
+inline double lanczos_kernel(double x, const int window)
+{
+	if (x < -window || x > window)
+		return 0.0;
+	else
+		return sinc(x) * sinc(x / static_cast<double>(window));
+}
+
+inline double lanczos(double t, const int window, uint32_t in_count, const doublev& in_mags)
+{
+	double result = 0.0f;
+	for (int i = static_cast<int>(t) - window + 1; i < static_cast<int>(t) + window; ++i)
+	{
+		if (i < 0 || i > in_count)
+			continue; // add nothing if we go out of available freq range
+
+		result += in_mags[i] * lanczos_kernel(t - static_cast<double>(i), window);
+	}
+
+	return result;
+}
+
+} // namespace
+
+
 namespace audio {
 spectrum_visualizer::spectrum_visualizer(source::config *cfg)
 	: audio_visualizer(cfg),
@@ -51,6 +99,8 @@ void spectrum_visualizer::update()
 {
 	audio_visualizer::update();
 	m_monstercat_smoothing_weights.clear(); /* Force recomputing of smoothing */
+	m_previous_max_heights.clear(); /* Force recomputing scaling */
+	m_last_bar_count = 0; /* Force precalculated data refresh */
 
 	m_fftw_results = (size_t)m_cfg->sample_size / 2 + 1;
 	m_fftw_input_left = (double *)brealloc(m_fftw_input_left, sizeof(double) * m_cfg->sample_size);
@@ -343,17 +393,35 @@ void spectrum_visualizer::maybe_reset_scaling_window(double current_max_height, 
 void spectrum_visualizer::create_spectrum_bars(fftw_complex *fftw_output, size_t fftw_results, int32_t win_height,
 											   uint32_t number_of_bars, doublev *bars, doublev *bars_falloff)
 {
-	// cut off frequencies only have to be re-calculated if number of bars
-	// change
-	if (m_last_bar_count != number_of_bars) {
-		recalculate_cutoff_frequencies(number_of_bars, &m_low_cutoff_frequencies, &m_high_cutoff_frequencies,
-									   &m_frequency_constants_per_bin);
-		m_last_bar_count = number_of_bars;
+	if (m_cfg->log_freq_scale) {
+		// targetted log frequencies should be recalculated when either number
+		// of bars or graph start frequency change
+		if (m_last_bar_count != number_of_bars || m_last_log_freq_start != m_cfg->log_freq_start) {
+			recalculate_target_log_frequencies(number_of_bars);
+
+			m_last_log_freq_start = m_cfg->log_freq_start;
+			m_last_bar_count = number_of_bars;
+		}
+	} else {
+		// cut off frequencies only have to be re-calculated if number of bars
+		// change
+		if (m_last_bar_count != number_of_bars) {
+			recalculate_cutoff_frequencies(number_of_bars,
+										   &m_low_cutoff_frequencies, &m_high_cutoff_frequencies,
+										   &m_frequency_constants_per_bin);
+
+			m_last_bar_count = number_of_bars;
+		}
+
 	}
 
-	// Separate the frequency spectrum into bars, the number of bars is based on
-	// screen width
-	generate_bars(number_of_bars, fftw_results, m_low_cutoff_frequencies, m_high_cutoff_frequencies, fftw_output, bars);
+	if (m_cfg->log_freq_scale) {
+		generate_log_bars(number_of_bars, fftw_results, fftw_output, m_fftw_magnitudes, *bars);
+	} else {
+		// Separate the frequency spectrum into bars, the number of bars is based on
+		// screen width
+		generate_bars(number_of_bars, fftw_results, m_low_cutoff_frequencies, m_high_cutoff_frequencies, fftw_output, bars);
+	}
 
 	// smoothing
 	smooth_bars(bars);
@@ -409,6 +477,7 @@ void spectrum_visualizer::generate_bars(uint32_t number_of_bars, size_t fftw_res
 			freq_magnitude += std::sqrt((fftw_output[cutoff_freq][0] * fftw_output[cutoff_freq][0]) +
 										(fftw_output[cutoff_freq][1] * fftw_output[cutoff_freq][1]));
 		}
+
 		(*bars)[i] = freq_magnitude / (high_cutoff_frequencies[i] - low_cutoff_frequencies[i] + 1);
 
 		/* boost high freqs */
@@ -416,4 +485,57 @@ void spectrum_visualizer::generate_bars(uint32_t number_of_bars, size_t fftw_res
 		(*bars)[i] = std::pow((*bars)[i], 0.5);
 	}
 }
+
+void spectrum_visualizer::recalculate_target_log_frequencies(uint32_t number_of_bars)
+{
+	if (m_bar_freq.size() != number_of_bars) {
+		m_bar_freq.resize(number_of_bars, 0.0);
+	}
+
+	for (auto i = 0u; i < number_of_bars; i++) {
+		// TODO get target sampling freq from config
+		m_bar_freq[i] = logspace(m_cfg->log_freq_start, m_cfg->high_cutoff_freq, i, number_of_bars);
+	}
+}
+
+void spectrum_visualizer::generate_log_bars(uint32_t number_of_bars, size_t fftw_results, const fftw_complex *fftw_output,
+											doublev& magnitudes, doublev& bars) const
+{
+	if (bars.size() != number_of_bars) {
+		bars.resize(number_of_bars, 0.0);
+	}
+
+	if (magnitudes.size() != fftw_results) {
+		magnitudes.resize(fftw_results, 0.0);
+	}
+
+	for (uint32_t i = 0u; i < fftw_results; ++i) {
+		magnitudes[i] = std::sqrt((fftw_output[i][0] * fftw_output[i][0]) +
+								  (fftw_output[i][1] * fftw_output[i][1]));
+	}
+
+	const int lanczos_window = (m_cfg->log_freq_quality == LFQ_PRECISE) ? 3 : 2;
+	for (uint32_t i = 0u; i < number_of_bars; i++) {
+		const double normalized_lin_bar = m_bar_freq[i] / m_cfg->high_cutoff_freq;
+		const double t = normalized_lin_bar * number_of_bars;
+		bars[i] = lanczos(t, lanczos_window, fftw_results, magnitudes);
+
+		// high-pass the result if requested to give room to high freqs
+		// m_cfg->log_freq_hpf_curve modifies the logarithm base for a sharper curve
+		if (m_cfg->log_freq_use_hpf) {
+			bars[i] *= (std::log(i + 2) / std::log(m_cfg->log_freq_hpf_curve)) * (static_cast<double>(i) / 8.0);
+		}
+
+		if (!m_cfg->use_auto_scale) {
+			// Constant scaling down the bars to make the "scale size" variable useable
+			// at these values/rates. Additionally, if we use HPF for the bars, counteract
+			// on logarithm's effect of scaling the spectrum.
+			bars[i] *= 0.0005;
+			if (m_cfg->log_freq_use_hpf) {
+				bars[i] *= 0.2 * lerp(0.066, 0.5, (m_cfg->log_freq_hpf_curve / defaults::log_freq_hpf_curve_max));
+			}
+		}
+	}
+}
+
 }

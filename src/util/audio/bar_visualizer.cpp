@@ -28,8 +28,8 @@ void bar_visualizer::render(gs_effect_t *effect)
 	if (m_cfg->stereo) {
 		size_t i = 0, pos_x = 0;
 		uint32_t height_l, height_r;
-		uint offset = m_cfg->stereo_space / 2;
-		uint center = m_cfg->bar_height / 2 + offset;
+		uint32_t offset = m_cfg->stereo_space / 2;
+		uint32_t center = m_cfg->bar_height / 2 + offset;
 
 		/* Just in case */
 		if (m_bars_left.size() != m_cfg->detail + DEAD_BAR_OFFSET)

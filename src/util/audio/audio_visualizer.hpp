@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <obs/graphics/graphics.h>
+#include <graphics/graphics.h>
 #include <string>
 
 namespace source {

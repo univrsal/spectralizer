@@ -493,7 +493,6 @@ void spectrum_visualizer::recalculate_target_log_frequencies(uint32_t number_of_
 	}
 
 	for (auto i = 0u; i < number_of_bars; i++) {
-		// TODO get target sampling freq from config
 		m_bar_freq[i] = logspace(m_cfg->log_freq_start, m_cfg->high_cutoff_freq, i, number_of_bars);
 	}
 }
@@ -514,7 +513,10 @@ void spectrum_visualizer::generate_log_bars(uint32_t number_of_bars, size_t fftw
 								  (fftw_output[i][1] * fftw_output[i][1]));
 	}
 
-	const int lanczos_window = (m_cfg->log_freq_quality == LFQ_PRECISE) ? 3 : 2;
+	// FIXME hardcoded to 3 for now
+	// look at visualizer_source.cpp: get_properties_for_visualiser()
+	//const int lanczos_window = (m_cfg->log_freq_quality == LFQ_PRECISE) ? 3 : 2;
+	const int lanczos_window = 3;
 	for (uint32_t i = 0u; i < number_of_bars; i++) {
 		const double normalized_lin_bar = m_bar_freq[i] / m_cfg->high_cutoff_freq;
 		const double t = normalized_lin_bar * number_of_bars;
@@ -523,7 +525,13 @@ void spectrum_visualizer::generate_log_bars(uint32_t number_of_bars, size_t fftw
 		// high-pass the result if requested to give room to high freqs
 		// m_cfg->log_freq_hpf_curve modifies the logarithm base for a sharper curve
 		if (m_cfg->log_freq_use_hpf) {
-			bars[i] *= (std::log(i + 2) / std::log(m_cfg->log_freq_hpf_curve)) * (static_cast<double>(i) / 8.0);
+			double multiplier = static_cast<double>(i);
+			// Enabling this multiplier scaling only for higher details
+			// Log freq scale is useful in larger detail spectrums anyway
+			if (m_cfg->detail > 32) {
+				multiplier /= (static_cast<double>(m_cfg->detail) / 32.0);
+			}
+			bars[i] *= (std::log(i + 2) / std::log(m_cfg->log_freq_hpf_curve)) * multiplier;
 		}
 
 		if (!m_cfg->use_auto_scale) {
@@ -532,7 +540,7 @@ void spectrum_visualizer::generate_log_bars(uint32_t number_of_bars, size_t fftw
 			// on logarithm's effect of scaling the spectrum.
 			bars[i] *= 0.0005;
 			if (m_cfg->log_freq_use_hpf) {
-				bars[i] *= 0.2 * lerp(0.066, 0.5, (m_cfg->log_freq_hpf_curve / defaults::log_freq_hpf_curve_max));
+				bars[i] *= 0.5 * lerp(0.066, 0.5, (m_cfg->log_freq_hpf_curve / defaults::log_freq_hpf_curve_max));
 			}
 		}
 	}

@@ -84,14 +84,6 @@ void visualizer_source::update(obs_data_t *settings)
 	m_config.wire_thickness = obs_data_get_int(settings, S_WIRE_THICKNESS);
 	m_config.log_freq_scale = obs_data_get_bool(settings, S_LOG_FREQ_SCALE);
 	m_config.log_freq_quality = (log_freq_qual)obs_data_get_int(settings, S_LOG_FREQ_SCALE_QUALITY);
-	if (m_config.log_freq_scale) {
-		uint32_t sample_size_multiplier = defaults::log_freq_quality_fast_detail_mul;
-		if (m_config.log_freq_quality == LFQ_PRECISE) {
-			sample_size_multiplier = defaults::log_freq_quality_precise_detail_mul;
-		}
-
-		m_config.sample_size *= sample_size_multiplier;
-	}
 	m_config.log_freq_start = obs_data_get_double(settings, S_LOG_FREQ_SCALE_START);
 	m_config.log_freq_use_hpf = obs_data_get_bool(settings, S_LOG_FREQ_SCALE_USE_HPF);
 	m_config.log_freq_hpf_curve = obs_data_get_double(settings, S_LOG_FREQ_SCALE_HPF_CURVE);
@@ -252,12 +244,13 @@ static bool log_freq_changed(obs_properties_t *props, obs_property_t *p, obs_dat
 {
 	bool log_freq_enabled = obs_data_get_bool(data, S_LOG_FREQ_SCALE);
 	bool log_freq_hpf_enabled = obs_data_get_bool(data, S_LOG_FREQ_SCALE_USE_HPF);
-	auto *log_freq_quality = obs_properties_get(props, S_LOG_FREQ_SCALE_QUALITY);
+	//auto *log_freq_quality = obs_properties_get(props, S_LOG_FREQ_SCALE_QUALITY);
 	auto *log_freq_start = obs_properties_get(props, S_LOG_FREQ_SCALE_START);
 	auto *log_freq_use_hpf = obs_properties_get(props, S_LOG_FREQ_SCALE_USE_HPF);
 	auto *log_freq_hpf_curve = obs_properties_get(props, S_LOG_FREQ_SCALE_HPF_CURVE);
 
-	obs_property_set_visible(log_freq_quality, log_freq_enabled);
+	// FIXME look below in get_properties_for_visualizer()
+	//obs_property_set_visible(log_freq_quality, log_freq_enabled);
 	obs_property_set_visible(log_freq_start, log_freq_enabled);
 	obs_property_set_visible(log_freq_use_hpf, log_freq_enabled);
 	obs_property_set_visible(log_freq_hpf_curve, log_freq_enabled && log_freq_hpf_enabled);
@@ -366,7 +359,21 @@ obs_properties_t *get_properties_for_visualiser(void *data)
 	auto *log_freq_quality = obs_properties_add_list(props, S_LOG_FREQ_SCALE_QUALITY, T_LOG_FREQ_SCALE_QUAL, OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 	obs_property_list_add_int(log_freq_quality, T_LOG_FREQ_SCALE_QUAL_FAST, LFQ_FAST);
 	obs_property_list_add_int(log_freq_quality, T_LOG_FREQ_SCALE_QUAL_PRECISE, LFQ_PRECISE);
-	obs_property_set_visible(log_freq_quality, defaults::log_freq_scale);
+	// FIXME This setting makes no sense with current implementation.
+	//
+	// Performing a DFT requires input buffer of specific length. Higher quality DFTs require
+	// longer input buffer - a classic "sacrifice X for better Y" scenario.
+	//
+	// Unfortunately, right now Spectralizer creates a spectrum directly from FFTW output and thus
+	// sample detail has to be directly tied to OBS's ticks and audio frequency. Increasing detail
+	// leaves part of input buffer empty, which makes the result invalid - see
+	// obs_internal_source::update() comment as well.
+	//
+	// Solution would be to double-buffer FFTW results and interpolate on OBS ticks in between the
+	// results. This would require reworking spectrum_visualizer.cpp code and most probably would
+	// introduce latency between played audio and displayed spectrum - needs further checking.
+	//obs_property_set_visible(log_freq_quality, defaults::log_freq_scale);
+	obs_property_set_visible(log_freq_quality, false);
 
 	auto *log_freq_start = obs_properties_add_float_slider(props, S_LOG_FREQ_SCALE_START, T_LOG_FREQ_SCALE_START, 20.0, 100.0, 0.1);
 	obs_property_float_set_suffix(log_freq_start, " Hz");

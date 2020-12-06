@@ -18,10 +18,10 @@
 
 #pragma once
 #include "audio_source.hpp"
-#include <obs/media-io/audio-io.h>
+#include <media-io/audio-io.h>
 #include <mutex>
-#include <obs/obs-module.h>
-#include <obs/util/circlebuf.h>
+#include <obs-module.h>
+#include <util/circlebuf.h>
 
 namespace audio {
 

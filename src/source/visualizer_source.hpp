@@ -10,7 +10,7 @@
 #include <cstdint>
 #include <map>
 #include <mutex>
-#include <obs/obs-module.h>
+#include <obs-module.h>
 
 namespace audio {
 class audio_visualizer;

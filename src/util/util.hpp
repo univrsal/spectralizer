@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <obs/obs-module.h>
+#include <obs-module.h>
 #include <vector>
 
 /* Logging */

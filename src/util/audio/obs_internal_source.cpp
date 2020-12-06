@@ -18,7 +18,7 @@
 
 #include "obs_internal_source.hpp"
 #include "../../source/visualizer_source.hpp"
-#include <obs/util/platform.h>
+#include <util/platform.h>
 
 #define DEFAULT_AUDIO_BUF_MS 10
 #define MS_IN_S 100
@@ -177,6 +177,14 @@ void obs_internal_source::update()
      * and therefore will break the visualizer so I'll just use 60 as a constant here
      */
 	m_cfg->sample_size = m_cfg->sample_rate / 60;
+	// FIXME see comment in visualizer_source.cpp: get_properties_for_visualiser()
+	/*if (m_cfg->log_freq_scale) {
+		if (m_cfg->log_freq_quality == LFQ_PRECISE) {
+			m_cfg->sample_size *= defaults::log_freq_quality_precise_detail_mul;
+		} else {
+			m_cfg->sample_size *= defaults::log_freq_quality_fast_detail_mul;
+		}
+	}*/
 	m_num_channels = audio_output_get_channels(obs_get_audio());
 	obs_weak_source_t *old = nullptr;
 

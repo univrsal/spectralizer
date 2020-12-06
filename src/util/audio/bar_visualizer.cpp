@@ -28,8 +28,8 @@ void bar_visualizer::render(gs_effect_t *effect)
 	if (m_cfg->stereo) {
 		size_t i = 0, pos_x = 0;
 		uint32_t height_l, height_r;
-		uint offset = m_cfg->stereo_space / 2;
-		uint center = m_cfg->bar_height / 2 + offset;
+		uint32_t offset = m_cfg->stereo_space / 2;
+		uint32_t center = m_cfg->bar_height / 2 + offset;
 
 		/* Just in case */
 		if (m_bars_left.size() != m_cfg->detail + DEAD_BAR_OFFSET)
@@ -38,8 +38,13 @@ void bar_visualizer::render(gs_effect_t *effect)
 			m_bars_right.resize(m_cfg->detail + DEAD_BAR_OFFSET, 0.0);
 
 		for (; i < m_bars_left.size() - DEAD_BAR_OFFSET; i++) { /* Leave the four dead bars the end */
-			height_l = UTIL_MAX(static_cast<uint32_t>(round(m_bars_left[i])), 1);
-			height_r = UTIL_MAX(static_cast<uint32_t>(round(m_bars_right[i])), 1);
+			double bar_left = (m_bars_left[i] > 1.0 ? m_bars_left[i] : 1.0);
+			double bar_right = (m_bars_right[i] > 1.0 ? m_bars_right[i] : 1.0);
+
+			height_l = UTIL_MAX(static_cast<uint32_t>(round(bar_left)), 1);
+			height_l = UTIL_MIN(height_l, (m_cfg->bar_height / 2));
+			height_r = UTIL_MAX(static_cast<uint32_t>(round(bar_right)), 1);
+			height_r = UTIL_MIN(height_r, (m_cfg->bar_height / 2));
 
 			pos_x = i * (m_cfg->bar_width + m_cfg->bar_space);
 
@@ -59,8 +64,9 @@ void bar_visualizer::render(gs_effect_t *effect)
 		size_t i = 0, pos_x = 0;
 		uint32_t height;
 		for (; i < m_bars_left.size() - DEAD_BAR_OFFSET; i++) { /* Leave the four dead bars the end */
-			auto val = m_bars_left[i];
+			auto val = m_bars_left[i] > 1.0 ? m_bars_left[i] : 1.0;
 			height = UTIL_MAX(static_cast<uint32_t>(round(val)), 1);
+			height = UTIL_MIN(height, m_cfg->bar_height);
 
 			pos_x = i * (m_cfg->bar_width + m_cfg->bar_space);
 			gs_matrix_push();

@@ -77,6 +77,13 @@
 #define T_WIRE_MODE_FILL_INVERTED		T_("Spectralizer.Wire.Mode.Fill.Invert")
 #define T_WIRE_MODE						T_("Spectralizer.Wire.Mode")
 #define T_WIRE_THICKNESS				T_("Spectralizer.Wire.Thickness")
+#define T_LOG_FREQ_SCALE				T_("Spectralizer.LogFreqScale.Enable")
+#define T_LOG_FREQ_SCALE_QUAL			T_("Spectralizer.LogFreqScale.Quality")
+#define T_LOG_FREQ_SCALE_QUAL_FAST		T_("Spectralizer.LogFreqScale.Quality.Fast")
+#define T_LOG_FREQ_SCALE_QUAL_PRECISE	T_("Spectralizer.LogFreqScale.Quality.Precise")
+#define T_LOG_FREQ_SCALE_START			T_("Spectralizer.LogFreqScale.Start")
+#define T_LOG_FREQ_SCALE_USE_HPF		T_("Spectralizer.LogFreqScale.UseHPF")
+#define T_LOG_FREQ_SCALE_HPF_CURVE		T_("Spectralizer.LogFreqScale.HPFCurve")
 
 #define S_SOURCE_MODE                   "source_mode"
 #define S_STEREO                        "stereo"
@@ -102,6 +109,11 @@
 #define S_SCALE_SIZE					"scale_size"
 #define S_WIRE_MODE						"wire_mode"
 #define S_WIRE_THICKNESS				"wire_thickness"
+#define S_LOG_FREQ_SCALE				"log_freq_scale"
+#define S_LOG_FREQ_SCALE_QUALITY		"log_freq_scale_quality"
+#define S_LOG_FREQ_SCALE_START			"log_freq_scale_start"
+#define S_LOG_FREQ_SCALE_USE_HPF		"log_freq_scale_use_hpf"
+#define S_LOG_FREQ_SCALE_HPF_CURVE		"log_freq_scale_hpf_curve"
 
 enum visual_mode
 {
@@ -134,6 +146,18 @@ enum channel_mode
     CM_BOTH
 };
 
+enum freq_scale
+{
+    FS_LIN = 0,
+    FS_LOG
+};
+
+enum log_freq_qual
+{
+    LFQ_FAST = 0,
+    LFQ_PRECISE,
+};
+
 struct stereo_sample_frame
 {
     int16_t l, r;
@@ -147,6 +171,16 @@ namespace defaults {
     CNST visual_mode 	visual			= VM_BARS;
     CNST smooting_mode	smoothing		= SM_NONE;
     CNST uint32_t		color			= 0xffffffff;
+
+    CNST bool			log_freq_scale	= false;
+    CNST log_freq_qual	log_freq_quality = LFQ_FAST;
+    CNST double			log_freq_start = 40.0;
+    CNST bool			log_freq_use_hpf = true;
+    CNST double			log_freq_hpf_curve = 20.0;
+    /* constants for log_freq-related options */
+    CNST double			log_freq_hpf_curve_max = 100.0;
+    CNST uint32_t		log_freq_quality_fast_detail_mul = 2;
+    CNST uint32_t		log_freq_quality_precise_detail_mul = 8;
 
     CNST uint16_t		detail			= 32,
                         cx				= 50,

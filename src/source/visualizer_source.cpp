@@ -82,6 +82,11 @@ void visualizer_source::update(obs_data_t *settings)
 	m_config.scale_size = obs_data_get_double(settings, S_SCALE_SIZE);
 	m_config.wire_mode = (wire_mode)obs_data_get_int(settings, S_WIRE_MODE);
 	m_config.wire_thickness = obs_data_get_int(settings, S_WIRE_THICKNESS);
+	m_config.log_freq_scale = obs_data_get_bool(settings, S_LOG_FREQ_SCALE);
+	m_config.log_freq_quality = (log_freq_qual)obs_data_get_int(settings, S_LOG_FREQ_SCALE_QUALITY);
+	m_config.log_freq_start = obs_data_get_double(settings, S_LOG_FREQ_SCALE_START);
+	m_config.log_freq_use_hpf = obs_data_get_bool(settings, S_LOG_FREQ_SCALE_USE_HPF);
+	m_config.log_freq_hpf_curve = obs_data_get_double(settings, S_LOG_FREQ_SCALE_HPF_CURVE);
 
 #ifdef LINUX
 	m_config.auto_clear = obs_data_get_bool(settings, S_AUTO_CLEAR);
@@ -235,6 +240,33 @@ static bool wire_mode_changed(obs_properties_t *props, obs_property_t *p, obs_da
 	return true;
 }
 
+static bool log_freq_changed(obs_properties_t *props, obs_property_t *p, obs_data_t *data)
+{
+	bool log_freq_enabled = obs_data_get_bool(data, S_LOG_FREQ_SCALE);
+	bool log_freq_hpf_enabled = obs_data_get_bool(data, S_LOG_FREQ_SCALE_USE_HPF);
+	//auto *log_freq_quality = obs_properties_get(props, S_LOG_FREQ_SCALE_QUALITY);
+	auto *log_freq_start = obs_properties_get(props, S_LOG_FREQ_SCALE_START);
+	auto *log_freq_use_hpf = obs_properties_get(props, S_LOG_FREQ_SCALE_USE_HPF);
+	auto *log_freq_hpf_curve = obs_properties_get(props, S_LOG_FREQ_SCALE_HPF_CURVE);
+
+	// FIXME look below in get_properties_for_visualizer()
+	//obs_property_set_visible(log_freq_quality, log_freq_enabled);
+	obs_property_set_visible(log_freq_start, log_freq_enabled);
+	obs_property_set_visible(log_freq_use_hpf, log_freq_enabled);
+	obs_property_set_visible(log_freq_hpf_curve, log_freq_enabled && log_freq_hpf_enabled);
+	return true;
+}
+
+static bool log_freq_use_hpf_changed(obs_properties_t *props, obs_property_t *p, obs_data_t *data)
+{
+	bool log_freq_enabled = obs_data_get_bool(data, S_LOG_FREQ_SCALE);
+	bool log_freq_hpf_enabled = obs_data_get_bool(data, S_LOG_FREQ_SCALE_USE_HPF);
+	auto *log_freq_hpf_curve = obs_properties_get(props, S_LOG_FREQ_SCALE_HPF_CURVE);
+
+	obs_property_set_visible(log_freq_hpf_curve, log_freq_enabled && log_freq_hpf_enabled);
+	return true;
+}
+
 static bool add_source(void *data, obs_source_t *src)
 {
 	uint32_t caps = obs_source_get_output_flags(src);
@@ -321,6 +353,42 @@ obs_properties_t *get_properties_for_visualiser(void *data)
 	obs_properties_add_bool(props, S_AUTO_CLEAR, T_AUTO_CLEAR);
 #endif
 
+	auto *log_freq = obs_properties_add_bool(props, S_LOG_FREQ_SCALE, T_LOG_FREQ_SCALE);
+	obs_property_set_modified_callback(log_freq, log_freq_changed);
+
+	auto *log_freq_quality = obs_properties_add_list(props, S_LOG_FREQ_SCALE_QUALITY, T_LOG_FREQ_SCALE_QUAL, OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+	obs_property_list_add_int(log_freq_quality, T_LOG_FREQ_SCALE_QUAL_FAST, LFQ_FAST);
+	obs_property_list_add_int(log_freq_quality, T_LOG_FREQ_SCALE_QUAL_PRECISE, LFQ_PRECISE);
+	// FIXME This setting makes no sense with current implementation.
+	//
+	// Performing a DFT requires input buffer of specific length. Higher quality DFTs require
+	// longer input buffer - a classic "sacrifice X for better Y" scenario.
+	//
+	// Unfortunately, right now Spectralizer creates a spectrum directly from FFTW output and thus
+	// sample detail has to be directly tied to OBS's ticks and audio frequency. Increasing detail
+	// leaves part of input buffer empty, which makes the result invalid - see
+	// obs_internal_source::update() comment as well.
+	//
+	// Solution would be to double-buffer FFTW results and interpolate on OBS ticks in between the
+	// results. This would require reworking spectrum_visualizer.cpp code and most probably would
+	// introduce latency between played audio and displayed spectrum - needs further checking.
+	//obs_property_set_visible(log_freq_quality, defaults::log_freq_scale);
+	obs_property_set_visible(log_freq_quality, false);
+
+	auto *log_freq_start = obs_properties_add_float_slider(props, S_LOG_FREQ_SCALE_START, T_LOG_FREQ_SCALE_START, 20.0, 100.0, 0.1);
+	obs_property_float_set_suffix(log_freq_start, " Hz");
+	obs_property_set_visible(log_freq_start, defaults::log_freq_scale);
+
+	auto *log_freq_use_hpf = obs_properties_add_bool(props, S_LOG_FREQ_SCALE_USE_HPF, T_LOG_FREQ_SCALE_USE_HPF);
+	obs_property_set_visible(log_freq_use_hpf, defaults::log_freq_scale);
+	obs_property_set_modified_callback(log_freq_use_hpf, log_freq_use_hpf_changed);
+
+	obs_property_set_visible(
+		obs_properties_add_float_slider(props, S_LOG_FREQ_SCALE_HPF_CURVE, T_LOG_FREQ_SCALE_HPF_CURVE,
+										2.0, defaults::log_freq_hpf_curve_max, 0.1),
+		defaults::log_freq_scale && defaults::log_freq_use_hpf
+	);
+
 	auto *stereo = obs_properties_add_bool(props, S_STEREO, T_STEREO);
 	auto *space = obs_properties_add_int(props, S_STEREO_SPACE, T_STEREO_SPACE, 0, UINT16_MAX, 1);
 	obs_property_int_set_suffix(space, " Pixel");
@@ -374,6 +442,11 @@ void register_visualiser()
 		obs_data_set_default_double(settings, S_SCALE_BOOST, defaults::scale_boost);
 		obs_data_set_default_int(settings, S_WIRE_MODE, defaults::wire_mode);
 		obs_data_set_default_int(settings, S_WIRE_THICKNESS, defaults::wire_thickness);
+		obs_data_set_default_bool(settings, S_LOG_FREQ_SCALE, defaults::log_freq_scale);
+		obs_data_set_default_int(settings, S_LOG_FREQ_SCALE_QUALITY, defaults::log_freq_quality);
+		obs_data_set_default_double(settings, S_LOG_FREQ_SCALE_START, defaults::log_freq_start);
+		obs_data_set_default_bool(settings, S_LOG_FREQ_SCALE_USE_HPF, defaults::log_freq_use_hpf);
+		obs_data_set_default_double(settings, S_LOG_FREQ_SCALE_HPF_CURVE, defaults::log_freq_hpf_curve);
 	};
 
 	si.update = [](void *data, obs_data_t *settings) { reinterpret_cast<visualizer_source *>(data)->update(settings); };

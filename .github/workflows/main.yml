@@ -102,6 +102,7 @@ jobs:
       - name: Configure and build plugin
         shell: bash
         run: |
+          brew install fftw
           cd ${{ github.workspace }}
           echo "=> Building plugin for macOS."
           echo "GIT_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
@@ -222,7 +223,7 @@ jobs:
             --pkgname=${{ env.project-name }} --pkgversion="$PKG_VERSION" \
             --pkglicense="GPLv2.0" --maintainer="${{ env.maintainer }}" \
             --pkggroup="video" \
-            --pkgsource="https://github.com/${{ env.PROJECT_GIT }}" \
+            --pkgsource="https://github.com/${{ env.project-git }}" \
             --requires="obs-studio \(\>= ${{ env.obs-studio-version }}\)" \
             --pakdir="../package"
           mv ../package/*.deb ../package/${{ env.project-name }}.${{ env.GIT_TAG }}.linux.x64.deb
@@ -349,6 +350,8 @@ jobs:
             -DDepsPath="${{ github.workspace }}\cmbuild\deps\win64" `
             -DLibObs_DIR="${{ github.workspace }}\obs-studio\build64\libobs" `
             -DLIBOBS_INCLUDE_DIR="${{ github.workspace }}\obs-studio\libobs" `
+            -DFFTW_INCLUDE_DIRS="${{ github.workspace }}\fftw3\include" `
+            -DFFTW_LIBRARIES="${{ github.workspace }}\fftw3\bin\64bit\libfftw3-3.lib" `
             -DLIBOBS_LIB="${{ github.workspace }}\obs-studio\build64\libobs\RelWithDebInfo\obs.lib" `
             -DOBS_FRONTEND_LIB="${{ github.workspace }}\obs-studio\build64\UI\obs-frontend-api\RelWithDebInfo\obs-frontend-api.lib" `
             -DW32_PTHREADS_LIB="${{ github.workspace }}\obs-studio\build64\deps\w32-pthreads\RelWithDebInfo\w32-pthreads.lib" ..
@@ -362,6 +365,8 @@ jobs:
           -DDepsPath="${{ github.workspace }}\cmbuild\deps\win32" `
           -DLibObs_DIR="${{ github.workspace }}\obs-studio\build32\libobs" `
           -DLIBOBS_INCLUDE_DIR="${{ github.workspace }}\obs-studio\libobs" `
+          -DFFTW_INCLUDE_DIRS="${{ github.workspace }}\fftw3\include" `
+          -DFFTW_LIBRARIES="${{ github.workspace }}\fftw3\bin\32bit\libfftw3-3.lib" `
           -DLIBOBS_LIB="${{ github.workspace }}\obs-studio\build32\libobs\RelWithDebInfo\obs.lib" `
           -DOBS_FRONTEND_LIB="${{ github.workspace }}\obs-studio\build32\UI\obs-frontend-api\RelWithDebInfo\obs-frontend-api.lib" `
           -DW32_PTHREADS_LIB="${{ github.workspace }}\obs-studio\build32\deps\w32-pthreads\RelWithDebInfo\w32-pthreads.lib" ..

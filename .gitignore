@@ -4,6 +4,7 @@
 *.pkgproj
 *.user
 build*/
+README.txt
 # Compiled Object files
 *.slo
 *.lo

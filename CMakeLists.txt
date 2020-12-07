@@ -18,7 +18,7 @@ option(GLOBAL_INSTALLATION "Whether to install for all users (default: OFF)" OFF
 
 if (MSVC)
     set(spectralizer_PLATFORM_DEPS
-            w32-pthreads)
+            ${W32_PTHREADS_LIB})
 endif ()
 
 if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
@@ -80,16 +80,6 @@ include_directories(${FFTW_INCLUDE_DIRS}
     ${LIBOBS_INCLUDE_DIR}
 )
 
-if (WIN32)
-    set(FFTW_BINARY libfftw3-3.dll)
-    math(EXPR BITS "8*${CMAKE_SIZEOF_VOID_P}")
-    add_custom_command(TARGET spectralizer POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy
-        "${CMAKE_CURRENT_SOURCE_DIR}/fftw3/bin/${BITS}bit/${FFTW_BINARY}"
-        "${CMAKE_BINARY_DIR}/rundir/$<CONFIGURATION>/obs-plugins/${BITS}bit/"
-    )
-endif()
-
 # Installation stuff
 
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
@@ -106,31 +96,49 @@ if(WIN32)
         add_definitions(/MP /d2FH4-)
     endif()
 
+    include_directories(
+        "${LIBOBS_INCLUDE_DIR}"
+    )
+
+    target_link_libraries(${CMAKE_PROJECT_NAME}
+        "${OBS_FRONTEND_LIB}"
+    )
+
+    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+        set(ARCH_NAME "64bit")
+        set(OBS_BUILDDIR_ARCH "build64")
+    else()
+        set(ARCH_NAME "32bit")
+        set(OBS_BUILDDIR_ARCH "build32")
+    endif()
 
     get_filename_component(LibOBS_DIR ${LIBOBS_LIB} DIRECTORY)
 
     add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
         # Copy to obs-studio dev environment for immediate testing
-        COMMAND if $<CONFIG:Debug>==1 (
+        COMMAND 
             "${CMAKE_COMMAND}" -E copy
                 "$<TARGET_FILE:${CMAKE_PROJECT_NAME}>"
-                "${LibOBS_DIR}/../../rundir/$<CONFIG>/obs-plugins/${ARCH_NAME}")
+                "${LibOBS_DIR}/../../rundir/$<CONFIG>/obs-plugins/${ARCH_NAME}"
 
-        COMMAND if $<CONFIG:Debug>==1 (
+        COMMAND
             "${CMAKE_COMMAND}" -E copy
                 "$<TARGET_PDB_FILE:${CMAKE_PROJECT_NAME}>"
-                "${LibOBS_DIR}/../../rundir/$<CONFIG>/obs-plugins/${ARCH_NAME}")
+                "${LibOBS_DIR}/../../rundir/$<CONFIG>/obs-plugins/${ARCH_NAME}"
 
-        COMMAND if $<CONFIG:Debug>==1 (
+        COMMAND 
             "${CMAKE_COMMAND}" -E make_directory
-                "${LibOBS_DIR}/../../rundir/$<CONFIG>/data/obs-plugins/${CMAKE_PROJECT_NAME}")
+                "${LibOBS_DIR}/../../rundir/$<CONFIG>/data/obs-plugins/${CMAKE_PROJECT_NAME}"
 
-        COMMAND if $<CONFIG:Debug>==1 (
+        COMMAND
             "${CMAKE_COMMAND}" -E copy_directory
-                "${PROJECT_SOURCE_DIR}/data"
-                "${LibOBS_DIR}/../../rundir/$<CONFIG>/data/obs-plugins/${CMAKE_PROJECT_NAME}")
+                "${CMAKE_CURRENT_SOURCE_DIR}/data"
+                "${LibOBS_DIR}/../../rundir/$<CONFIG>/data/obs-plugins/${CMAKE_PROJECT_NAME}"
+        COMMAND
+            ${CMAKE_COMMAND} -E copy
+                "${CMAKE_CURRENT_SOURCE_DIR}/fftw3/bin/${ARCH_NAME}/libfftw3-3.dll"
+                "${LibOBS_DIR}/../../rundir/$<CONFIG>/obs-plugins/${ARCH_NAME}"
     )
-
 elseif(UNIX AND NOT APPLE)
     include(GNUInstallDirs)
 

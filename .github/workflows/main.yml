@@ -254,7 +254,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          path: ${{ github.workspace }}/${{ env.project-git }}
+          path: ${{ github.workspace }}
           submodules: 'recursive'
       - name: 'Checkout OBS'
         uses: actions/checkout@v2
@@ -278,7 +278,7 @@ jobs:
           git submodule update
       - name: 'Get ${{ env.project-git }} git info'
         shell: bash
-        working-directory: ${{ github.workspace }}/${{ env.project-git }}
+        working-directory: ${{ github.workspace }}
         run: |
           git fetch --prune --unshallow
           echo "GIT_BRANCH=${{ github.event.pull_request.head.ref }}" >> $GITHUB_ENV
@@ -341,7 +341,7 @@ jobs:
           msbuild /m /p:Configuration=RelWithDebInfo .\build64\libobs\libobs.vcxproj
           msbuild /m /p:Configuration=RelWithDebInfo .\build64\UI\obs-frontend-api\obs-frontend-api.vcxproj
       - name: 'Configure ${{ env.project-git }}  64-bit'
-        working-directory: ${{ github.workspace }}\${{ env.project-git }}
+        working-directory: ${{ github.workspace }}
         run: |
           mkdir .\build64
           cd .\build64
@@ -356,7 +356,7 @@ jobs:
             -DOBS_FRONTEND_LIB="${{ github.workspace }}\obs-studio\build64\UI\obs-frontend-api\RelWithDebInfo\obs-frontend-api.lib" `
             -DW32_PTHREADS_LIB="${{ github.workspace }}\obs-studio\build64\deps\w32-pthreads\RelWithDebInfo\w32-pthreads.lib" ..
       - name: 'Configure ${{ env.project-git }} 32-bit'
-        working-directory: ${{ github.workspace }}/${{ env.project-git }}
+        working-directory: ${{ github.workspace }}
         run: |
           mkdir .\build32
           cd .\build32
@@ -371,13 +371,13 @@ jobs:
           -DOBS_FRONTEND_LIB="${{ github.workspace }}\obs-studio\build32\UI\obs-frontend-api\RelWithDebInfo\obs-frontend-api.lib" `
           -DW32_PTHREADS_LIB="${{ github.workspace }}\obs-studio\build32\deps\w32-pthreads\RelWithDebInfo\w32-pthreads.lib" ..
       - name: 'Build ${{ env.project-git }} 64-bit'
-        working-directory: ${{ github.workspace }}/${{ env.project-git }}
+        working-directory: ${{ github.workspace }}
         run: msbuild /m /p:Configuration=RelWithDebInfo .\build64\${{ env.project-name }}.sln
       - name: 'Build ${{ env.project-git }} 32-bit'
-        working-directory: ${{ github.workspace }}/${{ env.project-git }}
+        working-directory: ${{ github.workspace }}
         run: msbuild /m /p:Configuration=RelWithDebInfo .\build32\${{ env.project-name }}.sln
       - name: 'Package ${{ env.project-git  }}'
-        working-directory: ${{ github.workspace }}/${{ env.project-git }}
+        working-directory: ${{ github.workspace }}
         run: |
           mkdir release\obs-plugins\64bit
           mkdir release\obs-plugins\32bit
@@ -388,17 +388,17 @@ jobs:
           robocopy /E .\data .\release\data\obs-plugins\${{ env.project-name }}
           robocopy .\package .\release README.txt
           
-          cd ${{ github.workspace }}/${{ env.project-git }}
+          cd ${{ github.workspace }}
           iscc .\package\installer-Windows.iss /O. /F"${{ env.project-name }}.${{ env.GIT_TAG }}.installer.windows"
       - name: 'Publish Windows binary'
         if: success()
         uses: actions/upload-artifact@v2-preview
         with:
           name: '${{ env.project-name }}.${{ env.GIT_TAG }}.bin.windows'
-          path: ${{ github.workspace }}\${{ env.project-git }}\release\**\*
+          path: ${{ github.workspace }}\release\**\*
       - name: 'Publish Windows installer'
         if: success()
         uses: actions/upload-artifact@v2-preview
         with:
           name: '${{ env.project-name }}.${{ env.GIT_TAG }}.installer.windows'
-          path: ${{ github.workspace }}/${{ env.project-git }}/*.exe
+          path: ${{ github.workspace }}/*.exe

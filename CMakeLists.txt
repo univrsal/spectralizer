@@ -4,7 +4,7 @@ set(PLUGIN_AUTHOR "univrsal")
 set(PLUGIN_GIT spectralizer)
 set(LINUX_MAINTAINER_EMAIL "uni@vrsal.cf")
 set(MACOS_BUNDLEID "cf.vrsal.spectralizer")
-
+set(CMAKE_CXX_STANDARD 11)
 string(TIMESTAMP TODAY "%Y.%m.%d %H:%M")
 add_definitions(-DBUILD_TIME="${TODAY}")
 add_definitions(-DTUNA_VERSION="${PROJECT_VERSION}")

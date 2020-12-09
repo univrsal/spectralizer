@@ -48,6 +48,7 @@ set(spectralizer_SOURCES
     src/source/visualizer_source.cpp
     src/source/visualizer_source.hpp
     src/util/util.hpp
+    src/util/util.cpp
     src/util/audio/spectrum_visualizer.cpp
     src/util/audio/spectrum_visualizer.hpp
     src/util/audio/bar_visualizer.cpp

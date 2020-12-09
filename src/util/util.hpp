@@ -23,7 +23,7 @@
 
 /* Logging */
 #define log_src(log_level, format, ...) \
-	blog(log_level, "[spectralizer: '%s'] " format, obs_source_get_name(context->source), ##__VA_ARGS__)
+    blog(log_level, "[spectralizer: '%s'] " format, obs_source_get_name(context->source), ##__VA_ARGS__)
 #define write_log(log_level, format, ...) blog(log_level, "[spectralizer] " format, ##__VA_ARGS__)
 
 #define debug(format, ...) write_log(LOG_DEBUG, format, ##__VA_ARGS__)
@@ -36,7 +36,7 @@
 #define UTIL_SWAP(a, b) do { typeof(a) tmp = a; a = b; b = tmp; } while (0)
 #define UTIL_MAX(a, b)                  (((a) > (b)) ? (a) : (b))
 #define UTIL_MIN(a, b)                  (((a) < (b)) ? (a) : (b))
-#define UTIL_CLAMP(lower, x, upper) 	(UTIL_MIN(upper, UTIL_MAX(x, lower)))
+#define UTIL_CLAMP(lower, x, upper)     (UTIL_MIN(upper, UTIL_MAX(x, lower)))
 #define T_(v)                           obs_module_text(v)
 
 #define T_SOURCE                        T_("Spectralizer.Source")
@@ -44,7 +44,7 @@
 #define T_MODE_BARS                     T_("Spectralizer.Mode.Bars")
 #define T_MODE_WIRE                     T_("Spectralizer.Mode.Wire")
 #define T_STEREO                        T_("Spectralizer.Stereo")
-#define T_STEREO_SPACE					T_("Spectralizer.Stereo.Space")
+#define T_STEREO_SPACE                  T_("Spectralizer.Stereo.Space")
 #define T_DETAIL                        T_("Spectralizer.Detail")
 #define T_REFRESH_RATE                  T_("Spectralizer.RefreshRate")
 #define T_AUDIO_SOURCE                  T_("Spectralizer.AudioSource")
@@ -56,38 +56,38 @@
 #define T_SAMPLE_RATE                   T_("Spectralizer.SampleRate")
 #define T_BAR_SPACING                   T_("Spectralizer.Bar.Space")
 #define T_WIRE_SPACING                  T_("Spectralizer.Wire.Space")
-#define T_WIRE_HEIGHT					T_("Spectralizer.Wire.Height")
+#define T_WIRE_HEIGHT                   T_("Spectralizer.Wire.Height")
 #define T_COLOR                         T_("Spectralizer.Color")
 #define T_GRAVITY                       T_("Spectralizer.Gravity")
-#define T_FALLOFF						T_("Spectralizer.Falloff")
+#define T_FALLOFF                       T_("Spectralizer.Falloff")
 #define T_FILTER_MODE                   T_("Spectralizer.Filter.Mode")
-#define T_FILTER_NONE                  	T_AUDIO_SOURCE_NONE
+#define T_FILTER_NONE                   T_AUDIO_SOURCE_NONE
 #define T_FILTER_MONSTERCAT             T_("Spectralizer.Filter.Monstercat")
-#define T_FILTER_SGS					T_("Spectralizer.Filter.SGS")
-#define T_SGS_PASSES					T_("Spectralizer.Filter.SGS.Passes")
-#define T_SGS_POINTS					T_("Spectralizer.Filter.SGS.Points")
-#define T_FILTER_STRENGTH    			T_("Spectralizer.Filter.Strength")
-#define T_AUTO_CLEAR					T_("Spectralizer.AutoClear")
-#define T_AUTO_SCALE					T_("Spectralizer.Use.AutoScale")
-#define T_SCALE_BOOST					T_("Spectralizer.Scale.Boost")
-#define T_SCALE_SIZE					T_("Spectralizer.Scale.Size")
-#define T_WIRE_MODE_THIN				T_("Spectralizer.Wire.Mode.Thin")
-#define T_WIRE_MODE_THICK				T_("Spectralizer.Wire.Mode.Thick")
-#define T_WIRE_MODE_FILL				T_("Spectralizer.Wire.Mode.Fill")
-#define T_WIRE_MODE_FILL_INVERTED		T_("Spectralizer.Wire.Mode.Fill.Invert")
-#define T_WIRE_MODE						T_("Spectralizer.Wire.Mode")
-#define T_WIRE_THICKNESS				T_("Spectralizer.Wire.Thickness")
-#define T_LOG_FREQ_SCALE				T_("Spectralizer.LogFreqScale.Enable")
-#define T_LOG_FREQ_SCALE_QUAL			T_("Spectralizer.LogFreqScale.Quality")
-#define T_LOG_FREQ_SCALE_QUAL_FAST		T_("Spectralizer.LogFreqScale.Quality.Fast")
-#define T_LOG_FREQ_SCALE_QUAL_PRECISE	T_("Spectralizer.LogFreqScale.Quality.Precise")
-#define T_LOG_FREQ_SCALE_START			T_("Spectralizer.LogFreqScale.Start")
-#define T_LOG_FREQ_SCALE_USE_HPF		T_("Spectralizer.LogFreqScale.UseHPF")
-#define T_LOG_FREQ_SCALE_HPF_CURVE		T_("Spectralizer.LogFreqScale.HPFCurve")
+#define T_FILTER_SGS                    T_("Spectralizer.Filter.SGS")
+#define T_SGS_PASSES                    T_("Spectralizer.Filter.SGS.Passes")
+#define T_SGS_POINTS                    T_("Spectralizer.Filter.SGS.Points")
+#define T_FILTER_STRENGTH               T_("Spectralizer.Filter.Strength")
+#define T_AUTO_CLEAR                    T_("Spectralizer.AutoClear")
+#define T_AUTO_SCALE                    T_("Spectralizer.Use.AutoScale")
+#define T_SCALE_BOOST                   T_("Spectralizer.Scale.Boost")
+#define T_SCALE_SIZE                    T_("Spectralizer.Scale.Size")
+#define T_WIRE_MODE_THIN                T_("Spectralizer.Wire.Mode.Thin")
+#define T_WIRE_MODE_THICK               T_("Spectralizer.Wire.Mode.Thick")
+#define T_WIRE_MODE_FILL                T_("Spectralizer.Wire.Mode.Fill")
+#define T_WIRE_MODE_FILL_INVERTED       T_("Spectralizer.Wire.Mode.Fill.Invert")
+#define T_WIRE_MODE                     T_("Spectralizer.Wire.Mode")
+#define T_WIRE_THICKNESS                T_("Spectralizer.Wire.Thickness")
+#define T_LOG_FREQ_SCALE                T_("Spectralizer.LogFreqScale.Enable")
+#define T_LOG_FREQ_SCALE_QUAL           T_("Spectralizer.LogFreqScale.Quality")
+#define T_LOG_FREQ_SCALE_QUAL_FAST      T_("Spectralizer.LogFreqScale.Quality.Fast")
+#define T_LOG_FREQ_SCALE_QUAL_PRECISE   T_("Spectralizer.LogFreqScale.Quality.Precise")
+#define T_LOG_FREQ_SCALE_START          T_("Spectralizer.LogFreqScale.Start")
+#define T_LOG_FREQ_SCALE_USE_HPF        T_("Spectralizer.LogFreqScale.UseHPF")
+#define T_LOG_FREQ_SCALE_HPF_CURVE      T_("Spectralizer.LogFreqScale.HPFCurve")
 
 #define S_SOURCE_MODE                   "source_mode"
 #define S_STEREO                        "stereo"
-#define S_STEREO_SPACE					"stereo_space"
+#define S_STEREO_SPACE                  "stereo_space"
 #define S_DETAIL                        "detail"
 #define S_REFRESH_RATE                  "refresh_rate"
 #define S_AUDIO_SOURCE                  "audio_source"
@@ -98,22 +98,22 @@
 #define S_BAR_SPACE                     "bar_space"
 #define S_COLOR                         "color"
 #define S_FILTER_MODE                   "filter_mode"
-#define S_SGS_PASSES					"sgs_passes"
-#define S_SGS_POINTS					"sgs_points"
+#define S_SGS_PASSES                    "sgs_passes"
+#define S_SGS_POINTS                    "sgs_points"
 #define S_GRAVITY                       "gravity"
-#define S_FALLOFF						"falloff"
-#define S_FILTER_STRENGTH   			"filter_strength"
-#define S_AUTO_CLEAR  					"auto_clear"
-#define S_AUTO_SCALE					"use_auto_scale"
-#define S_SCALE_BOOST					"scale_boost"
-#define S_SCALE_SIZE					"scale_size"
-#define S_WIRE_MODE						"wire_mode"
-#define S_WIRE_THICKNESS				"wire_thickness"
-#define S_LOG_FREQ_SCALE				"log_freq_scale"
-#define S_LOG_FREQ_SCALE_QUALITY		"log_freq_scale_quality"
-#define S_LOG_FREQ_SCALE_START			"log_freq_scale_start"
-#define S_LOG_FREQ_SCALE_USE_HPF		"log_freq_scale_use_hpf"
-#define S_LOG_FREQ_SCALE_HPF_CURVE		"log_freq_scale_hpf_curve"
+#define S_FALLOFF                       "falloff"
+#define S_FILTER_STRENGTH               "filter_strength"
+#define S_AUTO_CLEAR                    "auto_clear"
+#define S_AUTO_SCALE                    "use_auto_scale"
+#define S_SCALE_BOOST                   "scale_boost"
+#define S_SCALE_SIZE                    "scale_size"
+#define S_WIRE_MODE                     "wire_mode"
+#define S_WIRE_THICKNESS                "wire_thickness"
+#define S_LOG_FREQ_SCALE                "log_freq_scale"
+#define S_LOG_FREQ_SCALE_QUALITY        "log_freq_scale_quality"
+#define S_LOG_FREQ_SCALE_START          "log_freq_scale_start"
+#define S_LOG_FREQ_SCALE_USE_HPF        "log_freq_scale_use_hpf"
+#define S_LOG_FREQ_SCALE_HPF_CURVE      "log_freq_scale_hpf_curve"
 
 enum visual_mode
 {
@@ -164,64 +164,63 @@ struct stereo_sample_frame
 };
 
 using pcm_stereo_sample = struct stereo_sample_frame;
-#define CNST			static const constexpr
 
 namespace defaults {
-    CNST bool			stereo			= false;
-    CNST visual_mode 	visual			= VM_BARS;
-    CNST smooting_mode	smoothing		= SM_NONE;
-    CNST uint32_t		color			= 0xffffffff;
+    extern const bool           stereo;
+    extern const visual_mode    visual;
+    extern const smooting_mode  smoothing;
+    extern const uint32_t       color;
 
-    CNST bool			log_freq_scale	= false;
-    CNST log_freq_qual	log_freq_quality = LFQ_FAST;
-    CNST double			log_freq_start = 40.0;
-    CNST bool			log_freq_use_hpf = true;
-    CNST double			log_freq_hpf_curve = 20.0;
+    extern const bool           log_freq_scale;
+    extern const log_freq_qual  log_freq_quality;
+    extern const double         log_freq_start;
+    extern const bool           log_freq_use_hpf;
+    extern const double         log_freq_hpf_curve;
     /* constants for log_freq-related options */
-    CNST double			log_freq_hpf_curve_max = 100.0;
-    CNST uint32_t		log_freq_quality_fast_detail_mul = 2;
-    CNST uint32_t		log_freq_quality_precise_detail_mul = 8;
+    extern const double         log_freq_hpf_curve_max;
+    extern const uint32_t       log_freq_quality_fast_detail_mul;
+    extern const uint32_t       log_freq_quality_precise_detail_mul;
 
-    CNST uint16_t		detail			= 32,
-                        cx				= 50,
-                        cy				= 50,
-                        fps				= 30;
+    extern const uint16_t       detail,
+                                cx,
+                                cy,
+                                fps;
 
-    CNST uint32_t		sample_rate		= 44100,
-                        sample_size 	= sample_rate / fps;
+    extern const uint32_t       sample_rate,
+                                sample_size;
 
-    CNST double			lfreq_cut		= 30,
-                        hfreq_cut		= 22050,
-                        falloff_weight	= .95,
-                        gravity			= .8;
-    CNST uint32_t		sgs_points		= 3,		/* Should be a odd number */
-                        sgs_passes		= 2;
+    extern const double         lfreq_cut,
+                                hfreq_cut,
+                                falloff_weight,
+                                gravity;
+    extern const uint32_t       sgs_points,
+                                sgs_passes;
 
-    CNST double			mcat_smooth		= 1.5;
+    extern const double         mcat_smooth;
 
-    CNST uint16_t		bar_space		= 2,
-                        bar_width		= 5,
-                        bar_height		= 100,
-                        bar_min_height	= 5;
+    extern const uint16_t       bar_space,
+                                bar_width,
+                                bar_height,
+                                bar_min_height;
 
-    CNST uint16_t		wire_thickness	= 5;
-    CNST wire_mode		wire_mode		= WM_THIN;
+    extern const uint16_t       wire_thickness;
+    extern const enum wire_mode wire_mode;
 
-    CNST char			*fifo_path		= "/tmp/mpd.fifo";
-    CNST char			*audio_source	= "none";
+    extern const char           *fifo_path;
+    extern const char           *audio_source;
 
-    CNST bool			use_auto_scale	= true;
-    CNST double			scale_boost		= 0.0;
-    CNST double			scale_size		= 1.0;
+    extern const bool           use_auto_scale;
+    extern const double         scale_boost;
+    extern const double         scale_size;
 };
 
 namespace constants {
-    CNST int auto_scale_span 						= 30;
-    CNST double auto_scaling_reset_window			= 0.1;
-    CNST double auto_scaling_erase_percent 			= 0.75;
+    extern const int            auto_scale_span;
+    extern const double         auto_scaling_reset_window;
+    extern const double         auto_scaling_erase_percent;
     /* Amount of deviation needed between short term and long
      * term moving max height averages to trigger an autoscaling reset */
-    CNST double deviation_amount_to_reset 			= 1.0;
+    extern const double         deviation_amount_to_reset;
 }
 
 /* clang-format on */

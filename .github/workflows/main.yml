@@ -224,7 +224,7 @@ jobs:
             --pkglicense="GPLv2.0" --maintainer="${{ env.maintainer }}" \
             --pkggroup="video" \
             --pkgsource="https://github.com/${{ env.project-git }}" \
-            --requires="obs-studio \(\>= ${{ env.obs-studio-version }}\)" \
+            --requires="obs-studio \(\>= ${{ env.obs-studio-version }}\) libfftw3-3 \(\>= 3.3.4\)" \
             --pakdir="../package"
           mv ../package/*.deb ../package/${{ env.project-name }}.${{ env.GIT_TAG }}.linux.x64.deb
     - name: Publish Linux binary

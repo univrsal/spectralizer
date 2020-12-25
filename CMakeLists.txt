@@ -11,7 +11,7 @@ add_definitions(-DBUILD_TIME="${TODAY}")
 add_definitions(-DTUNA_VERSION="${PROJECT_VERSION}")
 
 if (WIN32 OR APPLE)
-    include(${CMAKE_SOURCE_DIR}/cmake/FindLibObs.cmake)
+    set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 endif()
 
 option(LOCAL_INSTALLATION "Whether to install for the current user (default: OFF)" OFF)

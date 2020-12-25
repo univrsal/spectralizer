@@ -30,6 +30,7 @@ MODULE_EXPORT const char *obs_module_description(void)
 
 bool obs_module_load()
 {
+	blog(LOG_INFO, "[spectralizer] Loading v%s build time %s", SPECTRALIZER_VERSION, BUILD_TIME);
 	source::register_visualiser();
 	return true;
 }

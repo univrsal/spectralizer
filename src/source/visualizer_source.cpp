@@ -427,7 +427,7 @@ void register_visualiser()
 	si.destroy = [](void *data) { delete reinterpret_cast<visualizer_source *>(data); };
 	si.get_width = [](void *data) { return reinterpret_cast<visualizer_source *>(data)->get_width(); };
 	si.get_height = [](void *data) { return reinterpret_cast<visualizer_source *>(data)->get_height(); };
-
+	si.icon_type = OBS_ICON_TYPE_AUDIO_OUTPUT;
 	si.get_defaults = [](obs_data_t *settings) {
 		obs_data_set_default_int(settings, S_COLOR, 0xFFFFFFFF);
 		obs_data_set_default_int(settings, S_DETAIL, defaults::detail);

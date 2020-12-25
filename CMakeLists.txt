@@ -8,7 +8,8 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_PREFIX_PATH "${QTDIR}")
 string(TIMESTAMP TODAY "%Y.%m.%d %H:%M")
 add_definitions(-DBUILD_TIME="${TODAY}")
-add_definitions(-DTUNA_VERSION="${PROJECT_VERSION}")
+add_definitions(-DSPECTRALIZER_VERSION="${PROJECT_VERSION}")
+
 
 if (WIN32 OR APPLE)
     set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")

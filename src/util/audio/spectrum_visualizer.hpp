@@ -65,7 +65,7 @@ class spectrum_visualizer : public audio_visualizer {
 	void generate_bars(uint32_t number_of_bars, size_t fftw_results, const uint32v &low_cutoff_frequencies,
 					   const uint32v &high_cutoff_frequencies, const fftw_complex *fftw_output, doublev *bars) const;
 	void generate_log_bars(uint32_t number_of_bars, size_t fftw_results, const fftw_complex *fftw_output,
-						   doublev& magnitudes, doublev& bars) const;
+						   doublev &magnitudes, doublev &bars) const;
 
 	void recalculate_cutoff_frequencies(uint32_t number_of_bars, uint32v *low_cutoff_frequencies,
 										uint32v *high_cutoff_frequencies, doublev *freqconst_per_bin);
@@ -93,7 +93,7 @@ public:
 
 	~spectrum_visualizer() override;
 
-	void update() override;
+	virtual void update() override;
 
 	void tick(float seconds) override;
 };

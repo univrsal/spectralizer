@@ -23,7 +23,7 @@
 
 /* Logging */
 #define log_src(log_level, format, ...) \
-    blog(log_level, "[spectralizer: '%s'] " format, obs_source_get_name(context->source), ##__VA_ARGS__)
+	blog(log_level, "[spectralizer: '%s'] " format, obs_source_get_name(context->source), ##__VA_ARGS__)
 #define write_log(log_level, format, ...) blog(log_level, "[spectralizer] " format, ##__VA_ARGS__)
 
 #define debug(format, ...) write_log(LOG_DEBUG, format, ##__VA_ARGS__)
@@ -42,6 +42,7 @@
 #define T_SOURCE                        T_("Spectralizer.Source")
 #define T_SOURCE_MODE                   T_("Spectralizer.Mode")
 #define T_MODE_BARS                     T_("Spectralizer.Mode.Bars")
+#define T_MODE_CIRCLE_BARS              T_("Spectralizer.Mode.Circle.Bars")
 #define T_MODE_WIRE                     T_("Spectralizer.Mode.Wire")
 #define T_STEREO                        T_("Spectralizer.Stereo")
 #define T_STEREO_SPACE                  T_("Spectralizer.Stereo.Space")
@@ -117,7 +118,7 @@
 
 enum visual_mode
 {
-    VM_BARS, VM_WIRE
+    VM_BARS, VM_CIRCULAR_BARS, VM_WIRE
 };
 
 enum wire_mode

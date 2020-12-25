@@ -1,7 +1,7 @@
 /*************************************************************************
- * This file is part of spectralizer
- * github.con/univrsal/spectralizer
- * Copyright 2020 univrsal <universailp@web.de>.
+ * This file is part of spectralize
+ * github.con/univrsal/spectralize
+ * Copyright 2020 univrsal <uni@vrsal.cf>.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,28 +16,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *************************************************************************/
 
-#include "audio_source.hpp"
+#pragma once
+#include "spectrum_visualizer.hpp"
 
 namespace audio {
-class fifo : public audio_source {
-#ifdef LINUX
-private:
-	const char *m_file_path = nullptr;
-	int m_fifo_fd = 0;
-	bool open_fifo();
+class circle_bar_visualizer : public spectrum_visualizer {
+	float m_radius = 0.0;
 
 public:
-	fifo(source::config *cfg);
-	~fifo() override;
+	explicit circle_bar_visualizer(source::config *cfg);
+	void render(gs_effect_t *effect) override;
 	void update() override;
-	bool tick(float seconds) override;
-#else /* Stubs on Windows */
-public:
-	fifo(source::config *cfg) : audio_source(cfg) {}
-	~fifo() override {}
-	void update() override {}
-	bool tick(float seconds) override { return false; }
-#endif /* Linux */
 };
-
 }

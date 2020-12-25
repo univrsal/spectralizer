@@ -18,6 +18,7 @@
 
 #include "visualizer_source.hpp"
 #include "../util/audio/bar_visualizer.hpp"
+#include "../util/audio/circle_bar_visualizer.hpp"
 #include "../util/audio/wire_visualizer.hpp"
 #include "../util/util.hpp"
 
@@ -118,6 +119,8 @@ void visualizer_source::update(obs_data_t *settings)
 		case VM_WIRE:
 			m_visualizer = new audio::wire_visualizer(&m_config);
 			break;
+		case VM_CIRCULAR_BARS:
+			m_visualizer = new audio::circle_bar_visualizer(&m_config);
 		}
 	}
 
@@ -287,6 +290,7 @@ obs_properties_t *get_properties_for_visualiser(void *data)
 	auto *mode =
 		obs_properties_add_list(props, S_SOURCE_MODE, T_SOURCE_MODE, OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 	obs_property_list_add_int(mode, T_MODE_BARS, (int)VM_BARS);
+	obs_property_list_add_int(mode, T_MODE_CIRCLE_BARS, (int)VM_CIRCULAR_BARS);
 	obs_property_list_add_int(mode, T_MODE_WIRE, (int)VM_WIRE);
 	obs_property_set_modified_callback(mode, visual_mode_changed);
 
@@ -342,7 +346,10 @@ obs_properties_t *get_properties_for_visualiser(void *data)
 
 	/* Smoothing stuff */
 	obs_properties_add_float_slider(props, S_GRAVITY, T_GRAVITY, 0, 1, 0.01);
-	obs_properties_add_float_slider(props, S_FALLOFF, T_FALLOFF, 0, 2, 0.01);
+	/* This setting doesn't really do anything, it's used in cli-visualizer to determine
+     * the fallow of colors inside bins
+     */
+	obs_property_set_visible(obs_properties_add_float_slider(props, S_FALLOFF, T_FALLOFF, 0, 2, 0.01), false);
 
 	obs_property_list_add_string(src, T_AUDIO_SOURCE_NONE, defaults::audio_source);
 #ifdef LINUX
@@ -356,7 +363,8 @@ obs_properties_t *get_properties_for_visualiser(void *data)
 	auto *log_freq = obs_properties_add_bool(props, S_LOG_FREQ_SCALE, T_LOG_FREQ_SCALE);
 	obs_property_set_modified_callback(log_freq, log_freq_changed);
 
-	auto *log_freq_quality = obs_properties_add_list(props, S_LOG_FREQ_SCALE_QUALITY, T_LOG_FREQ_SCALE_QUAL, OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+	auto *log_freq_quality = obs_properties_add_list(props, S_LOG_FREQ_SCALE_QUALITY, T_LOG_FREQ_SCALE_QUAL,
+													 OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 	obs_property_list_add_int(log_freq_quality, T_LOG_FREQ_SCALE_QUAL_FAST, LFQ_FAST);
 	obs_property_list_add_int(log_freq_quality, T_LOG_FREQ_SCALE_QUAL_PRECISE, LFQ_PRECISE);
 	// FIXME This setting makes no sense with current implementation.
@@ -375,7 +383,8 @@ obs_properties_t *get_properties_for_visualiser(void *data)
 	//obs_property_set_visible(log_freq_quality, defaults::log_freq_scale);
 	obs_property_set_visible(log_freq_quality, false);
 
-	auto *log_freq_start = obs_properties_add_float_slider(props, S_LOG_FREQ_SCALE_START, T_LOG_FREQ_SCALE_START, 20.0, 100.0, 0.1);
+	auto *log_freq_start =
+		obs_properties_add_float_slider(props, S_LOG_FREQ_SCALE_START, T_LOG_FREQ_SCALE_START, 20.0, 100.0, 0.1);
 	obs_property_float_set_suffix(log_freq_start, " Hz");
 	obs_property_set_visible(log_freq_start, defaults::log_freq_scale);
 
@@ -383,11 +392,10 @@ obs_properties_t *get_properties_for_visualiser(void *data)
 	obs_property_set_visible(log_freq_use_hpf, defaults::log_freq_scale);
 	obs_property_set_modified_callback(log_freq_use_hpf, log_freq_use_hpf_changed);
 
-	obs_property_set_visible(
-		obs_properties_add_float_slider(props, S_LOG_FREQ_SCALE_HPF_CURVE, T_LOG_FREQ_SCALE_HPF_CURVE,
-										2.0, defaults::log_freq_hpf_curve_max, 0.1),
-		defaults::log_freq_scale && defaults::log_freq_use_hpf
-	);
+	obs_property_set_visible(obs_properties_add_float_slider(props, S_LOG_FREQ_SCALE_HPF_CURVE,
+															 T_LOG_FREQ_SCALE_HPF_CURVE, 2.0,
+															 defaults::log_freq_hpf_curve_max, 0.1),
+							 defaults::log_freq_scale && defaults::log_freq_use_hpf);
 
 	auto *stereo = obs_properties_add_bool(props, S_STEREO, T_STEREO);
 	auto *space = obs_properties_add_int(props, S_STEREO_SPACE, T_STEREO_SPACE, 0, UINT16_MAX, 1);

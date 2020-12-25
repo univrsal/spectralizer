@@ -53,6 +53,8 @@ set(spectralizer_SOURCES
     src/util/audio/spectrum_visualizer.hpp
     src/util/audio/bar_visualizer.cpp
     src/util/audio/bar_visualizer.hpp
+    src/util/audio/circle_bar_visualizer.cpp
+    src/util/audio/circle_bar_visualizer.hpp
     src/util/audio/wire_visualizer.cpp
     src/util/audio/wire_visualizer.hpp
     src/util/audio/fifo.cpp
@@ -117,7 +119,7 @@ if(WIN32)
 
     add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
         # Copy to obs-studio dev environment for immediate testing
-        COMMAND 
+        COMMAND
             "${CMAKE_COMMAND}" -E copy
                 "$<TARGET_FILE:${CMAKE_PROJECT_NAME}>"
                 "${LibOBS_DIR}/../../rundir/$<CONFIG>/obs-plugins/${ARCH_NAME}"
@@ -127,7 +129,7 @@ if(WIN32)
                 "$<TARGET_PDB_FILE:${CMAKE_PROJECT_NAME}>"
                 "${LibOBS_DIR}/../../rundir/$<CONFIG>/obs-plugins/${ARCH_NAME}"
 
-        COMMAND 
+        COMMAND
             "${CMAKE_COMMAND}" -E make_directory
                 "${LibOBS_DIR}/../../rundir/$<CONFIG>/data/obs-plugins/${CMAKE_PROJECT_NAME}"
 

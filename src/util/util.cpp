@@ -18,6 +18,7 @@
 
 #include "util.hpp"
 
+/* clang-format off */
 namespace defaults {
 const bool stereo                                         = false;
 const visual_mode visual                                  = VM_BARS;
@@ -75,5 +76,6 @@ const double auto_scaling_reset_window                    = 0.1;
 const double auto_scaling_erase_percent                   = 0.75;
 /* Amount of deviation needed between short term and long
  * term moving max height averages to trigger an autoscaling reset */
-const double deviation_amount_to_reset                    = 1.0;	
+const double deviation_amount_to_reset                    = 1.0;
 }
+/* clang-format on */

@@ -37,6 +37,9 @@ obs_internal_source::obs_internal_source(source::config *cfg) : audio_source(cfg
 	circlebuf_init(&m_audio_data[0]);
 	circlebuf_init(&m_audio_data[1]);
 	update();
+	// make sure that the buffer is empty on startup
+	memset(m_audio_buf[0], 0, m_audio_buf_len * sizeof(float));
+	memset(m_audio_buf[1], 0, m_audio_buf_len * sizeof(float));
 }
 
 obs_internal_source::~obs_internal_source()
@@ -94,7 +97,7 @@ void obs_internal_source::capture(obs_source_t *src, const struct audio_data *da
 bool obs_internal_source::tick(float seconds)
 {
 	/* Audio capturing is done in separate callback
-     * and is technically only done, once the circle buffer is
+     * and is technically only finished, once the circle buffer is
      * filled, but we'll just assume that's always the case */
 
 	/* Update / refresh audio capturing */
@@ -179,12 +182,12 @@ void obs_internal_source::update()
 	m_cfg->sample_size = m_cfg->sample_rate / 60;
 	// FIXME see comment in visualizer_source.cpp: get_properties_for_visualiser()
 	/*if (m_cfg->log_freq_scale) {
-		if (m_cfg->log_freq_quality == LFQ_PRECISE) {
-			m_cfg->sample_size *= defaults::log_freq_quality_precise_detail_mul;
-		} else {
-			m_cfg->sample_size *= defaults::log_freq_quality_fast_detail_mul;
-		}
-	}*/
+        if (m_cfg->log_freq_quality == LFQ_PRECISE) {
+            m_cfg->sample_size *= defaults::log_freq_quality_precise_detail_mul;
+        } else {
+            m_cfg->sample_size *= defaults::log_freq_quality_fast_detail_mul;
+        }
+    }*/
 	m_num_channels = audio_output_get_channels(obs_get_audio());
 	obs_weak_source_t *old = nullptr;
 

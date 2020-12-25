@@ -1,2 +1,8 @@
 This will automatically install the plugin to the appropriate directories.
-NOTICE: I offer no support for macOS versions.
+
+NOTICE:
+=======
+This plugin depends on fftw3 (fftw.org), which you have to install manually.
+For this get the brew package manager from https://brew.sh and then run
+brew install fftw in a terminal.
+Also, I offer no support for macOS versions.

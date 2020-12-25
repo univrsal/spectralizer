@@ -417,7 +417,7 @@ void register_visualiser()
 	obs_source_info si = {};
 	si.id = "spectralizer";
 	si.type = OBS_SOURCE_TYPE_INPUT;
-	si.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW;
+	si.output_flags = OBS_SOURCE_VIDEO; // | OBS_SOURCE_CUSTOM_DRAW;
 	si.get_properties = get_properties_for_visualiser;
 
 	si.get_name = [](void *) { return T_SOURCE; };

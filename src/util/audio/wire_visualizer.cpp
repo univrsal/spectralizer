@@ -45,7 +45,7 @@ gs_vertbuffer_t *wire_visualizer::make_thin(channel_mode cm)
 			gs_vertex2f(pos_x, center + offset + height);
 		}
 	} else if (cm == CM_LEFT) {
-		for (; i < UTIL_MIN(m_cfg->detail + 1, m_bars_right.size()); i++) {
+		for (; i < UTIL_MIN(m_cfg->detail + 1, m_bars_left.size()); i++) {
 			auto val = m_bars_left[i];
 			height = UTIL_MAX(static_cast<int32_t>(round(val)), 1);
 
@@ -53,7 +53,7 @@ gs_vertbuffer_t *wire_visualizer::make_thin(channel_mode cm)
 			gs_vertex2f(pos_x, center - offset - height);
 		}
 	} else {
-		for (; i < UTIL_MIN(m_cfg->detail + 1, m_bars_right.size()); i++) {
+		for (; i < UTIL_MIN(m_cfg->detail + 1, m_bars_left.size()); i++) {
 			auto val = m_bars_left[i];
 			height = UTIL_MAX(static_cast<int32_t>(round(val)), 1);
 
@@ -88,7 +88,7 @@ gs_vertbuffer_t *wire_visualizer::make_thick(channel_mode cm)
 			gs_vertex2f(pos_x, center + offset + height - m_cfg->wire_thickness);
 		}
 	} else if (cm == CM_LEFT) {
-		for (; i < UTIL_MIN(m_cfg->detail + 1, m_bars_right.size()); i++) {
+		for (; i < UTIL_MIN(m_cfg->detail + 1, m_bars_left.size()); i++) {
 			auto val = m_bars_left[i];
 			height = UTIL_MAX(static_cast<int32_t>(round(val)), 1);
 
@@ -97,7 +97,7 @@ gs_vertbuffer_t *wire_visualizer::make_thick(channel_mode cm)
 			gs_vertex2f(pos_x, center - offset - height + m_cfg->wire_thickness);
 		}
 	} else {
-		for (; i < UTIL_MIN(m_cfg->detail + 1, m_bars_right.size()); i++) {
+		for (; i < UTIL_MIN(m_cfg->detail + 1, m_bars_left.size()); i++) {
 			auto val = m_bars_left[i];
 			height = UTIL_MAX(static_cast<int32_t>(round(val)), 1);
 
@@ -133,7 +133,7 @@ gs_vertbuffer_t *wire_visualizer::make_filled(channel_mode cm)
 			gs_vertex2f(pos_x, center + offset);
 		}
 	} else if (cm == CM_LEFT) {
-		for (; i < UTIL_MIN(m_cfg->detail + 1, m_bars_right.size()); i++) {
+		for (; i < UTIL_MIN(m_cfg->detail + 1, m_bars_left.size()); i++) {
 			auto val = m_bars_left[i];
 			height = UTIL_MAX(static_cast<int32_t>(round(val)), 1);
 
@@ -142,7 +142,7 @@ gs_vertbuffer_t *wire_visualizer::make_filled(channel_mode cm)
 			gs_vertex2f(pos_x, center - offset);
 		}
 	} else {
-		for (; i < UTIL_MIN(m_cfg->detail + 1, m_bars_right.size()); i++) {
+		for (; i < UTIL_MIN(m_cfg->detail + 1, m_bars_left.size()); i++) {
 			auto val = m_bars_left[i];
 			height = UTIL_MAX(static_cast<int32_t>(round(val)), 1);
 
@@ -159,13 +159,41 @@ gs_vertbuffer_t *wire_visualizer::make_filled_inverted(channel_mode cm)
 	gs_render_start(true);
 	size_t i = 0, pos_x = 0;
 	uint32_t height = 0;
-	for (; i < m_bars_left.size() - DEAD_BAR_OFFSET; i++) {
-		auto val = m_bars_left[i];
-		height = UTIL_MAX(static_cast<uint32_t>(round(val)), 1);
+	int32_t offset = 0;
+	int32_t center = 0;
 
-		pos_x = i * (m_cfg->bar_width + m_cfg->bar_space);
-		gs_vertex2f(pos_x, m_cfg->bar_height - height);
-		gs_vertex2f(pos_x, 0);
+	if (cm != CM_BOTH) {
+		offset = m_cfg->stereo_space / 2;
+		center = m_cfg->bar_height / 2 + offset;
+	}
+
+	if (cm == CM_RIGHT) {
+		for (; i < m_bars_left.size() - DEAD_BAR_OFFSET; i++) {
+			auto val = m_bars_right[i];
+			height = UTIL_MAX(static_cast<uint32_t>(round(val)), 1);
+
+			pos_x = i * (m_cfg->bar_width + m_cfg->bar_space);
+			gs_vertex2f(pos_x, center + offset + height);
+			gs_vertex2f(pos_x, m_cfg->cx);
+		}
+	} else if (cm == CM_LEFT) {
+		for (; i < m_bars_left.size() - DEAD_BAR_OFFSET; i++) {
+			auto val = m_bars_left[i];
+			height = UTIL_MAX(static_cast<uint32_t>(round(val)), 1);
+
+			pos_x = i * (m_cfg->bar_width + m_cfg->bar_space);
+			gs_vertex2f(pos_x, center - offset - height);
+			gs_vertex2f(pos_x, 0);
+		}
+	} else {
+		for (; i < m_bars_left.size() - DEAD_BAR_OFFSET; i++) {
+			auto val = m_bars_left[i];
+			height = UTIL_MAX(static_cast<uint32_t>(round(val)), 1);
+
+			pos_x = i * (m_cfg->bar_width + m_cfg->bar_space);
+			gs_vertex2f(pos_x, m_cfg->bar_height - height);
+			gs_vertex2f(pos_x, 0);
+		}
 	}
 	return gs_render_save();
 }
@@ -198,7 +226,7 @@ void wire_visualizer::render(gs_effect_t *e)
 		num_verts = m_cfg->detail * 2;
 		break;
 	case WM_FILL:
-		vb_left = make_filled(CM_RIGHT);
+		vb_left = make_filled(main);
 		if (m_cfg->stereo)
 			vb_right = make_filled(CM_RIGHT);
 		num_verts = m_cfg->detail * 2;

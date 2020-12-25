@@ -385,8 +385,8 @@ jobs:
           
           robocopy .\build64\RelWithDebInfo .\release\obs-plugins\64bit\ ${{ env.project-name }}.dll ${{ env.project-name }}.pdb
           robocopy .\build32\RelWithDebInfo .\release\obs-plugins\32bit\ ${{ env.project-name }}.dll ${{ env.project-name }}.pdb
-          robocopy .\fftw3\bin\64bit\libfftw3-3.dll .\release\obs-plugins\64bit\
-          robocopy .\fftw3\bin\32bit\libfftw3-3.dll .\release\obs-plugins\32bit\
+          robocopy .\fftw3\bin\64bit\ .\release\obs-plugins\64bit\ libfftw3-3.dll 
+          robocopy .\fftw3\bin\32bit\ .\release\obs-plugins\32bit\ libfftw3-3.dll
           robocopy /E .\data .\release\data\obs-plugins\${{ env.project-name }}
           robocopy .\package .\release README.txt
           

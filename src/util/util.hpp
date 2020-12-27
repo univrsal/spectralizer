@@ -85,7 +85,13 @@
 #define T_LOG_FREQ_SCALE_START          T_("Spectralizer.LogFreqScale.Start")
 #define T_LOG_FREQ_SCALE_USE_HPF        T_("Spectralizer.LogFreqScale.UseHPF")
 #define T_LOG_FREQ_SCALE_HPF_CURVE      T_("Spectralizer.LogFreqScale.HPFCurve")
+#define T_OFFSET                        T_("Spectralizer.Offset")
+#define T_PADDING                       T_("Spectralizer.Padding")
+#define T_EXPONENT                      T_("Spectralizer.Boost")
+#define T_EXPONENT_ENABLED              T_("Spectralizer.Boost.Enabled")
 
+#define S_EXPONENT_ENABLED              "boost_enabled"
+#define S_EXPONENT                      "boost"
 #define S_SOURCE_MODE                   "source_mode"
 #define S_STEREO                        "stereo"
 #define S_STEREO_SPACE                  "stereo_space"
@@ -115,6 +121,8 @@
 #define S_LOG_FREQ_SCALE_START          "log_freq_scale_start"
 #define S_LOG_FREQ_SCALE_USE_HPF        "log_freq_scale_use_hpf"
 #define S_LOG_FREQ_SCALE_HPF_CURVE      "log_freq_scale_hpf_curve"
+#define S_OFFSET                        "offset"
+#define S_PADDING                       "padding"
 
 enum visual_mode
 {

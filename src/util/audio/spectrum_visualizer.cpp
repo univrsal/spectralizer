@@ -426,7 +426,8 @@ void spectrum_visualizer::create_spectrum_bars(fftw_complex *fftw_output, size_t
 	scale_bars(win_height, bars);
 
 	// falloff, save values for next falloff run
-	apply_falloff(*bars, bars_falloff);
+	// falloff is only used in cli-visualizer
+	//apply_falloff(*bars, bars_falloff);
 }
 
 void spectrum_visualizer::recalculate_cutoff_frequencies(uint32_t number_of_bars, uint32v *low_cutoff_frequencies,

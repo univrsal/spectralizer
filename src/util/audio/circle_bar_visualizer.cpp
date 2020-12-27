@@ -30,14 +30,14 @@ void circle_bar_visualizer::render(gs_effect_t *)
 	// First translate everything to the center, offset for rotation, rotate, undo offset
 	auto count = m_bars_left.size() - DEAD_BAR_OFFSET;
 	for (size_t i = 0; i < count; i++) { /* Leave the four dead bars the end */
-		float pos = float(i) / count;
+		float pos = float(i) / (count);
 		auto w = UTIL_MAX(m_bars_left[i], 1);
 		gs_matrix_push();
 		{
 			gs_matrix_translate3f(m_cfg->cx / 2, m_cfg->cx / 2 + m_radius, 0);
 
 			gs_matrix_translate3f(0, -m_radius, 0);
-			gs_matrix_rotaa4f(0, 0, 1, pos * M_PI * 2);
+			gs_matrix_rotaa4f(0, 0, 1, pos * (M_PI * 2 - m_padding) + m_cfg->offset);
 			gs_matrix_translate3f(0, m_radius, 0);
 
 			gs_draw_sprite(nullptr, 0, m_cfg->bar_width, w);
@@ -49,8 +49,10 @@ void circle_bar_visualizer::render(gs_effect_t *)
 void circle_bar_visualizer::update()
 {
 	spectrum_visualizer::update();
-	float spectrum_width = (m_cfg->bar_width + m_cfg->bar_space - DEAD_BAR_OFFSET) * m_cfg->detail;
-	m_radius = spectrum_width / (2 * M_PI);
+	auto count = m_bars_left.size() - DEAD_BAR_OFFSET;
+	float spectrum_width = ((m_cfg->bar_width + m_cfg->bar_space) * count);
+	m_radius = (spectrum_width * (1 + m_cfg->padding)) / (2 * M_PI);
+	m_padding = m_cfg->padding * 2 * M_PI;
 	m_cfg->cx = m_radius * 2 + m_cfg->bar_height * 2;
 	m_cfg->cy = m_cfg->cx;
 }

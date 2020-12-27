@@ -72,6 +72,10 @@ struct config {
 	uint16_t wire_thickness = defaults::wire_thickness;
 	enum wire_mode wire_mode = defaults::wire_mode;
 
+	/* Circular visualizer settings */
+	float offset;  // in degree
+	float padding; // in %
+
 	/* General spectrum settings */
 	bool stereo = defaults::stereo;
 	uint16_t stereo_space = 0;

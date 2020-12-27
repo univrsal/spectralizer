@@ -56,8 +56,8 @@ visualizer_source::~visualizer_source()
 void visualizer_source::update(obs_data_t *settings)
 {
 	visual_mode old_mode = m_config.visual;
+	std::lock_guard<std::mutex> lock(m_config.value_mutex);
 
-	m_config.value_mutex.lock();
 	m_config.audio_source_name = obs_data_get_string(settings, S_AUDIO_SOURCE);
 	m_config.sample_rate = obs_data_get_int(settings, S_SAMPLE_RATE);
 	m_config.sample_size = m_config.sample_rate / m_config.fps;
@@ -88,6 +88,9 @@ void visualizer_source::update(obs_data_t *settings)
 	m_config.log_freq_start = obs_data_get_double(settings, S_LOG_FREQ_SCALE_START);
 	m_config.log_freq_use_hpf = obs_data_get_bool(settings, S_LOG_FREQ_SCALE_USE_HPF);
 	m_config.log_freq_hpf_curve = obs_data_get_double(settings, S_LOG_FREQ_SCALE_HPF_CURVE);
+
+	m_config.offset = obs_data_get_double(settings, S_OFFSET) / 180.f * M_PI;
+	m_config.padding = obs_data_get_double(settings, S_PADDING) / 100.f; // to %
 
 #ifdef LINUX
 	m_config.auto_clear = obs_data_get_bool(settings, S_AUTO_CLEAR);
@@ -123,8 +126,6 @@ void visualizer_source::update(obs_data_t *settings)
 			m_visualizer = new audio::circle_bar_visualizer(&m_config);
 		}
 	}
-
-	m_config.value_mutex.unlock();
 }
 
 void visualizer_source::tick(float seconds)
@@ -161,7 +162,7 @@ void visualizer_source::render(gs_effect_t *effect)
 	}
 }
 
-static bool filter_changed(obs_properties_t *props, obs_property_t *p, obs_data_t *data)
+static bool filter_changed(obs_properties_t *props, obs_property_t *, obs_data_t *data)
 {
 	int mode = obs_data_get_int(data, S_FILTER_MODE);
 	auto *strength = obs_properties_get(props, S_FILTER_STRENGTH);
@@ -184,7 +185,7 @@ static bool filter_changed(obs_properties_t *props, obs_property_t *p, obs_data_
 	return true;
 }
 
-static bool use_auto_scale_changed(obs_properties_t *props, obs_property_t *p, obs_data_t *data)
+static bool use_auto_scale_changed(obs_properties_t *props, obs_property_t *, obs_data_t *data)
 {
 	auto state = !obs_data_get_bool(data, S_AUTO_SCALE);
 	auto boost = obs_properties_get(props, S_SCALE_BOOST);
@@ -195,7 +196,7 @@ static bool use_auto_scale_changed(obs_properties_t *props, obs_property_t *p, o
 	return true;
 }
 
-static bool source_changed(obs_properties_t *props, obs_property_t *p, obs_data_t *data)
+static bool source_changed(obs_properties_t *props, obs_property_t *, obs_data_t *data)
 {
 	auto *id = obs_data_get_string(data, S_AUDIO_SOURCE);
 	auto *sr = obs_properties_get(props, S_SAMPLE_RATE);
@@ -212,7 +213,7 @@ static bool source_changed(obs_properties_t *props, obs_property_t *p, obs_data_
 	return true;
 }
 
-static bool stereo_changed(obs_properties_t *props, obs_property_t *p, obs_data_t *data)
+static bool stereo_changed(obs_properties_t *props, obs_property_t *, obs_data_t *data)
 {
 	auto stereo = obs_data_get_bool(data, S_STEREO);
 	auto *space = obs_properties_get(props, S_STEREO_SPACE);
@@ -220,22 +221,27 @@ static bool stereo_changed(obs_properties_t *props, obs_property_t *p, obs_data_
 	return true;
 }
 
-static bool visual_mode_changed(obs_properties_t *props, obs_property_t *p, obs_data_t *data)
+static bool visual_mode_changed(obs_properties_t *props, obs_property_t *, obs_data_t *data)
 {
 	visual_mode vm = (visual_mode)obs_data_get_int(data, S_SOURCE_MODE);
 	auto *wire_mode = obs_properties_get(props, S_WIRE_MODE);
 	auto *height = obs_properties_get(props, S_BAR_HEIGHT);
 	auto *width = obs_properties_get(props, S_BAR_WIDTH);
 	auto *space = obs_properties_get(props, S_BAR_SPACE);
+	auto *offset = obs_properties_get(props, S_OFFSET);
+	auto *padding = obs_properties_get(props, S_PADDING);
 
 	obs_property_set_visible(width, vm != VM_WIRE);
 	obs_property_set_description(space, vm == VM_WIRE ? T_WIRE_SPACING : T_BAR_SPACING);
 	obs_property_set_description(height, vm == VM_WIRE ? T_WIRE_HEIGHT : T_BAR_HEIGHT);
 	obs_property_set_visible(wire_mode, vm == VM_WIRE);
+
+	obs_property_set_visible(offset, vm == VM_CIRCULAR_BARS);
+	obs_property_set_visible(padding, vm == VM_CIRCULAR_BARS);
 	return true;
 }
 
-static bool wire_mode_changed(obs_properties_t *props, obs_property_t *p, obs_data_t *data)
+static bool wire_mode_changed(obs_properties_t *props, obs_property_t *, obs_data_t *data)
 {
 	wire_mode wm = (wire_mode)obs_data_get_int(data, S_WIRE_MODE);
 	auto *wire_thickness = obs_properties_get(props, S_WIRE_THICKNESS);
@@ -243,7 +249,7 @@ static bool wire_mode_changed(obs_properties_t *props, obs_property_t *p, obs_da
 	return true;
 }
 
-static bool log_freq_changed(obs_properties_t *props, obs_property_t *p, obs_data_t *data)
+static bool log_freq_changed(obs_properties_t *props, obs_property_t *, obs_data_t *data)
 {
 	bool log_freq_enabled = obs_data_get_bool(data, S_LOG_FREQ_SCALE);
 	bool log_freq_hpf_enabled = obs_data_get_bool(data, S_LOG_FREQ_SCALE_USE_HPF);
@@ -260,7 +266,7 @@ static bool log_freq_changed(obs_properties_t *props, obs_property_t *p, obs_dat
 	return true;
 }
 
-static bool log_freq_use_hpf_changed(obs_properties_t *props, obs_property_t *p, obs_data_t *data)
+static bool log_freq_use_hpf_changed(obs_properties_t *props, obs_property_t *, obs_data_t *data)
 {
 	bool log_freq_enabled = obs_data_get_bool(data, S_LOG_FREQ_SCALE);
 	bool log_freq_hpf_enabled = obs_data_get_bool(data, S_LOG_FREQ_SCALE_USE_HPF);
@@ -323,7 +329,16 @@ obs_properties_t *get_properties_for_visualiser(void *data)
 	obs_property_int_set_suffix(h, " Pixel");
 	obs_property_int_set_suffix(s, " Pixel");
 
-	obs_property_set_visible(sr, false); /* Sampel rate is only needed for fifo */
+	obs_property_set_visible(sr, false); /* Sample rate is only needed for fifo */
+
+	/* Circle settings */
+	auto *offset = obs_properties_add_float(props, S_OFFSET, T_OFFSET, -360, 360, 0.1);
+	auto *padding = obs_properties_add_float(props, S_PADDING, T_PADDING, -70, 70, 0.1);
+	obs_property_float_set_suffix(offset, "°");
+	obs_property_float_set_suffix(padding, "%");
+
+	obs_property_set_visible(offset, false);
+	obs_property_set_visible(padding, false);
 
 	/* Wire settings */
 	auto *wm = obs_properties_add_list(props, S_WIRE_MODE, T_WIRE_MODE, OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);

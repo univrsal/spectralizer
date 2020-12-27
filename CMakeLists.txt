@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(spectralizer VERSION 1.3.0)
+project(spectralizer VERSION 1.3.1)
 set(PLUGIN_AUTHOR "univrsal")
 set(PLUGIN_GIT spectralizer)
 set(LINUX_MAINTAINER_EMAIL "uni@vrsal.cf")

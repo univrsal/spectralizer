@@ -21,14 +21,14 @@
 
 namespace audio {
 class wire_visualizer : public spectrum_visualizer {
-	gs_vertbuffer_t *make_thin(channel_mode cm);
-	gs_vertbuffer_t *make_thick(channel_mode cm);
-	gs_vertbuffer_t *make_filled(channel_mode cm);
-	gs_vertbuffer_t *make_filled_inverted(channel_mode cm);
+    gs_vertbuffer_t *make_thin(channel_mode cm);
+    gs_vertbuffer_t *make_thick(channel_mode cm);
+    gs_vertbuffer_t *make_filled(channel_mode cm);
+    gs_vertbuffer_t *make_filled_inverted(channel_mode cm);
 
 public:
-	explicit wire_visualizer(source::config *cfg);
+    explicit wire_visualizer(source::config *cfg);
 
-	void render(gs_effect_t *e) override;
+    void render(gs_effect_t *e) override;
 };
 }

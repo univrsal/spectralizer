@@ -25,17 +25,17 @@ OBS_MODULE_USE_DEFAULT_LOCALE("spectralizer", "en-US")
 
 MODULE_EXPORT const char *obs_module_description(void)
 {
-	return "Spectrum visualizer";
+    return "Spectrum visualizer";
 }
 
 bool obs_module_load()
 {
-	blog(LOG_INFO, "[spectralizer] Loading v%s build time %s", SPECTRALIZER_VERSION, BUILD_TIME);
-	source::register_visualiser();
-	return true;
+    blog(LOG_INFO, "[spectralizer] Loading v%s build time %s", SPECTRALIZER_VERSION, BUILD_TIME);
+    source::register_visualiser();
+    return true;
 }
 
 void obs_module_unload()
 {
-	/* NO-OP */
+    /* NO-OP */
 }

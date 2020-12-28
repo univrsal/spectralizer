@@ -73,7 +73,7 @@ struct config {
     enum wire_mode wire_mode = defaults::wire_mode;
 
     /* Circular visualizer settings */
-    float offset; // in degree
+    float offset;  // in degree
     float padding; // in %
 
     /* General spectrum settings */

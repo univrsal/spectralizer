@@ -23,6 +23,7 @@ namespace audio {
 class circle_bar_visualizer : public spectrum_visualizer {
     float m_radius = 0.0;
     float m_padding = 0.0;
+
 public:
     explicit circle_bar_visualizer(source::config *cfg);
     void render(gs_effect_t *effect) override;

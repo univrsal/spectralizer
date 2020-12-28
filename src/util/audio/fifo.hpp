@@ -22,21 +22,21 @@ namespace audio {
 class fifo : public audio_source {
 #ifdef LINUX
 private:
-	const char *m_file_path = nullptr;
-	int m_fifo_fd = 0;
-	bool open_fifo();
+    const char *m_file_path = nullptr;
+    int m_fifo_fd = 0;
+    bool open_fifo();
 
 public:
-	fifo(source::config *cfg);
-	~fifo() override;
-	void update() override;
-	bool tick(float seconds) override;
+    fifo(source::config *cfg);
+    ~fifo() override;
+    void update() override;
+    bool tick(float seconds) override;
 #else /* Stubs on Windows */
 public:
-	fifo(source::config *cfg) : audio_source(cfg) {}
-	~fifo() override {}
-	void update() override {}
-	bool tick(float seconds) override { return false; }
+    fifo(source::config *cfg) : audio_source(cfg) {}
+    ~fifo() override {}
+    void update() override {}
+    bool tick(float seconds) override { return false; }
 #endif /* Linux */
 };
 

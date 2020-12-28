@@ -162,10 +162,10 @@ elseif(UNIX AND NOT APPLE)
         # For *.deb installer
         if (USE_CMAKE_LIBDIR)
             install(TARGETS ${CMAKE_PROJECT_NAME}
-                LIBRARY DESTINATION "/usr/lib/obs-plugins")
+                LIBRARY DESTINATION "lib/obs-plugins") # hardcoded, since ubuntu uses the wrong path by default
         else()
             install(TARGETS ${CMAKE_PROJECT_NAME}
-                LIBRARY DESTINATION "${CMAKE_INSTALL_FULL_LIBDIR}/obs-plugins") # hardcoded, since ubuntu uses the wrong path by default
+                LIBRARY DESTINATION "/usr/lib/obs-plugins")
         endif()
 
         file(GLOB locale_files ${CMAKE_SOURCE_DIR}/data/locale/*.ini)

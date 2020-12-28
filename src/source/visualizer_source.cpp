@@ -125,6 +125,7 @@ void visualizer_source::update(obs_data_t *settings)
         case VM_CIRCULAR_BARS:
             m_visualizer = new audio::circle_bar_visualizer(&m_config);
         }
+        m_visualizer->update();
     }
 }
 
@@ -332,8 +333,8 @@ obs_properties_t *get_properties_for_visualiser(void *data)
     obs_property_set_visible(sr, false); /* Sample rate is only needed for fifo */
 
     /* Circle settings */
-    auto* offset = obs_properties_add_float(props, S_OFFSET, T_OFFSET, -360, 360, 0.1);
-    auto* padding = obs_properties_add_float(props, S_PADDING, T_PADDING, -70, 70, 0.1);
+    auto *offset = obs_properties_add_float(props, S_OFFSET, T_OFFSET, -360, 360, 0.1);
+    auto *padding = obs_properties_add_float(props, S_PADDING, T_PADDING, -70, 70, 0.1);
     obs_property_float_set_suffix(offset, "°");
     obs_property_float_set_suffix(padding, "%");
 

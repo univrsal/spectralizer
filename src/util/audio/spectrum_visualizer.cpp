@@ -81,7 +81,6 @@ spectrum_visualizer::spectrum_visualizer(source::config *cfg)
       m_fftw_plan_right(nullptr),
       m_silent_runs(0u)
 {
-    update();
 }
 
 spectrum_visualizer::~spectrum_visualizer()

@@ -49,7 +49,7 @@ void circle_bar_visualizer::render(gs_effect_t *)
 void circle_bar_visualizer::update()
 {
     spectrum_visualizer::update();
-    auto count = m_bars_left.size() - DEAD_BAR_OFFSET;
+    auto count = m_bars_left.empty() ? m_cfg->detail : m_bars_left.size();
     float spectrum_width = ((m_cfg->bar_width + m_cfg->bar_space) * count);
     m_radius = (spectrum_width * (1 + m_cfg->padding)) / (2 * M_PI);
     m_padding = m_cfg->padding * 2 * M_PI;

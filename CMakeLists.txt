@@ -17,6 +17,7 @@ endif()
 
 option(LOCAL_INSTALLATION "Whether to install for the current user (default: OFF)" OFF)
 option(GLOBAL_INSTALLATION "Whether to install for all users (default: OFF)" OFF)
+option(USE_CMAKE_LIBDIR "Whether to use install to the cmake defined library directory, which breaks on ubuntu. (default: OFF)" OFF)
 
 if (MSVC)
     set(spectralizer_PLATFORM_DEPS
@@ -34,15 +35,15 @@ find_library(FFTW_LIBRARIES fftw3)
 
 configure_file(
     package/installer-macOS.pkgproj.in
-    ../package/installer-macOS.pkgproj
+    ${CMAKE_SOURCE_DIR}/package/installer-macOS.pkgproj
 )
 configure_file(
     package/installer-Windows.iss.in
-    ../package/installer-Windows.iss
+    ${CMAKE_SOURCE_DIR}/package/installer-Windows.iss
 )
 configure_file(
     package/README.txt.in
-    ../package/README.txt
+    ${CMAKE_SOURCE_DIR}/package/README.txt
 )
 
 set(spectralizer_SOURCES
@@ -159,11 +160,16 @@ elseif(UNIX AND NOT APPLE)
             DESTINATION "$ENV{HOME}/.config/obs-studio/plugins/${CMAKE_PROJECT_NAME}")
     elseif(GLOBAL_INSTALLATION)
         # For *.deb installer
-        install(TARGETS ${CMAKE_PROJECT_NAME}
-            LIBRARY DESTINATION "/usr/lib/obs-plugins") # hardcoded, since ubuntu uses the wrong path by default
+        if (USE_CMAKE_LIBDIR)
+            install(TARGETS ${CMAKE_PROJECT_NAME}
+                LIBRARY DESTINATION "/usr/lib/obs-plugins")
+        else()
+            install(TARGETS ${CMAKE_PROJECT_NAME}
+                LIBRARY DESTINATION "${CMAKE_INSTALL_FULL_LIBDIR}/obs-plugins") # hardcoded, since ubuntu uses the wrong path by default
+        endif()
 
-        file(GLOB locale_files data/locale/*.ini)
-        file(GLOB other_files data/*.*)
+        file(GLOB locale_files ${CMAKE_SOURCE_DIR}/data/locale/*.ini)
+        file(GLOB other_files ${CMAKE_SOURCE_DIR}/data/*.*)
 
         install(FILES ${locale_files}
             DESTINATION "${CMAKE_INSTALL_FULL_DATAROOTDIR}/obs/obs-plugins/${CMAKE_PROJECT_NAME}/locale")
@@ -174,10 +180,10 @@ elseif(UNIX AND NOT APPLE)
         install(TARGETS ${CMAKE_PROJECT_NAME}
             LIBRARY DESTINATION "${CMAKE_PROJECT_NAME}/bin/${ARCH_NAME}")
 
-        install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/data
+        install(DIRECTORY${CMAKE_SOURCE_DIR}/data
             DESTINATION "${CMAKE_PROJECT_NAME}")
 
-        install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/package/README.txt"
+        install(FILES "${CMAKE_SOURCE_DIR}/package/README.txt"
             DESTINATION "${CMAKE_PROJECT_NAME}")
     endif()
 elseif(APPLE)

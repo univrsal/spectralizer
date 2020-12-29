@@ -180,7 +180,7 @@ elseif(UNIX AND NOT APPLE)
         install(TARGETS ${CMAKE_PROJECT_NAME}
             LIBRARY DESTINATION "${CMAKE_PROJECT_NAME}/bin/${ARCH_NAME}")
 
-        install(DIRECTORY${CMAKE_SOURCE_DIR}/data
+        install(DIRECTORY ${CMAKE_SOURCE_DIR}/data
             DESTINATION "${CMAKE_PROJECT_NAME}")
 
         install(FILES "${CMAKE_SOURCE_DIR}/package/README.txt"

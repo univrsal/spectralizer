@@ -334,7 +334,7 @@ obs_properties_t *get_properties_for_visualiser(void *data)
 
     /* Circle settings */
     auto *offset = obs_properties_add_float(props, S_OFFSET, T_OFFSET, -360, 360, 0.1);
-    auto *padding = obs_properties_add_float(props, S_PADDING, T_PADDING, -70, 70, 0.1);
+    auto *padding = obs_properties_add_float(props, S_PADDING, T_PADDING, -100, 100, 0.1);
     obs_property_float_set_suffix(offset, "°");
     obs_property_float_set_suffix(padding, "%");
 

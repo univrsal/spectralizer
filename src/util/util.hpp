@@ -89,6 +89,9 @@
 #define T_PADDING                       T_("Spectralizer.Padding")
 #define T_EXPONENT                      T_("Spectralizer.Boost")
 #define T_EXPONENT_ENABLED              T_("Spectralizer.Boost.Enabled")
+#define T_CORNER_ROUNDING               T_("Spectralizer.Corner.Rounding")
+#define T_CORNER_RADIUS                 T_("Spectralizer.Corner.Radius")
+#define T_CORNER_POINTS                 T_("Spectralizer.Corner.Points")
 
 #define S_EXPONENT_ENABLED              "boost_enabled"
 #define S_EXPONENT                      "boost"
@@ -123,6 +126,9 @@
 #define S_LOG_FREQ_SCALE_HPF_CURVE      "log_freq_scale_hpf_curve"
 #define S_OFFSET                        "offset"
 #define S_PADDING                       "padding"
+#define S_CORNER_ROUNDING               "round_corners"
+#define S_CORNER_RADIUS                 "corner_radius"
+#define S_CORNER_POINTS                 "corner_points"
 
 enum visual_mode
 {
@@ -210,7 +216,8 @@ namespace defaults {
     extern const uint16_t       bar_space,
                                 bar_width,
                                 bar_height,
-                                bar_min_height;
+                                bar_min_height,
+                                corner_points;
 
     extern const uint16_t       wire_thickness;
     extern const enum wire_mode wire_mode;

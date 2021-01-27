@@ -88,6 +88,9 @@ void visualizer_source::update(obs_data_t *settings)
     m_config.log_freq_start = obs_data_get_double(settings, S_LOG_FREQ_SCALE_START);
     m_config.log_freq_use_hpf = obs_data_get_bool(settings, S_LOG_FREQ_SCALE_USE_HPF);
     m_config.log_freq_hpf_curve = obs_data_get_double(settings, S_LOG_FREQ_SCALE_HPF_CURVE);
+    m_config.rounded_corners = obs_data_get_bool(settings, S_CORNER_ROUNDING);
+    m_config.corner_radius = obs_data_get_double(settings, S_CORNER_RADIUS);
+    m_config.corner_points = obs_data_get_int(settings, S_CORNER_POINTS);
 
     m_config.offset = obs_data_get_double(settings, S_OFFSET) / 180.f * M_PI;
     m_config.padding = obs_data_get_double(settings, S_PADDING) / 100.f; // to %
@@ -277,6 +280,17 @@ static bool log_freq_use_hpf_changed(obs_properties_t *props, obs_property_t *, 
     return true;
 }
 
+static bool use_rounded_corners_changed(obs_properties_t *props, obs_property_t *, obs_data_t *data)
+{
+    bool rounding = obs_data_get_bool(data, S_CORNER_ROUNDING);
+    auto *corner_radius = obs_properties_get(props, S_CORNER_RADIUS);
+    auto *corner_points = obs_properties_get(props, S_CORNER_POINTS);
+
+    obs_property_set_visible(corner_radius, rounding);
+    obs_property_set_visible(corner_points, rounding);
+    return true;
+}
+
 static bool add_source(void *data, obs_source_t *src)
 {
     uint32_t caps = obs_source_get_output_flags(src);
@@ -325,12 +339,19 @@ obs_properties_t *get_properties_for_visualiser(void *data)
     auto *h = obs_properties_add_int(props, S_BAR_HEIGHT, T_BAR_HEIGHT, 10, UINT16_MAX, 1);
     auto *s = obs_properties_add_int(props, S_BAR_SPACE, T_BAR_SPACING, 0, UINT16_MAX, 1);
     auto *sr = obs_properties_add_int(props, S_SAMPLE_RATE, T_SAMPLE_RATE, 128, UINT16_MAX, 10);
+    auto *rounding = obs_properties_add_bool(props, S_CORNER_ROUNDING, T_CORNER_ROUNDING);
+    auto *points = obs_properties_add_int(props, S_CORNER_POINTS, T_CORNER_POINTS, 2, 25, 1);
+    auto *radius = obs_properties_add_float(props, S_CORNER_RADIUS, T_CORNER_RADIUS, 0.1, 1, 0.1);
+
     obs_property_int_set_suffix(sr, " Hz");
     obs_property_int_set_suffix(w, " Pixel");
     obs_property_int_set_suffix(h, " Pixel");
     obs_property_int_set_suffix(s, " Pixel");
 
     obs_property_set_visible(sr, false); /* Sample rate is only needed for fifo */
+    obs_property_set_visible(points, false);
+    obs_property_set_visible(radius, false);
+    obs_property_set_modified_callback(rounding, use_rounded_corners_changed);
 
     /* Circle settings */
     auto *offset = obs_properties_add_float(props, S_OFFSET, T_OFFSET, -360, 360, 0.1);
@@ -471,6 +492,9 @@ void register_visualiser()
         obs_data_set_default_double(settings, S_LOG_FREQ_SCALE_START, defaults::log_freq_start);
         obs_data_set_default_bool(settings, S_LOG_FREQ_SCALE_USE_HPF, defaults::log_freq_use_hpf);
         obs_data_set_default_double(settings, S_LOG_FREQ_SCALE_HPF_CURVE, defaults::log_freq_hpf_curve);
+        obs_data_set_default_bool(settings, S_CORNER_ROUNDING, false);
+        obs_data_set_default_int(settings, S_CORNER_POINTS, defaults::corner_points);
+        obs_data_set_default_double(settings, S_CORNER_RADIUS, 0.5f);
     };
 
     si.update = [](void *data, obs_data_t *settings) { reinterpret_cast<visualizer_source *>(data)->update(settings); };

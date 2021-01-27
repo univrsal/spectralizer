@@ -31,7 +31,7 @@ public:
     ~fifo() override;
     void update() override;
     bool tick(float seconds) override;
-#else /* Stubs on Windows */
+#else  /* Stubs on Windows */
 public:
     fifo(source::config *cfg) : audio_source(cfg) {}
     ~fifo() override {}

@@ -57,7 +57,8 @@ const double mcat_smooth                                  = 1.5;
 const uint16_t bar_space                                  = 2,
                bar_width                                  = 5,
                bar_height                                 = 100,
-               bar_min_height                             = 5;
+               bar_min_height                             = 5,
+               corner_points                              = 5;
 
 const uint16_t wire_thickness                             = 5;
 const enum wire_mode wire_mode                            = WM_THIN;

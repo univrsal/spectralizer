@@ -68,6 +68,10 @@ struct config {
     uint16_t bar_height = defaults::bar_height;
     uint16_t bar_min_height = defaults::bar_min_height;
 
+    bool rounded_corners = false;
+    float corner_radius = 0.5f;
+    uint16_t corner_points = defaults::corner_points;
+
     /* Wire visualizer settings */
     uint16_t wire_thickness = defaults::wire_thickness;
     enum wire_mode wire_mode = defaults::wire_mode;

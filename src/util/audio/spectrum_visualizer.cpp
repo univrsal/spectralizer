@@ -108,6 +108,9 @@ void spectrum_visualizer::update()
 
 void spectrum_visualizer::tick(float seconds)
 {
+    if (!m_cfg->buffer || !m_fftw_input_left)
+        return;
+
     if (m_sleeping) {
         m_sleep_count += seconds;
         if (m_sleep_count >= 0.25f) {
@@ -122,7 +125,7 @@ void spectrum_visualizer::tick(float seconds)
     const auto win_height = m_cfg->bar_height;
     bool is_silent_left = true, is_silent_right = true;
 
-    if (m_cfg->stereo) {
+    if (m_cfg->stereo && m_fftw_plan_right) {
         is_silent_left = prepare_fft_input(m_cfg->buffer, m_cfg->sample_size, m_fftw_input_left, CM_LEFT);
         is_silent_right = prepare_fft_input(m_cfg->buffer, m_cfg->sample_size, m_fftw_input_right, CM_RIGHT);
     } else {

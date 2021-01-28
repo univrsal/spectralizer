@@ -436,7 +436,7 @@ obs_properties_t *get_properties_for_visualiser(void *data)
                              defaults::log_freq_scale && defaults::log_freq_use_hpf);
 
     auto *stereo = obs_properties_add_bool(props, S_STEREO, T_STEREO);
-    auto *space = obs_properties_add_int(props, S_STEREO_SPACE, T_STEREO_SPACE, 0, UINT16_MAX, 1);
+    auto *space = obs_properties_add_int(props, S_STEREO_SPACE, T_STEREO_SPACE, -UINT16_MAX, UINT16_MAX, 1);
     obs_property_int_set_suffix(space, " Pixel");
     auto *dt = obs_properties_add_int(props, S_DETAIL, T_DETAIL, 1, UINT16_MAX, 1);
     obs_property_int_set_suffix(dt, " Bins");

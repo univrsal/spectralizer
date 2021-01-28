@@ -170,6 +170,47 @@ void bar_visualizer::draw_rounded_bars()
     }
 }
 
+void bar_visualizer::draw_stereo_rounded_bars()
+{
+
+    size_t i = 0, pos_x = 0;
+    uint32_t height_l, height_r;
+    int32_t offset = m_cfg->stereo_space / 2;
+    uint32_t center = m_cfg->bar_height / 2 + offset;
+
+    for (; i < m_bars_left.size() - DEAD_BAR_OFFSET; i++) { /* Leave the four dead bars the end */
+        double bar_left = (m_bars_left[i] > 1.0 ? m_bars_left[i] : 1.0);
+        double bar_right = (m_bars_right[i] > 1.0 ? m_bars_right[i] : 1.0);
+
+        // The bar needs to be at least a square so the circle fits
+        height_l = UTIL_MAX(static_cast<uint32_t>(round(bar_left)), m_cfg->bar_width);
+        height_l = UTIL_MIN(height_l, (m_cfg->bar_height / 2));
+        height_r = UTIL_MAX(static_cast<uint32_t>(round(bar_right)), m_cfg->bar_width);
+        height_r = UTIL_MIN(height_r, (m_cfg->bar_height / 2));
+
+        pos_x = i * (m_cfg->bar_width + m_cfg->bar_space);
+        auto verts_left = make_buffer(height_l);
+        auto verts_right = make_buffer(height_r);
+
+        /* Top */
+        gs_matrix_push();
+        gs_load_vertexbuffer(verts_left);
+        gs_matrix_translate3f(pos_x, (center - height_l) - offset, 0);
+        gs_draw(GS_TRISTRIP, 0, (m_cfg->corner_points + 1) * 8 + 20);
+        gs_matrix_pop();
+
+        /* Bottom */
+        gs_matrix_push();
+        gs_load_vertexbuffer(verts_right);
+        gs_matrix_translate3f(pos_x, center + offset, 0);
+        gs_draw(GS_TRISTRIP, 0, (m_cfg->corner_points + 1) * 8 + 20);
+        gs_matrix_pop();
+
+        gs_vertexbuffer_destroy(verts_left);
+        gs_vertexbuffer_destroy(verts_right);
+    }
+}
+
 bar_visualizer::bar_visualizer(source::config *cfg) : spectrum_visualizer(cfg) {}
 
 void bar_visualizer::render(gs_effect_t *effect)
@@ -181,6 +222,7 @@ void bar_visualizer::render(gs_effect_t *effect)
         m_bars_right.resize(m_cfg->detail + DEAD_BAR_OFFSET, 0.0);
     if (m_cfg->stereo) {
         if (m_cfg->rounded_corners) {
+            draw_stereo_rounded_bars();
         } else {
             draw_stereo_rectangle_bars();
         }
@@ -206,10 +248,8 @@ void bar_visualizer::update()
             float p = (float(j) / m_cfg->corner_points);
             offset.x = sinf((i * M_PI / 2.f) + (M_PI / 2.f) * p) * m_corner_radius;
             offset.y = cosf((i * M_PI / 2.f) + (M_PI / 2.f) * p) * m_corner_radius;
-            debug("POINT %i at %f: %f, %f", (int)m_circle_points.size(), p, offset.x, offset.y);
             m_circle_points.emplace_back(offset);
         }
-        debug("------");
     }
 }
 }

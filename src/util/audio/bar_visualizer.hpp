@@ -28,6 +28,7 @@ class bar_visualizer : public spectrum_visualizer {
     void draw_rectangle_bars();
     void draw_stereo_rectangle_bars();
     void draw_rounded_bars();
+    void draw_stereo_rounded_bars();
 
 public:
     explicit bar_visualizer(source::config *cfg);

@@ -21,10 +21,6 @@
 
 namespace audio {
 class bar_visualizer : public spectrum_visualizer {
-    std::vector<struct vec2> m_circle_points;
-    gs_vertbuffer_t *make_buffer(float height);
-    float m_corner_radius = 0;
-
     void draw_rectangle_bars();
     void draw_stereo_rectangle_bars();
     void draw_rounded_bars();
@@ -33,6 +29,5 @@ class bar_visualizer : public spectrum_visualizer {
 public:
     explicit bar_visualizer(source::config *cfg);
     void render(gs_effect_t *effect) override;
-    virtual void update() override;
 };
 }

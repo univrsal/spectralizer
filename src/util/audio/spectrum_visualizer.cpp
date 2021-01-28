@@ -104,6 +104,21 @@ void spectrum_visualizer::update()
 
     m_fftw_output_left = (fftw_complex *)brealloc(m_fftw_output_left, sizeof(fftw_complex) * m_fftw_results);
     m_fftw_output_right = (fftw_complex *)brealloc(m_fftw_output_right, sizeof(fftw_complex) * m_fftw_results);
+
+    if (m_cfg->rounded_corners) {
+        m_circle_points.clear();
+        m_corner_radius = (m_cfg->bar_width / 2) * m_cfg->corner_radius;
+        struct vec2 offset = {};
+
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j <= m_cfg->corner_points; j++) {
+                float p = (float(j) / m_cfg->corner_points);
+                offset.x = sinf((i * M_PI / 2.f) + (M_PI / 2.f) * p) * m_corner_radius;
+                offset.y = cosf((i * M_PI / 2.f) + (M_PI / 2.f) * p) * m_corner_radius;
+                m_circle_points.emplace_back(offset);
+            }
+        }
+    }
 }
 
 void spectrum_visualizer::tick(float seconds)
@@ -160,10 +175,10 @@ void spectrum_visualizer::tick(float seconds)
         fftw_execute(m_fftw_plan_left);
 
         create_spectrum_bars(m_fftw_output_left, m_fftw_results, height, m_cfg->detail + DEAD_BAR_OFFSET,
-                             &m_bars_left_new, &m_bars_falloff_left);
+                             &m_bars_left_new);
         if (m_cfg->stereo) {
             create_spectrum_bars(m_fftw_output_right, m_fftw_results, height, m_cfg->detail + DEAD_BAR_OFFSET,
-                                 &m_bars_right_new, &m_bars_falloff_right);
+                                 &m_bars_right_new);
 
             m_bars_right.resize(m_bars_right_new.size(), 0.0);
             for (size_t i = 0; i < m_bars_right.size(); i++) {
@@ -294,6 +309,81 @@ void spectrum_visualizer::monstercat_smoothing(doublev *bars)
     }
 }
 
+gs_vertbuffer_t *spectrum_visualizer::make_rounded_rectangle(float height)
+{
+    gs_render_start(true);
+    int index = 0;
+
+    // Top right
+    for (int i = 0; i <= m_cfg->corner_points; i++) {
+        auto &v = m_circle_points[index++];
+        // We can't go outside the bounds
+        gs_vertex2f(UTIL_CLAMP(1, m_cfg->bar_width - (m_corner_radius - v.x), m_cfg->cx),
+                    UTIL_CLAMP(1, m_corner_radius - v.y, m_cfg->cy));
+        gs_vertex2f(m_cfg->bar_width - m_corner_radius, m_corner_radius);
+    }
+
+    // right filler
+    gs_vertex2f(m_cfg->bar_width, m_corner_radius);
+    gs_vertex2f(m_cfg->bar_width, height - m_corner_radius);
+
+    gs_vertex2f(m_cfg->bar_width - m_corner_radius, m_corner_radius);
+    gs_vertex2f(m_cfg->bar_width - m_corner_radius, height - m_corner_radius);
+
+    // bottom right
+    for (int i = 0; i <= m_cfg->corner_points; i++) {
+        auto &v = m_circle_points[index++];
+        gs_vertex2f(UTIL_CLAMP(1, m_cfg->bar_width - (m_corner_radius - v.x), m_cfg->cx),
+                    UTIL_CLAMP(1, height - (m_corner_radius + v.y), m_cfg->cy));
+        gs_vertex2f(m_cfg->bar_width - m_corner_radius, height - m_corner_radius);
+    }
+
+    // bottom filler
+    gs_vertex2f(m_cfg->bar_width - m_corner_radius, height);
+    gs_vertex2f(m_corner_radius, height);
+
+    gs_vertex2f(m_cfg->bar_width - m_corner_radius, height - m_corner_radius);
+    gs_vertex2f(m_corner_radius, height - m_corner_radius);
+
+    // bottom left
+    for (int i = 0; i <= m_cfg->corner_points; i++) {
+        auto &v = m_circle_points[index++];
+        gs_vertex2f(UTIL_CLAMP(1, m_corner_radius + v.x, m_cfg->cx),
+                    UTIL_CLAMP(1, height - (m_corner_radius + v.y), m_cfg->cy));
+        gs_vertex2f(m_corner_radius, height - m_corner_radius);
+    }
+
+    // left filler
+    gs_vertex2f(1, height - m_corner_radius);
+    gs_vertex2f(1, m_corner_radius);
+
+    gs_vertex2f(m_corner_radius, height - m_corner_radius);
+    gs_vertex2f(m_corner_radius, m_corner_radius);
+
+    // top left
+    for (int i = 0; i <= m_cfg->corner_points; i++) {
+        auto &v = m_circle_points[index++];
+        gs_vertex2f(UTIL_CLAMP(1, m_corner_radius + v.x, m_cfg->cx), UTIL_CLAMP(1, m_corner_radius - v.y, m_cfg->cy));
+        gs_vertex2f(m_corner_radius, m_corner_radius);
+    }
+
+    // top filler
+    gs_vertex2f(m_corner_radius, 1);
+    gs_vertex2f(m_cfg->bar_width - m_corner_radius, 1);
+
+    gs_vertex2f(m_cfg->bar_width - m_corner_radius, m_corner_radius);
+    gs_vertex2f(m_corner_radius, m_corner_radius);
+
+    // Center filler
+    gs_vertex2f(m_cfg->bar_width - m_corner_radius, m_corner_radius);
+    gs_vertex2f(m_cfg->bar_width - m_corner_radius, height - m_corner_radius);
+
+    gs_vertex2f(m_corner_radius, height - m_corner_radius);
+    gs_vertex2f(m_corner_radius, m_corner_radius);
+
+    return gs_render_save();
+}
+
 void spectrum_visualizer::apply_falloff(const doublev &bars, doublev *falloff_bars) const
 {
     // Screen size has change which means previous falloff values are not valid
@@ -390,7 +480,7 @@ void spectrum_visualizer::maybe_reset_scaling_window(double current_max_height, 
 }
 
 void spectrum_visualizer::create_spectrum_bars(fftw_complex *fftw_output, size_t fftw_results, int32_t win_height,
-                                               uint32_t number_of_bars, doublev *bars, doublev *bars_falloff)
+                                               uint32_t number_of_bars, doublev *bars)
 {
     if (m_cfg->log_freq_scale) {
         // targetted log frequencies should be recalculated when either number

@@ -22,81 +22,6 @@
 
 namespace audio {
 
-gs_vertbuffer_t *bar_visualizer::make_buffer(float height)
-{
-    gs_render_start(true);
-    int index = 0;
-
-    // Top right
-    for (int i = 0; i <= m_cfg->corner_points; i++) {
-        auto &v = m_circle_points[index++];
-        // We can't go outside the bounds
-        gs_vertex2f(UTIL_CLAMP(1, m_cfg->bar_width - (m_corner_radius - v.x), m_cfg->cx),
-                    UTIL_CLAMP(1, m_corner_radius - v.y, m_cfg->cy));
-        gs_vertex2f(m_cfg->bar_width - m_corner_radius, m_corner_radius);
-    }
-
-    // right filler
-    gs_vertex2f(m_cfg->bar_width, m_corner_radius);
-    gs_vertex2f(m_cfg->bar_width, height - m_corner_radius);
-
-    gs_vertex2f(m_cfg->bar_width - m_corner_radius, m_corner_radius);
-    gs_vertex2f(m_cfg->bar_width - m_corner_radius, height - m_corner_radius);
-
-    // bottom right
-    for (int i = 0; i <= m_cfg->corner_points; i++) {
-        auto &v = m_circle_points[index++];
-        gs_vertex2f(UTIL_CLAMP(1, m_cfg->bar_width - (m_corner_radius - v.x), m_cfg->cx),
-                    UTIL_CLAMP(1, height - (m_corner_radius + v.y), m_cfg->cy));
-        gs_vertex2f(m_cfg->bar_width - m_corner_radius, height - m_corner_radius);
-    }
-
-    // bottom filler
-    gs_vertex2f(m_cfg->bar_width - m_corner_radius, height);
-    gs_vertex2f(m_corner_radius, height);
-
-    gs_vertex2f(m_cfg->bar_width - m_corner_radius, height - m_corner_radius);
-    gs_vertex2f(m_corner_radius, height - m_corner_radius);
-
-    // bottom left
-    for (int i = 0; i <= m_cfg->corner_points; i++) {
-        auto &v = m_circle_points[index++];
-        gs_vertex2f(UTIL_CLAMP(1, m_corner_radius + v.x, m_cfg->cx),
-                    UTIL_CLAMP(1, height - (m_corner_radius + v.y), m_cfg->cy));
-        gs_vertex2f(m_corner_radius, height - m_corner_radius);
-    }
-
-    // left filler
-    gs_vertex2f(1, height - m_corner_radius);
-    gs_vertex2f(1, m_corner_radius);
-
-    gs_vertex2f(m_corner_radius, height - m_corner_radius);
-    gs_vertex2f(m_corner_radius, m_corner_radius);
-
-    // top left
-    for (int i = 0; i <= m_cfg->corner_points; i++) {
-        auto &v = m_circle_points[index++];
-        gs_vertex2f(UTIL_CLAMP(1, m_corner_radius + v.x, m_cfg->cx), UTIL_CLAMP(1, m_corner_radius - v.y, m_cfg->cy));
-        gs_vertex2f(m_corner_radius, m_corner_radius);
-    }
-
-    // top filler
-    gs_vertex2f(m_corner_radius, 1);
-    gs_vertex2f(m_cfg->bar_width - m_corner_radius, 1);
-
-    gs_vertex2f(m_cfg->bar_width - m_corner_radius, m_corner_radius);
-    gs_vertex2f(m_corner_radius, m_corner_radius);
-
-    // Center filler
-    gs_vertex2f(m_cfg->bar_width - m_corner_radius, m_corner_radius);
-    gs_vertex2f(m_cfg->bar_width - m_corner_radius, height - m_corner_radius);
-
-    gs_vertex2f(m_corner_radius, height - m_corner_radius);
-    gs_vertex2f(m_corner_radius, m_corner_radius);
-
-    return gs_render_save();
-}
-
 void bar_visualizer::draw_rectangle_bars()
 {
     size_t i = 0, pos_x = 0;
@@ -160,7 +85,7 @@ void bar_visualizer::draw_rounded_bars()
         height = UTIL_MIN(height, m_cfg->bar_height);
 
         pos_x = i * (m_cfg->bar_width + m_cfg->bar_space);
-        auto verts = make_buffer(height);
+        auto verts = make_rounded_rectangle(height);
         gs_matrix_push();
         gs_load_vertexbuffer(verts);
         gs_matrix_translate3f(pos_x, (m_cfg->bar_height - height), 0);
@@ -189,8 +114,8 @@ void bar_visualizer::draw_stereo_rounded_bars()
         height_r = UTIL_MIN(height_r, (m_cfg->bar_height / 2));
 
         pos_x = i * (m_cfg->bar_width + m_cfg->bar_space);
-        auto verts_left = make_buffer(height_l);
-        auto verts_right = make_buffer(height_r);
+        auto verts_left = make_rounded_rectangle(height_l);
+        auto verts_right = make_rounded_rectangle(height_r);
 
         /* Top */
         gs_matrix_push();
@@ -220,6 +145,7 @@ void bar_visualizer::render(gs_effect_t *effect)
         m_bars_left.resize(m_cfg->detail + DEAD_BAR_OFFSET, 0.0);
     if (m_bars_right.size() != m_cfg->detail + DEAD_BAR_OFFSET)
         m_bars_right.resize(m_cfg->detail + DEAD_BAR_OFFSET, 0.0);
+
     if (m_cfg->stereo) {
         if (m_cfg->rounded_corners) {
             draw_stereo_rounded_bars();
@@ -236,20 +162,4 @@ void bar_visualizer::render(gs_effect_t *effect)
     UNUSED_PARAMETER(effect);
 }
 
-void bar_visualizer::update()
-{
-    spectrum_visualizer::update();
-    m_circle_points.clear();
-    m_corner_radius = (m_cfg->bar_width / 2) * m_cfg->corner_radius;
-    struct vec2 offset = {};
-
-    for (int i = 0; i < 4; i++) {
-        for (int j = 0; j <= m_cfg->corner_points; j++) {
-            float p = (float(j) / m_cfg->corner_points);
-            offset.x = sinf((i * M_PI / 2.f) + (M_PI / 2.f) * p) * m_corner_radius;
-            offset.y = cosf((i * M_PI / 2.f) + (M_PI / 2.f) * p) * m_corner_radius;
-            m_circle_points.emplace_back(offset);
-        }
-    }
-}
 }

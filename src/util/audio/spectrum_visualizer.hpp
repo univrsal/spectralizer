@@ -60,7 +60,7 @@ class spectrum_visualizer : public audio_visualizer {
                            channel_mode channel_mode);
 
     void create_spectrum_bars(fftw_complex *fftw_output, size_t fftw_results, int32_t win_height,
-                              uint32_t number_of_bars, doublev *bars, doublev *bars_falloff);
+                              uint32_t number_of_bars, doublev *bars);
 
     void generate_bars(uint32_t number_of_bars, size_t fftw_results, const uint32v &low_cutoff_frequencies,
                        const uint32v &high_cutoff_frequencies, const fftw_complex *fftw_output, doublev *bars) const;
@@ -84,9 +84,13 @@ protected:
     /* New values are smoothly copied over if smoothing is used
      * otherwise they're directly copied */
     doublev m_bars_left, m_bars_right, m_bars_left_new, m_bars_right_new;
-    doublev m_bars_falloff_left, m_bars_falloff_right;
+    //    doublev m_bars_falloff_left, m_bars_falloff_right;
     doublev m_previous_max_heights;
     doublev m_monstercat_smoothing_weights;
+
+    gs_vertbuffer_t *make_rounded_rectangle(float height);
+    float m_corner_radius = 0;
+    std::vector<struct vec2> m_circle_points;
 
 public:
     explicit spectrum_visualizer(source::config *cfg);

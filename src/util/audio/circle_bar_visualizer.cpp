@@ -20,12 +20,7 @@
 #include "../../source/visualizer_source.hpp"
 
 namespace audio {
-circle_bar_visualizer::circle_bar_visualizer(source::config *cfg) : spectrum_visualizer(cfg)
-{
-    update();
-}
-
-void circle_bar_visualizer::render(gs_effect_t *)
+void circle_bar_visualizer::draw_square_rectangle_circle()
 {
     // First translate everything to the center, offset for rotation, rotate, undo offset
     auto count = m_bars_left.size() - DEAD_BAR_OFFSET;
@@ -43,6 +38,42 @@ void circle_bar_visualizer::render(gs_effect_t *)
             gs_draw_sprite(nullptr, 0, m_cfg->bar_width, w);
         }
         gs_matrix_pop();
+    }
+}
+
+void circle_bar_visualizer::draw_rounded_bar_circle()
+{
+    // First translate everything to the center, offset for rotation, rotate, undo offset
+    auto count = m_bars_left.size() - DEAD_BAR_OFFSET;
+    for (size_t i = 0; i < count; i++) { /* Leave the four dead bars the end */
+        float pos = float(i) / (count);
+        auto w = UTIL_MAX(m_bars_left[i], m_cfg->bar_width);
+        auto verts = make_rounded_rectangle(w);
+        gs_matrix_push();
+        {
+            gs_load_vertexbuffer(verts);
+            gs_matrix_translate3f(m_cfg->cx / 2, m_cfg->cx / 2 + m_radius, 0);
+            gs_matrix_translate3f(0, -m_radius, 0);
+            gs_matrix_rotaa4f(0, 0, 1, pos * (M_PI * 2 - m_padding) + m_cfg->offset);
+            gs_matrix_translate3f(0, m_radius, 0);
+            gs_draw(GS_TRISTRIP, 0, (m_cfg->corner_points + 1) * 8 + 20);
+        }
+        gs_matrix_pop();
+        gs_vertexbuffer_destroy(verts);
+    }
+}
+
+circle_bar_visualizer::circle_bar_visualizer(source::config *cfg) : spectrum_visualizer(cfg)
+{
+    update();
+}
+
+void circle_bar_visualizer::render(gs_effect_t *)
+{
+    if (m_cfg->rounded_corners) {
+        draw_rounded_bar_circle();
+    } else {
+        draw_square_rectangle_circle();
     }
 }
 

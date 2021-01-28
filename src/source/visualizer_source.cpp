@@ -89,7 +89,7 @@ void visualizer_source::update(obs_data_t *settings)
     m_config.log_freq_use_hpf = obs_data_get_bool(settings, S_LOG_FREQ_SCALE_USE_HPF);
     m_config.log_freq_hpf_curve = obs_data_get_double(settings, S_LOG_FREQ_SCALE_HPF_CURVE);
     m_config.rounded_corners = obs_data_get_bool(settings, S_CORNER_ROUNDING);
-    m_config.corner_radius = obs_data_get_double(settings, S_CORNER_RADIUS);
+    m_config.corner_radius = obs_data_get_double(settings, S_CORNER_RADIUS) / 100.f;
     m_config.corner_points = obs_data_get_int(settings, S_CORNER_POINTS);
 
     m_config.offset = obs_data_get_double(settings, S_OFFSET) / 180.f * M_PI;
@@ -341,12 +341,13 @@ obs_properties_t *get_properties_for_visualiser(void *data)
     auto *sr = obs_properties_add_int(props, S_SAMPLE_RATE, T_SAMPLE_RATE, 128, UINT16_MAX, 10);
     auto *rounding = obs_properties_add_bool(props, S_CORNER_ROUNDING, T_CORNER_ROUNDING);
     auto *points = obs_properties_add_int(props, S_CORNER_POINTS, T_CORNER_POINTS, 2, 25, 1);
-    auto *radius = obs_properties_add_float(props, S_CORNER_RADIUS, T_CORNER_RADIUS, 0.1, 1, 0.1);
+    auto *radius = obs_properties_add_float(props, S_CORNER_RADIUS, T_CORNER_RADIUS, 0.1, 100, 0.1);
 
     obs_property_int_set_suffix(sr, " Hz");
     obs_property_int_set_suffix(w, " Pixel");
     obs_property_int_set_suffix(h, " Pixel");
     obs_property_int_set_suffix(s, " Pixel");
+    obs_property_float_set_suffix(radius, "%");
 
     obs_property_set_visible(sr, false); /* Sample rate is only needed for fifo */
     obs_property_set_visible(points, false);

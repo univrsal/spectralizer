@@ -14,4 +14,7 @@ Linux:
 Windows:
 --------
 1. Extract the archive
-2. Move the contents of plugin into your obs installation directory
+2. Open your obs studio installation directory (Usually C:\Program Files\obs-studio)
+3. Copy the folders "data" and "obs-plugins" into your obs installation directory.
+   "data" contains the translations and additional files, "obs-plugins" the actual plugin
+   You'll need to grant administrative rights to merge the folders.

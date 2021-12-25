@@ -5,6 +5,6 @@ Audio visualization for [obs-studio](https://obsproject.com/) using [fftw](http:
 
 Allows for vizualisation of [MPD](https://www.musicpd.org/) and internal obs audio sources.
 
-Issues have moved to [git.vrsal.de/alex/spectralizer/issues](https://git.vrsal.de/alex/spectralizer/issues). You can submit new ones under [bugs.vrsal.de/alex/spectralizer](https://bugs.vrsal.de/alex/spectralizer) and comment under bugs.vrsal.de/alex/tuna/[issue number] (for example https://bugs.vrsal.de/alex/spectralizer/63 for [this](https://git.vrsal.de/alex/spectralizer/issues/63) issue)
+Issues have moved to [git.vrsal.xyz/alex/spectralizer/issues](https://git.vrsal.xyz/alex/spectralizer/issues). You can submit new ones under [bugs.vrsal.xyz/alex/spectralizer](https://bugs.vrsal.xyz/alex/spectralizer) and comment under bugs.vrsal.xyz/alex/tuna/[issue number] (for example https://bugs.vrsal.xyz/alex/spectralizer/63 for [this](https://git.vrsal.xyz/alex/spectralizer/issues/63) issue)
 
 ![demo](https://i.imgur.com/3QyBqgb.png)

@@ -1,4 +1,6 @@
 ## Spectralizer
+### Spectralizer will not be developed anymore, if you're looking for an excellent replacement check out [Waveform](https://obsproject.com/forum/resources/waveform.1423/).
+
 ![nightly](https://github.com/univrsal/spectralizer/workflows/nightly/badge.svg)
 
 Audio visualization for [obs-studio](https://obsproject.com/) using [fftw](http://fftw.org/), based on [cli-visualizer](https://github.com/dpayne/cli-visualizer)
